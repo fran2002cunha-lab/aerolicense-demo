@@ -9,3 +9,6 @@ frontend/build/
 .DS_Store
 __pycache__/
 *.pyc
+smart_contract/node_modules/
+smart_contract/artifacts/
+smart_contract/cache/
