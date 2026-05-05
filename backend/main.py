@@ -61,7 +61,7 @@ w3 = Web3(Web3.HTTPProvider(BLOCKCHAIN_URL))
 # Só inicializa o contrato se existir endereço válido configurado
 contract = None
 account  = None
-if CONTRACT_ADDRESS and CONTRACT_ADDRESS != "0xYourContractAddressHere":
+if CONTRACT_ADDRESS and CONTRACT_ADDRESS.startswith("0x") and len(CONTRACT_ADDRESS) == 42:
     CONTRACT_ABI = [
         {
             "inputs": [
