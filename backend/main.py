@@ -11,7 +11,7 @@ Fluxo principal:
 
 import hashlib
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import Optional
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from web3 import Web3
+import database
 from database import init_db, get_db, seed_demo_data, Pilot, Document
 
 # ── App ────────────────────────────────────────────────────────────────────
@@ -38,8 +39,7 @@ app.add_middleware(
 @app.on_event("startup")
 def startup():
     init_db()
-    from database import SessionLocal
-    db = SessionLocal()
+    db = database.SessionLocal()
     try:
         seed_demo_data(db)
     finally:
@@ -293,7 +293,6 @@ def get_expiring_documents(days: int = 30):
 
 @app.get("/demo/pilotos", tags=["Demo"])
 def demo_pilotos(db: Session = Depends(get_db)):
-    from datetime import date
     pilots = db.query(Pilot).all()
     resumo = []
     for p in pilots:
@@ -317,7 +316,6 @@ def demo_pilotos(db: Session = Depends(get_db)):
 
 @app.get("/demo/pilotos/{piloto_id}", tags=["Demo"])
 def demo_piloto_detalhe(piloto_id: str, db: Session = Depends(get_db)):
-    from datetime import date
     pilot = db.query(Pilot).filter(Pilot.id == piloto_id).first()
     if not pilot:
         raise HTTPException(404, f"Piloto '{piloto_id}' não encontrado.")
@@ -340,8 +338,8 @@ def demo_piloto_detalhe(piloto_id: str, db: Session = Depends(get_db)):
 
 @app.get("/demo/alertas", tags=["Demo"])
 def demo_alertas(db: Session = Depends(get_db)):
-    from datetime import date
     today = date.today()
+    pilots = {p.id: p for p in db.query(Pilot).all()}
     alertas = []
     for d in db.query(Document).all():
         exp  = date.fromisoformat(d.expires_at)
@@ -349,7 +347,7 @@ def demo_alertas(db: Session = Depends(get_db)):
         if days > 30:
             continue
         status = "expired" if days <= 0 else "expiring_soon"
-        pilot  = db.query(Pilot).filter(Pilot.id == d.pilot_id).first()
+        pilot  = pilots[d.pilot_id]
         alertas.append({
             "piloto": pilot.name, "cargo": pilot.role,
             "documento": d.description, "tipo": d.doc_type,
