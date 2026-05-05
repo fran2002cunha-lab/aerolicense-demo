@@ -26,7 +26,7 @@ export default function AlertsPage() {
       </p>
       {data.alertas.map((a, i) => (
         <div key={i} style={{
-          ...s.card, borderLeftColor: a.status === 'expired' ? '#E74C3C' : '#F0A500',
+          ...s.card, borderLeftColor: a.status === 'expired' ? '#E74C3C' : a.status === 'expiring_soon' ? '#F0A500' : '#667788',
         }}>
           <div>
             <div style={s.pilot}>👨‍✈️ {a.piloto} · <span style={{ color: '#0087CC', fontSize: 12 }}>{a.cargo}</span></div>
@@ -34,12 +34,12 @@ export default function AlertsPage() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 20, fontWeight: 'bold',
-              color: a.status === 'expired' ? '#E74C3C' : '#F0A500' }}>
+              color: a.status === 'expired' ? '#E74C3C' : a.status === 'expiring_soon' ? '#F0A500' : '#667788' }}>
               {a.status === 'expired' ? 'EXPIRADO' : `${a.dias_restantes} dias`}
             </div>
             <div style={{
               ...s.action,
-              background: a.status === 'expired' ? '#E74C3C' : '#F0A500',
+              background: a.status === 'expired' ? '#E74C3C' : a.status === 'expiring_soon' ? '#F0A500' : '#667788',
               color: a.status === 'expired' ? '#fff' : '#000',
             }}>{a.acao_necessaria}</div>
           </div>

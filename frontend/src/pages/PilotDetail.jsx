@@ -45,7 +45,7 @@ export default function PilotDetail() {
         </button>
       </div>
       <div style={s.grid}>
-        {docs.map((doc, i) => <DocumentCard key={i} document={doc} />)}
+        {docs.map((doc) => <DocumentCard key={doc.hash} document={doc} />)}
       </div>
     </div>
   );

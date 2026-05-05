@@ -1,16 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import UploadDocument from '../components/UploadDocument';
 
+const ADDRESSES = {
+  P001: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+  P002: '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
+  P003: '0x1Db3439a7D398351b8bE11C439e05C5B3259aeD4',
+};
+
 export default function UploadPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  // Map demo pilot IDs to Ethereum addresses
-  const ADDRESSES = {
-    P001: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-    P002: '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
-    P003: '0x1Db3439a7D398351b8bE11C439e05C5B3259aeD4',
-  };
 
   return (
     <div>
