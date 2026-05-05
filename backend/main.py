@@ -14,10 +14,12 @@ import os
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 from web3 import Web3
+from database import init_db, get_db, seed_demo_data, Pilot, Document
 
 # ── App ────────────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -32,6 +34,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def startup():
+    init_db()
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        seed_demo_data(db)
+    finally:
+        db.close()
 
 # ── Ligação à blockchain (opcional em modo demo) ───────────────────────────
 BLOCKCHAIN_URL   = os.getenv("BLOCKCHAIN_URL", "http://127.0.0.1:8545")
@@ -276,192 +288,79 @@ def get_expiring_documents(days: int = 30):
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# DADOS DE EXEMPLO — para demonstração ao professor
+# DEMO ENDPOINTS — backed by SQLite via SQLAlchemy
 # ══════════════════════════════════════════════════════════════════════════
 
-DEMO_PILOTOS = [
-    {
-        "id": "P001",
-        "nome": "Miguel Ferreira",
-        "cargo": "First Officer — TAP Air Portugal",
-        "carteira_ethereum": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-        "documentos": [
-            {
-                "tipo": "ATPL",
-                "descricao": "Licença ATPL — ANAC Portugal",
-                "hash": "0xf5fa1228922f7b4e3e13181d7054cf56785891b7025e0361906b8964ec62eb73",
-                "tx_blockchain": "0xa3d2e891b4c7f305162a9c184d7e3b56f0c9e2a1b3d4e5f6a7b8c9d0e1f2a3b4",
-                "emitido_em": "2023-03-15",
-                "validade": "2026-03-15",
-                "dias_restantes": (datetime(2026, 3, 15) - datetime.utcnow()).days,
-                "status": "valid",
-                "entidade_emissora": "ANAC — Autoridade Nacional de Aviação Civil",
-            },
-            {
-                "tipo": "MEDICAL_CLASS1",
-                "descricao": "Certificado Médico Classe 1",
-                "hash": "0xca26ae93ee7df6764af6689223428eeb13101bf5a4b8b7cc4ab945460b235f99",
-                "tx_blockchain": "0xb4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
-                "emitido_em": "2024-11-20",
-                "validade": (datetime.utcnow() + timedelta(days=12)).strftime("%Y-%m-%d"),
-                "dias_restantes": 12,
-                "status": "expiring_soon",
-                "entidade_emissora": "Clínica de Medicina Aeronáutica Lisboa",
-            },
-            {
-                "tipo": "ICAO_ENGLISH",
-                "descricao": "Proficiência Linguística ICAO — Nível 5",
-                "hash": "0x9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8",
-                "tx_blockchain": "0xc5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
-                "emitido_em": "2022-06-10",
-                "validade": "2025-06-10",
-                "dias_restantes": -330,
-                "status": "expired",
-                "entidade_emissora": "Centro de Testes ICAO — Lisboa",
-            },
-            {
-                "tipo": "TYPE_RATING",
-                "descricao": "Type Rating Airbus A320",
-                "hash": "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
-                "tx_blockchain": "0xd6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7",
-                "emitido_em": "2024-01-08",
-                "validade": "2026-01-08",
-                "dias_restantes": (datetime(2026, 1, 8) - datetime.utcnow()).days,
-                "status": "valid",
-                "entidade_emissora": "Airbus Training Centre — Toulouse",
-            },
-        ],
-    },
-    {
-        "id": "P002",
-        "nome": "Ana Costa",
-        "cargo": "Cabin Crew Senior — Ryanair",
-        "carteira_ethereum": "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
-        "documentos": [
-            {
-                "tipo": "ATPL",
-                "descricao": "Licença de Tripulante de Cabine — EASA",
-                "hash": "0x3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9d0c1b2a3f4",
-                "tx_blockchain": "0xe7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8",
-                "emitido_em": "2024-05-01",
-                "validade": "2027-05-01",
-                "dias_restantes": (datetime(2027, 5, 1) - datetime.utcnow()).days,
-                "status": "valid",
-                "entidade_emissora": "EASA — European Union Aviation Safety Agency",
-            },
-            {
-                "tipo": "MEDICAL_CLASS1",
-                "descricao": "Certificado Médico Cabin Crew",
-                "hash": "0x5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b",
-                "tx_blockchain": "0xf8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9",
-                "emitido_em": "2024-12-01",
-                "validade": (datetime.utcnow() + timedelta(days=28)).strftime("%Y-%m-%d"),
-                "dias_restantes": 28,
-                "status": "expiring_soon",
-                "entidade_emissora": "Clínica de Medicina Aeronáutica Porto",
-            },
-        ],
-    },
-    {
-        "id": "P003",
-        "nome": "João Matos",
-        "cargo": "Captain — easyJet",
-        "carteira_ethereum": "0x1Db3439a7D398351b8bE11C439e05C5B3259aeD4",
-        "documentos": [
-            {
-                "tipo": "ATPL",
-                "descricao": "Licença ATPL — CAA United Kingdom",
-                "hash": "0x7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d",
-                "tx_blockchain": "0xa9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
-                "emitido_em": "2021-09-14",
-                "validade": "2027-09-14",
-                "dias_restantes": (datetime(2027, 9, 14) - datetime.utcnow()).days,
-                "status": "valid",
-                "entidade_emissora": "CAA — Civil Aviation Authority UK",
-            },
-            {
-                "tipo": "TYPE_RATING",
-                "descricao": "Type Rating Boeing 737 MAX",
-                "hash": "0x9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f",
-                "tx_blockchain": "0xb0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1",
-                "emitido_em": "2024-03-22",
-                "validade": "2026-03-22",
-                "dias_restantes": (datetime(2026, 3, 22) - datetime.utcnow()).days,
-                "status": "valid",
-                "entidade_emissora": "Boeing Training — Seattle",
-            },
-            {
-                "tipo": "CRM_TRAINING",
-                "descricao": "Crew Resource Management — Recurrent",
-                "hash": "0x1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
-                "tx_blockchain": "0xc1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2",
-                "emitido_em": "2025-01-10",
-                "validade": "2027-01-10",
-                "dias_restantes": (datetime(2027, 1, 10) - datetime.utcnow()).days,
-                "status": "valid",
-                "entidade_emissora": "easyJet Training Academy",
-            },
-        ],
-    },
-]
-
-
 @app.get("/demo/pilotos", tags=["Demo"])
-def demo_pilotos():
-    """Lista todos os pilotos de exemplo com os seus documentos."""
+def demo_pilotos(db: Session = Depends(get_db)):
+    from datetime import date
+    pilots = db.query(Pilot).all()
     resumo = []
-    for p in DEMO_PILOTOS:
-        total     = len(p["documentos"])
-        validos   = sum(1 for d in p["documentos"] if d["status"] == "valid")
-        urgentes  = sum(1 for d in p["documentos"] if d["status"] == "expiring_soon")
-        expirados = sum(1 for d in p["documentos"] if d["status"] == "expired")
+    for p in pilots:
+        docs = p.documents
+        today = date.today()
+        def days_left(d):
+            exp = date.fromisoformat(d.expires_at)
+            return (exp - today).days
+        validos   = sum(1 for d in docs if days_left(d) > 30)
+        urgentes  = sum(1 for d in docs if 0 < days_left(d) <= 30)
+        expirados = sum(1 for d in docs if days_left(d) <= 0)
         resumo.append({
-            "id":                  p["id"],
-            "nome":                p["nome"],
-            "cargo":               p["cargo"],
-            "carteira_ethereum":   p["carteira_ethereum"],
-            "total_documentos":    total,
-            "validos":             validos,
-            "a_expirar_em_breve":  urgentes,
-            "expirados":           expirados,
-            "compliance_ok":       expirados == 0,
+            "id": p.id, "nome": p.name, "cargo": p.role,
+            "carteira_ethereum": p.ethereum_address,
+            "total_documentos": len(docs),
+            "validos": validos, "a_expirar_em_breve": urgentes, "expirados": expirados,
+            "compliance_ok": expirados == 0,
         })
     return {"pilotos": resumo, "total": len(resumo)}
 
 
 @app.get("/demo/pilotos/{piloto_id}", tags=["Demo"])
-def demo_piloto_detalhe(piloto_id: str):
-    """Detalhe completo de um piloto com todos os seus documentos na blockchain."""
-    piloto = next((p for p in DEMO_PILOTOS if p["id"] == piloto_id), None)
-    if not piloto:
-        raise HTTPException(404, f"Piloto '{piloto_id}' não encontrado. IDs disponíveis: P001, P002, P003")
-    return piloto
+def demo_piloto_detalhe(piloto_id: str, db: Session = Depends(get_db)):
+    from datetime import date
+    pilot = db.query(Pilot).filter(Pilot.id == piloto_id).first()
+    if not pilot:
+        raise HTTPException(404, f"Piloto '{piloto_id}' não encontrado.")
+    today = date.today()
+    docs = []
+    for d in pilot.documents:
+        exp = date.fromisoformat(d.expires_at)
+        days = (exp - today).days
+        status = "expired" if days <= 0 else ("expiring_soon" if days <= 30 else "valid")
+        docs.append({
+            "tipo": d.doc_type, "descricao": d.description,
+            "hash": d.hash, "tx_blockchain": d.tx_blockchain,
+            "emitido_em": d.issued_at, "validade": d.expires_at,
+            "dias_restantes": days, "status": status,
+            "entidade_emissora": d.issuer,
+        })
+    return {"id": pilot.id, "nome": pilot.name, "cargo": pilot.role,
+            "carteira_ethereum": pilot.ethereum_address, "documentos": docs}
 
 
 @app.get("/demo/alertas", tags=["Demo"])
-def demo_alertas():
-    """Documentos urgentes de todos os pilotos — como apareceriam no dashboard diário."""
+def demo_alertas(db: Session = Depends(get_db)):
+    from datetime import date
+    today = date.today()
     alertas = []
-    for p in DEMO_PILOTOS:
-        for d in p["documentos"]:
-            if d["status"] in ("expiring_soon", "expired"):
-                alertas.append({
-                    "piloto":           p["nome"],
-                    "cargo":            p["cargo"],
-                    "documento":        d["descricao"],
-                    "tipo":             d["tipo"],
-                    "dias_restantes":   d["dias_restantes"],
-                    "status":           d["status"],
-                    "hash_blockchain":  d["hash"],
-                    "acao_necessaria":  "RENOVAR URGENTE" if d["status"] == "expired"
-                                        else f"Renovar em {d['dias_restantes']} dias",
-                })
+    for d in db.query(Document).all():
+        exp  = date.fromisoformat(d.expires_at)
+        days = (exp - today).days
+        if days > 30:
+            continue
+        status = "expired" if days <= 0 else "expiring_soon"
+        pilot  = db.query(Pilot).filter(Pilot.id == d.pilot_id).first()
+        alertas.append({
+            "piloto": pilot.name, "cargo": pilot.role,
+            "documento": d.description, "tipo": d.doc_type,
+            "dias_restantes": days, "status": status,
+            "hash_blockchain": d.hash,
+            "acao_necessaria": "RENOVAR URGENTE" if status == "expired"
+                               else f"Renovar em {days} dias",
+        })
     alertas.sort(key=lambda x: x["dias_restantes"])
-    return {
-        "total_alertas": len(alertas),
-        "alertas": alertas,
-        "nota": "Em produção, este endpoint é chamado diariamente e envia notificações push + email.",
-    }
+    return {"total_alertas": len(alertas), "alertas": alertas,
+            "nota": "Em produção, este endpoint é chamado diariamente."}
 
 
 @app.get("/demo/blockchain", tags=["Demo"])
