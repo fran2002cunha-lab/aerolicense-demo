@@ -1,3 +1,5 @@
+import os
+
 from sqlalchemy import Column, String, Integer, ForeignKey, create_engine
 from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
 
@@ -29,9 +31,12 @@ class Document(Base):
 _engine = None
 SessionLocal = None
 
-def init_db(url: str = "sqlite:///./aerolicense.db"):
+def init_db(url: str | None = None):
     global _engine, SessionLocal
-    _engine = create_engine(url, connect_args={"check_same_thread": False})
+    if url is None:
+        url = os.getenv("DATABASE_URL", "sqlite:///./aerolicense.db")
+    kwargs = {"connect_args": {"check_same_thread": False}} if url.startswith("sqlite") else {}
+    _engine = create_engine(url, **kwargs)
     Base.metadata.create_all(_engine)
     SessionLocal = sessionmaker(bind=_engine)
 
