@@ -14,16 +14,24 @@ echo "      Hardhat PID: $HARDHAT_PID"
 
 # Wait for node to be ready
 echo "      Waiting for node..."
+NODE_READY=0
 for i in $(seq 1 20); do
   if curl -s -X POST http://127.0.0.1:8545 \
     -H "Content-Type: application/json" \
     -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
     > /dev/null 2>&1; then
     echo "      Node ready."
+    NODE_READY=1
     break
   fi
   sleep 0.5
 done
+
+if [ "$NODE_READY" -eq 0 ]; then
+  echo "ERROR: Hardhat node did not start after 10s. Check /tmp/hardhat.log"
+  kill $HARDHAT_PID 2>/dev/null
+  exit 1
+fi
 
 # Deploy contract
 echo "[2/3] Deploying AeroLicenseRegistry..."
