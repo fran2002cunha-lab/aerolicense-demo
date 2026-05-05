@@ -35,6 +35,9 @@ def init_db(url: str | None = None):
     global _engine, SessionLocal
     if url is None:
         url = os.getenv("DATABASE_URL", "sqlite:///./aerolicense.db")
+    # Railway provides postgres:// but SQLAlchemy requires postgresql://
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
     kwargs = {"connect_args": {"check_same_thread": False}} if url.startswith("sqlite") else {}
     _engine = create_engine(url, **kwargs)
     Base.metadata.create_all(_engine)
