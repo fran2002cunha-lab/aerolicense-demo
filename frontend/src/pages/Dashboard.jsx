@@ -4,16 +4,26 @@ import { api } from '../api';
 import Spinner from '../components/Spinner';
 import ApiOfflineBanner from '../components/ApiOfflineBanner';
 
+const RISK_COLORS = { safe: '#27AE60', attention: '#F0A500', critical: '#E74C3C' };
+
 export default function Dashboard() {
-  const [pilots, setPilots] = useState([]);
+  const [pilots,  setPilots]  = useState([]);
+  const [riskMap, setRiskMap] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(false);
+  const [error,   setError]   = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.pilots()
-      .then(d => setPilots(d.pilotos))
-      .catch(() => setError(true))
+    Promise.allSettled([api.pilots(), api.riskScores()])
+      .then(([pilotsRes, riskRes]) => {
+        if (pilotsRes.status === 'fulfilled') setPilots(pilotsRes.value.pilotos);
+        else setError(true);
+        if (riskRes.status === 'fulfilled') {
+          const map = {};
+          riskRes.value.pilots.forEach(p => { map[p.pilot_id] = p; });
+          setRiskMap(map);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -43,6 +53,17 @@ export default function Dashboard() {
                 color: p.compliance_ok ? '#27AE60' : '#E74C3C' }}>
                 {p.compliance_ok ? '✔ Compliance OK' : '✖ Ação necessária'}
               </div>
+              {riskMap[p.id] && (
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{
+                    background: RISK_COLORS[riskMap[p.id].level],
+                    color: '#fff', fontWeight: 'bold', fontSize: 12,
+                    padding: '3px 10px', borderRadius: 20,
+                  }}>
+                    Risk Score: {riskMap[p.id].score}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}

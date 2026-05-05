@@ -1,7 +1,7 @@
 // AeroLicense — Componente React: Cartão de Documento
 // Mostra o estado de um documento e permite verificar autenticidade na blockchain
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
@@ -25,10 +25,19 @@ export default function DocumentCard({ document }) {
   const [verifying, setVerifying]     = useState(false);
   const [verification, setVerification] = useState(null);
   const [error, setError]             = useState(null);
+  const [showQr, setShowQr] = useState(false);
+  const [qrUrl, setQrUrl]   = useState(null);
+  const [qrLoading, setQrLoading] = useState(false);
 
   const { color, label, icon } = STATUS_CONFIG[document.status] || STATUS_CONFIG.valid;
   const daysLeft = document.days_until_expiry;
   const expiryDate = new Date(document.expires_at).toLocaleDateString("pt-PT");
+
+  useEffect(() => {
+    return () => {
+      if (qrUrl) URL.revokeObjectURL(qrUrl);
+    };
+  }, [qrUrl]);
 
   // Chama o backend que por sua vez consulta a blockchain
   async function verifyOnBlockchain() {
@@ -47,8 +56,36 @@ export default function DocumentCard({ document }) {
     }
   }
 
+  async function loadQr() {
+    if (qrUrl) { setShowQr(true); return; }
+    setQrLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/documents/qr/${document.hash}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      setQrUrl(URL.createObjectURL(blob));
+      setShowQr(true);
+    } catch {
+      setError('Não foi possível gerar o QR Code.');
+    } finally {
+      setQrLoading(false);
+    }
+  }
+
   return (
     <div style={styles.card}>
+
+      {showQr && (
+        <div style={styles.qrOverlay} onClick={() => setShowQr(false)}>
+          <div style={styles.qrBox} onClick={e => e.stopPropagation()}>
+            <p style={{ color: '#667788', fontSize: 12, marginTop: 0, marginBottom: 8 }}>
+              Digitalize para verificar na blockchain
+            </p>
+            {qrUrl && <img src={qrUrl} alt="QR Code" style={{ width: 180, height: 180 }} />}
+            <button onClick={() => setShowQr(false)} style={styles.qrClose}>Fechar</button>
+          </div>
+        </div>
+      )}
 
       {/* Barra colorida de estado */}
       <div style={{ ...styles.statusBar, backgroundColor: color }} />
@@ -94,13 +131,23 @@ export default function DocumentCard({ document }) {
       </div>
 
       {/* Botão de verificação na blockchain */}
-      <button
-        onClick={verifyOnBlockchain}
-        disabled={verifying}
-        style={{ ...styles.button, opacity: verifying ? 0.6 : 1 }}
-      >
-        {verifying ? "A verificar na blockchain..." : "🔗 Verificar na Blockchain"}
-      </button>
+      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <button
+          onClick={verifyOnBlockchain}
+          disabled={verifying}
+          style={{ ...styles.button, flex: 1, marginTop: 0, opacity: verifying ? 0.6 : 1 }}
+        >
+          {verifying ? 'A verificar...' : '🔗 Verificar Blockchain'}
+        </button>
+        <button
+          onClick={loadQr}
+          disabled={qrLoading}
+          style={{ ...styles.button, width: 48, flex: 'none', marginTop: 0, opacity: qrLoading ? 0.6 : 1 }}
+          title="Gerar QR Code"
+        >
+          {qrLoading ? '⏳' : '📱'}
+        </button>
+      </div>
 
       {/* Resultado da verificação */}
       {verification && (
@@ -172,4 +219,17 @@ const styles = {
   },
   txNote: { margin: "6px 0 0", color: "#AABBCC", fontSize: 12 },
   errorBox: { marginTop: 10, padding: 10, background: "#2C0A0A", borderRadius: 8 },
+  qrOverlay: {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(0,0,0,0.75)', zIndex: 1000,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  qrBox: {
+    background: '#fff', borderRadius: 12, padding: '24px 28px',
+    textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+  },
+  qrClose: {
+    marginTop: 12, padding: '8px 24px', background: '#0A1F44',
+    border: 'none', borderRadius: 8, color: '#fff', fontWeight: 'bold', cursor: 'pointer',
+  },
 };

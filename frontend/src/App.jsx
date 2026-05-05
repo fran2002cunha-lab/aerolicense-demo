@@ -1,11 +1,13 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Header     from './components/Header';
 import Sidebar    from './components/Sidebar';
+import ChatPanel  from './components/ChatPanel';
 import Dashboard      from './pages/Dashboard';
 import PilotDetail    from './pages/PilotDetail';
 import UploadPage     from './pages/UploadPage';
 import AlertsPage     from './pages/AlertsPage';
 import BlockchainDemo from './pages/BlockchainDemo';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 export default function App() {
   return (
@@ -21,10 +23,12 @@ export default function App() {
               <Route path="/pilots/:id/upload"     element={<UploadPage />} />
               <Route path="/alerts"                element={<AlertsPage />} />
               <Route path="/blockchain"            element={<BlockchainDemo />} />
+              <Route path="/analytics"             element={<AnalyticsPage />} />
             </Routes>
           </main>
         </div>
       </div>
+      <ChatPanel />
     </HashRouter>
   );
 }

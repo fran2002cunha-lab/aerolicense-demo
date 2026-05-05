@@ -10,17 +10,22 @@ Fluxo principal:
 """
 
 import hashlib
+import io
 import os
+import re
 from datetime import datetime, timedelta, date
 from typing import Optional
 
+import qrcode
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from web3 import Web3
 import database
 from database import init_db, get_db, seed_demo_data, Pilot, Document
+from risk import compute_pilot_score
 
 # ── App ────────────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -49,6 +54,7 @@ def startup():
 BLOCKCHAIN_URL   = os.getenv("BLOCKCHAIN_URL", "http://127.0.0.1:8545")
 CONTRACT_ADDRESS = os.getenv("CONTRACT_ADDRESS", "")
 PRIVATE_KEY      = os.getenv("PRIVATE_KEY", "")
+PUBLIC_BASE_URL  = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000")
 
 w3 = Web3(Web3.HTTPProvider(BLOCKCHAIN_URL))
 
@@ -175,6 +181,9 @@ class VerifyResponse(BaseModel):
     is_expired: bool
     expires_at: Optional[datetime]
     message: str
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=500)
 
 # ── Helper: calcular SHA-256 ───────────────────────────────────────────────
 def sha256_file(data: bytes) -> bytes:
@@ -336,6 +345,26 @@ def get_expiring_documents(days: int = 30):
     }
 
 
+@app.get("/documents/qr/{doc_hash}", tags=["Documentos"])
+def get_document_qr(doc_hash: str):
+    """
+    Gera um QR Code que qualquer entidade pode escanear para verificar
+    a autenticidade do documento diretamente na blockchain.
+    """
+    if not re.match(r'^0x[0-9a-fA-F]{64}$', doc_hash):
+        raise HTTPException(400, "Hash inválido. Formato esperado: 0x seguido de 64 caracteres hexadecimais.")
+
+    verify_url = f"{PUBLIC_BASE_URL}/documents/verify/{doc_hash}"
+    qr = qrcode.QRCode(box_size=10, border=4)
+    qr.add_data(verify_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return Response(content=buf.getvalue(), media_type="image/png")
+
+
 # ══════════════════════════════════════════════════════════════════════════
 # DEMO ENDPOINTS — backed by SQLite via SQLAlchemy
 # ══════════════════════════════════════════════════════════════════════════
@@ -438,3 +467,259 @@ def demo_blockchain():
                      "Qualquer alteração ao documento — mesmo 1 caracter — "
                      "produz um hash completamente diferente e a falsificação é detetada.",
     }
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# ANALYTICS ENDPOINTS
+# ══════════════════════════════════════════════════════════════════════════
+
+@app.get("/analytics/summary", tags=["Analytics"])
+def analytics_summary(db: Session = Depends(get_db)):
+    """KPIs globais: total de pilotos, documentos, taxa de conformidade."""
+    today  = date.today()
+    pilots = db.query(Pilot).all()
+    docs   = db.query(Document).all()
+
+    expired     = 0
+    expiring_30 = 0
+    valid       = 0
+    for d in docs:
+        exp  = date.fromisoformat(d.expires_at)
+        days = (exp - today).days
+        if days <= 0:
+            expired += 1
+        elif days <= 30:
+            expiring_30 += 1
+        else:
+            valid += 1
+
+    compliant = sum(
+        1 for p in pilots
+        if p.documents and all((date.fromisoformat(d.expires_at) - today).days > 0 for d in p.documents)
+    )
+
+    return {
+        "total_pilots":     len(pilots),
+        "total_documents":  len(docs),
+        "valid":            valid,
+        "expiring_soon":    expiring_30,
+        "expired":          expired,
+        "compliance_rate":  round(compliant / len(pilots) * 100, 1) if pilots else 0.0,
+        "compliant_pilots": compliant,
+    }
+
+
+@app.get("/analytics/monthly", tags=["Analytics"])
+def analytics_monthly(db: Session = Depends(get_db)):
+    """Número de documentos a expirar por mês nos próximos 12 meses."""
+    today = date.today()
+    docs  = db.query(Document).all()
+
+    months = {}
+    for i in range(12):
+        total_months = today.month - 1 + i
+        year  = today.year + total_months // 12
+        month = total_months % 12 + 1
+        key   = f"{year}-{month:02d}"
+        months[key] = 0
+
+    for d in docs:
+        key = d.expires_at[:7]  # "YYYY-MM"
+        if key in months:
+            months[key] += 1
+
+    return [{"month": k, "count": v} for k, v in months.items()]
+
+
+@app.get("/analytics/distribution", tags=["Analytics"])
+def analytics_distribution(db: Session = Depends(get_db)):
+    """Contagem de documentos por tipo."""
+    docs   = db.query(Document).all()
+    counts: dict = {}
+    for d in docs:
+        counts[d.doc_type] = counts.get(d.doc_type, 0) + 1
+    return [{"type": k, "count": v} for k, v in counts.items()]
+
+
+@app.get("/analytics/anomalies", tags=["Analytics"])
+def analytics_anomalies(db: Session = Depends(get_db)):
+    """
+    Detecção de anomalias com ML (scikit-learn IsolationForest).
+    Analisa padrões de emissão, validade e emissor para identificar documentos suspeitos.
+    """
+    import sys as _sys
+    import os as _os
+    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    from anomaly import detect_anomalies
+
+    docs = db.query(Document).all()
+    doc_dicts = [
+        {
+            "id":          d.id,
+            "pilot_id":    d.pilot_id,
+            "doc_type":    d.doc_type,
+            "description": d.description,
+            "hash":        d.hash,
+            "issued_at":   d.issued_at,
+            "expires_at":  d.expires_at,
+            "issuer":      d.issuer,
+        }
+        for d in docs
+    ]
+    detected = detect_anomalies(doc_dicts)
+    return {"total": len(detected), "anomalies": detected}
+
+
+@app.get("/analytics/risk-scores", tags=["Analytics"])
+def analytics_risk_scores(db: Session = Depends(get_db)):
+    """
+    Score de risco 0-100 por piloto, combinando documentos expirados,
+    a expirar e anomalias ML do IsolationForest.
+    """
+    import sys as _sys, os as _os
+    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    from anomaly import detect_anomalies
+
+    pilots = db.query(Pilot).all()
+    all_docs = db.query(Document).all()
+
+    all_doc_dicts = [
+        {
+            "id": d.id, "pilot_id": d.pilot_id, "doc_type": d.doc_type,
+            "description": d.description, "hash": d.hash,
+            "issued_at": d.issued_at, "expires_at": d.expires_at, "issuer": d.issuer,
+        }
+        for d in all_docs
+    ]
+    anomalies        = detect_anomalies(all_doc_dicts)
+    anomalous_hashes = {a["hash"] for a in anomalies}
+
+    results = []
+    for p in pilots:
+        pilot_docs = [
+            {"hash": d.hash, "expires_at": d.expires_at, "description": d.description}
+            for d in p.documents
+        ]
+        score_data = compute_pilot_score(pilot_docs, anomalous_hashes)
+        results.append({
+            "pilot_id":   p.id,
+            "pilot_name": p.name,
+            "pilot_role": p.role,
+            **score_data,
+        })
+
+    results.sort(key=lambda x: x["score"])
+    return {"pilots": results}
+
+
+@app.post("/chat", tags=["Chat IA"])
+def chat(req: ChatRequest, db: Session = Depends(get_db)):
+    """
+    Chatbot NLP com OpenAI function calling.
+    Responde em português a perguntas sobre conformidade documental de pilotos.
+    Funciona em modo demo (sem OPENAI_API_KEY) com respostas pré-definidas.
+    """
+    import sys as _sys, os as _os
+    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    from chat import run_chat
+    from anomaly import detect_anomalies
+    from risk import compute_pilot_score
+
+    today = date.today()
+
+    def _get_pilots_summary():
+        pilots = db.query(Pilot).all()
+        return [
+            {
+                "id": p.id, "nome": p.name, "cargo": p.role,
+                "total_docs": len(p.documents),
+                "expirados":  sum(1 for d in p.documents if (date.fromisoformat(d.expires_at) - today).days <= 0),
+                "a_expirar":  sum(1 for d in p.documents if 0 < (date.fromisoformat(d.expires_at) - today).days <= 30),
+                "compliance_ok": p.documents and all((date.fromisoformat(d.expires_at) - today).days > 0 for d in p.documents),
+            }
+            for p in pilots
+        ]
+
+    def _get_expiring_documents(days: int = 30):
+        docs = db.query(Document).all()
+        pilots_map = {p.id: p for p in db.query(Pilot).all()}
+        result = []
+        for d in docs:
+            days_left = (date.fromisoformat(d.expires_at) - today).days
+            if days_left <= days:
+                pilot = pilots_map.get(d.pilot_id)
+                result.append({
+                    "piloto": pilot.name if pilot else d.pilot_id,
+                    "documento": d.description,
+                    "tipo": d.doc_type,
+                    "dias_restantes": days_left,
+                    "status": "expired" if days_left <= 0 else "expiring_soon",
+                })
+        return sorted(result, key=lambda x: x["dias_restantes"])
+
+    def _get_pilot_detail(pilot_id: str):
+        pilot = db.query(Pilot).filter(Pilot.id == pilot_id).first()
+        if not pilot:
+            return {"error": f"Piloto {pilot_id} não encontrado"}
+        return {
+            "nome": pilot.name, "cargo": pilot.role,
+            "documentos": [
+                {
+                    "tipo": d.doc_type, "descricao": d.description,
+                    "validade": d.expires_at,
+                    "dias_restantes": (date.fromisoformat(d.expires_at) - today).days,
+                    "status": "expired" if (date.fromisoformat(d.expires_at) - today).days <= 0
+                              else ("expiring_soon" if (date.fromisoformat(d.expires_at) - today).days <= 30 else "valid"),
+                }
+                for d in pilot.documents
+            ],
+        }
+
+    def _get_risk_scores():
+        pilots = db.query(Pilot).all()
+        all_docs = [
+            {"id": d.id, "pilot_id": d.pilot_id, "doc_type": d.doc_type,
+             "description": d.description, "hash": d.hash,
+             "issued_at": d.issued_at, "expires_at": d.expires_at, "issuer": d.issuer}
+            for p in pilots for d in p.documents
+        ]
+        anomalies = detect_anomalies(all_docs)
+        anomalous_hashes = {a["hash"] for a in anomalies}
+        return [
+            {
+                "piloto": p.name,
+                **compute_pilot_score(
+                    [{"hash": d.hash, "expires_at": d.expires_at, "description": d.description} for d in p.documents],
+                    anomalous_hashes,
+                ),
+            }
+            for p in pilots
+        ]
+
+    def _get_anomalies():
+        all_docs = [
+            {"id": d.id, "pilot_id": d.pilot_id, "doc_type": d.doc_type,
+             "description": d.description, "hash": d.hash,
+             "issued_at": d.issued_at, "expires_at": d.expires_at, "issuer": d.issuer}
+            for d in db.query(Document).all()
+        ]
+        anomalies = detect_anomalies(all_docs)
+        return {
+            "total": len(anomalies),
+            "anomalias": [
+                {"piloto": a["pilot_id"], "documento": a["description"],
+                 "score": a["anomaly_score"], "razoes": a["reasons"]}
+                for a in anomalies
+            ],
+        }
+
+    db_tools = {
+        "get_pilots_summary":     _get_pilots_summary,
+        "get_expiring_documents": _get_expiring_documents,
+        "get_pilot_detail":       _get_pilot_detail,
+        "get_risk_scores":        _get_risk_scores,
+        "get_anomalies":          _get_anomalies,
+    }
+
+    response_text = run_chat(req.message, db_tools)
+    return {"response": response_text}

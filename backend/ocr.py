@@ -15,6 +15,9 @@ import re
 import hashlib
 from datetime import datetime
 from typing import Optional
+import os
+import base64
+import json
 
 try:
     import pytesseract
@@ -96,49 +99,108 @@ def _extract_with_regex(text: str) -> dict:
 
     return result
 
+def _ai_ocr(image_bytes: bytes, filename: str, file_hash: str) -> dict | None:
+    """
+    Extrai dados de documentos aeronáuticos usando OpenAI Vision (GPT-4o-mini).
+    Requer OPENAI_API_KEY no ambiente. Devolve None se a chave não estiver definida.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return None
+
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key)
+
+        ext  = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpeg"
+        mime = "image/png" if ext == "png" else "image/jpeg"
+        b64  = base64.b64encode(image_bytes).decode()
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": (
+                            "You are an aviation document analyser. "
+                            "Extract from this document: pilot name, license number "
+                            "(format PT.FCL.X.XXXXXX or similar), expiry date (ISO YYYY-MM-DD), "
+                            "and document type (one of: ATPL, MEDICAL_CLASS1, ICAO_ENGLISH, "
+                            "TYPE_RATING, CRM_TRAINING, OTHER). "
+                            "Reply ONLY with valid JSON, no markdown: "
+                            '{\"pilot_name\": \"...\", \"license_number\": \"...\", '
+                            '\"expiry_date\": \"...\", \"doc_type\": \"...\"}'
+                        ),
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:{mime};base64,{b64}"},
+                    },
+                ],
+            }],
+            max_tokens=200,
+        )
+
+        raw  = response.choices[0].message.content.strip()
+        data = json.loads(raw)
+
+        return {
+            "pilot_name":     data.get("pilot_name"),
+            "license_number": data.get("license_number"),
+            "expiry_date":    data.get("expiry_date"),
+            "doc_type":       data.get("doc_type", "OTHER"),
+            "raw_text":       raw,
+            "sha256":         file_hash,
+            "confidence":     "high",
+            "ocr_available":  True,
+            "fields_found":   sum(1 for v in data.values() if v),
+            "ai_model":       "gpt-4o-mini",
+        }
+    except Exception as e:
+        return {"_ai_error": str(e)}
+
 def extract_from_image(image_bytes: bytes, filename: str = "") -> dict:
     """
-    Extrai dados de um documento a partir de uma imagem (JPG/PNG/PDF).
-
-    Retorna:
-      - pilot_name: nome extraído (ou None)
-      - license_number: número da licença (ou None)
-      - expiry_date: data de validade em ISO 8601 (ou None)
-      - doc_type: tipo detetado
-      - raw_text: texto bruto extraído (para debug)
-      - sha256: hash do ficheiro original
-      - confidence: "high" | "medium" | "low"
-      - ocr_available: se o OCR estava disponível
+    Extrai dados de um documento aeronáutico.
+    Ordem de preferência: OpenAI Vision → Tesseract OCR → demo fallback.
     """
     file_hash = "0x" + hashlib.sha256(image_bytes).hexdigest()
 
-    if not OCR_AVAILABLE:
-        # Fallback demo quando Tesseract não está instalado
-        return _demo_fallback(filename, file_hash)
+    # 1. Tentar OpenAI Vision (requer OPENAI_API_KEY)
+    ai_result = _ai_ocr(image_bytes, filename, file_hash)
+    if ai_result and "_ai_error" not in ai_result:
+        return ai_result
 
-    try:
-        image    = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        raw_text = pytesseract.image_to_string(image, lang="eng")
-        extracted = _extract_with_regex(raw_text)
-        doc_type  = _detect_doc_type(raw_text)
+    # 2. Tentar Tesseract local
+    if OCR_AVAILABLE:
+        try:
+            image    = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+            raw_text = pytesseract.image_to_string(image, lang="eng")
+            extracted = _extract_with_regex(raw_text)
+            doc_type  = _detect_doc_type(raw_text)
+            found = sum(1 for v in extracted.values() if v)
+            confidence = "high" if found == 3 else ("medium" if found >= 1 else "low")
+            return {
+                "pilot_name":     extracted["pilot_name"],
+                "license_number": extracted["license_number"],
+                "expiry_date":    extracted["expiry_date"],
+                "doc_type":       doc_type,
+                "raw_text":       raw_text[:500] + "..." if len(raw_text) > 500 else raw_text,
+                "sha256":         file_hash,
+                "confidence":     confidence,
+                "ocr_available":  True,
+                "fields_found":   found,
+            }
+        except Exception as e:
+            return {**_demo_fallback(filename, file_hash), "error": str(e)}
 
-        # Nível de confiança baseado em quantos campos foram encontrados
-        found = sum(1 for v in extracted.values() if v)
-        confidence = "high" if found == 3 else ("medium" if found >= 1 else "low")
-
-        return {
-            "pilot_name":     extracted["pilot_name"],
-            "license_number": extracted["license_number"],
-            "expiry_date":    extracted["expiry_date"],
-            "doc_type":       doc_type,
-            "raw_text":       raw_text[:500] + "..." if len(raw_text) > 500 else raw_text,
-            "sha256":         file_hash,
-            "confidence":     confidence,
-            "ocr_available":  True,
-            "fields_found":   found,
-        }
-    except Exception as e:
-        return {**_demo_fallback(filename, file_hash), "error": str(e)}
+    # 3. Demo fallback
+    result = _demo_fallback(filename, file_hash)
+    if ai_result and "_ai_error" in ai_result:
+        result["ai_error"] = ai_result["_ai_error"]
+    return result
 
 def _demo_fallback(filename: str, file_hash: str) -> dict:
     """Resultado simulado para demonstração sem Tesseract."""

@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom';
 
 const links = [
-  { to: '/',            label: '👨‍✈️ Pilotos' },
-  { to: '/alerts',      label: '🔔 Alertas' },
-  { to: '/blockchain',  label: '⛓ Blockchain Demo' },
+  { to: '/',           label: '👨‍✈️ Pilotos' },
+  { to: '/alerts',     label: '🔔 Alertas' },
+  { to: '/analytics',  label: '📊 Analytics' },
+  { to: '/blockchain', label: '⛓ Blockchain' },
 ];
 
 export default function Sidebar() {
