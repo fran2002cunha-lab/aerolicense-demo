@@ -1,0 +1,11 @@
+backend/venv/
+backend/aerolicense.db
+backend/.env
+smart_contract/node_modules/
+smart_contract/artifacts/
+smart_contract/cache/
+frontend/node_modules/
+frontend/build/
+.DS_Store
+__pycache__/
+*.pyc
