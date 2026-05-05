@@ -20,7 +20,7 @@ export default function Header() {
           <div style={{ ...s.dot, background: online ? '#27AE60' : '#E74C3C',
             boxShadow: online ? '0 0 6px #27AE60' : 'none' }} />
           <span style={{ color: '#AABBCC', fontSize: 12 }}>
-            {online === null ? 'A ligar...' : online ? `API online · ${mode}` : 'API offline'}
+            {online === null ? 'A ligar...' : online ? `API online${mode ? ` · ${mode}` : ''}` : 'API offline'}
           </span>
         </div>
       </div>
