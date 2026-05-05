@@ -71,14 +71,34 @@ if CONTRACT_ADDRESS and CONTRACT_ADDRESS != "0xYourContractAddressHere":
             "type": "function",
         },
         {
+            "inputs": [
+                {"name": "_oldHash",   "type": "bytes32"},
+                {"name": "_newHash",   "type": "bytes32"},
+                {"name": "_desc",      "type": "string"},
+                {"name": "_newExpiry", "type": "uint256"},
+            ],
+            "name": "renewDocument",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function",
+        },
+        {
             "inputs": [{"name": "_hash", "type": "bytes32"}],
             "name": "verifyDocument",
             "outputs": [
                 {"name": "valid",     "type": "bool"},
                 {"name": "expired",   "type": "bool"},
                 {"name": "expiresAt", "type": "uint256"},
+                {"name": "issuedBy",  "type": "address"},
             ],
             "stateMutability": "view",
+            "type": "function",
+        },
+        {
+            "inputs": [{"name": "_hash", "type": "bytes32"}],
+            "name": "revokeDocument",
+            "outputs": [],
+            "stateMutability": "nonpayable",
             "type": "function",
         },
         {
@@ -92,6 +112,35 @@ if CONTRACT_ADDRESS and CONTRACT_ADDRESS != "0xYourContractAddressHere":
             "inputs": [{"name": "_pilot", "type": "address"}],
             "name": "getDocumentsByPilot",
             "outputs": [{"name": "", "type": "bytes32[]"}],
+            "stateMutability": "view",
+            "type": "function",
+        },
+        {
+            "inputs": [
+                {"name": "_pilot",         "type": "address"},
+                {"name": "_licenseNumber", "type": "string"},
+                {"name": "_licenseType",   "type": "uint8"},
+                {"name": "_expiresAt",     "type": "uint256"},
+            ],
+            "name": "issueLicense",
+            "outputs": [{"name": "tokenId", "type": "uint256"}],
+            "stateMutability": "nonpayable",
+            "type": "function",
+        },
+        {
+            "inputs": [
+                {"name": "_pilot", "type": "address"},
+                {"name": "_did",   "type": "string"},
+            ],
+            "name": "registerDID",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function",
+        },
+        {
+            "inputs": [{"name": "_pilot", "type": "address"}],
+            "name": "resolveDID",
+            "outputs": [{"name": "", "type": "string"}],
             "stateMutability": "view",
             "type": "function",
         },
@@ -252,7 +301,7 @@ def verify_document(doc_hash: str):
         )
     try:
         hash_bytes                    = bytes.fromhex(doc_hash.replace("0x", ""))
-        valid, expired, expires_ts    = contract.functions.verifyDocument(hash_bytes).call()
+        valid, expired, expires_ts, issued_by = contract.functions.verifyDocument(hash_bytes).call()
     except Exception as e:
         raise HTTPException(404, f"Documento não encontrado na blockchain: {str(e)}")
 
