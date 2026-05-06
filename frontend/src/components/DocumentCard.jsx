@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { c, statusColor, statusLabel } from '../theme';
 
-const API_URL = process.env.NODE_ENV === 'development'
-  ? (process.env.REACT_APP_API_URL || 'http://localhost:8000')
-  : '/api/backend';
+const isDev = process.env.NODE_ENV === 'development';
+const DEV_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const apiUrl = (path) => isDev ? `${DEV_URL}${path}` : `/api/proxy?p=${encodeURIComponent(path)}`;
 
 const DOC_TYPE_LABELS = {
   ATPL: 'Licença ATPL', MEDICAL_CLASS1: 'Médico Classe 1', ICAO_ENGLISH: 'Proficiência ICAO',
@@ -28,7 +28,7 @@ export default function DocumentCard({ document }) {
   async function verifyOnBlockchain() {
     setVerifying(true); setVerification(null); setVerifyError(null);
     try {
-      const res  = await fetch(`${API_URL}/documents/verify/${document.hash}`);
+      const res  = await fetch(apiUrl(`/documents/verify/${document.hash}`));
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail);
       setVerification(data);
@@ -40,7 +40,7 @@ export default function DocumentCard({ document }) {
     if (qrUrl) { setShowQr(true); return; }
     setQrLoading(true);
     try {
-      const res  = await fetch(`${API_URL}/documents/qr/${document.hash}`);
+      const res  = await fetch(apiUrl(`/documents/qr/${document.hash}`));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setQrUrl(URL.createObjectURL(await res.blob()));
       setShowQr(true);

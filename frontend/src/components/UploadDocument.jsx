@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { c } from '../theme';
 
-const API_URL = process.env.NODE_ENV === 'development'
-  ? (process.env.REACT_APP_API_URL || 'http://localhost:8000')
-  : '/api/backend';
+const isDev = process.env.NODE_ENV === 'development';
+const DEV_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const apiUrl = (path) => isDev ? `${DEV_URL}${path}` : `/api/proxy?p=${encodeURIComponent(path)}`;
 
 const DOC_TYPES = [
   { value: "ATPL",           label: "Licença ATPL" },
@@ -43,7 +43,7 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
     });
 
     try {
-      const res  = await fetch(`${API_URL}/documents/upload?${params}`, {
+      const res  = await fetch(apiUrl(`/documents/upload?${params}`), {
         method: "POST",
         body:   form,
       });

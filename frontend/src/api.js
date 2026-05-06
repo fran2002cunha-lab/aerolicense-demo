@@ -1,12 +1,16 @@
-const BASE = process.env.NODE_ENV === 'development'
-  ? (process.env.REACT_APP_API_URL || 'http://localhost:8000')
-  : '/api/backend';
+const isDev = process.env.NODE_ENV === 'development';
+const DEV_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
+function proxyUrl(path) {
+  if (isDev) return `${DEV_BASE}${path}`;
+  return `/api/proxy?p=${encodeURIComponent(path)}`;
+}
 
 async function request(path) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const res = await fetch(`${BASE}${path}`, { signal: controller.signal });
+    const res = await fetch(proxyUrl(path), { signal: controller.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   } catch (err) {
@@ -33,7 +37,7 @@ export const api = {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 10000);
     try {
-      const res = await fetch(`${BASE}/chat`, {
+      const res = await fetch(proxyUrl('/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, history }),
