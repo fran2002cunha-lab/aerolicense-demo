@@ -3,27 +3,39 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import Spinner from '../components/Spinner';
 import ApiOfflineBanner from '../components/ApiOfflineBanner';
+import { c, riskColor, pilotStatusBadge } from '../theme';
 
-const RISK_COLORS = { safe: '#27AE60', attention: '#F0A500', critical: '#E74C3C' };
+function StatCard({ label, value, color }) {
+  return (
+    <div style={{ background: c.bgSurface, border: `1px solid ${c.border}`,
+      borderRadius: 12, padding: '16px 20px', flex: 1, minWidth: 120 }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: c.textMuted,
+        textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 26, fontWeight: 800, color: color || c.text, lineHeight: 1 }}>{value ?? '—'}</div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
-  const [pilots,  setPilots]  = useState([]);
-  const [riskMap, setRiskMap] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(false);
-  const [search,  setSearch]  = useState('');
+  const [pilots,   setPilots]   = useState([]);
+  const [riskMap,  setRiskMap]  = useState({});
+  const [summary,  setSummary]  = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(false);
+  const [search,   setSearch]   = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    Promise.allSettled([api.pilots(), api.riskScores()])
-      .then(([pilotsRes, riskRes]) => {
-        if (pilotsRes.status === 'fulfilled') setPilots(pilotsRes.value.pilotos);
+    Promise.allSettled([api.pilots(), api.riskScores(), api.analyticsSummary()])
+      .then(([pRes, rRes, sRes]) => {
+        if (pRes.status === 'fulfilled') setPilots(pRes.value.pilotos);
         else setError(true);
-        if (riskRes.status === 'fulfilled') {
+        if (rRes.status === 'fulfilled') {
           const map = {};
-          riskRes.value.pilots.forEach(p => { map[p.pilot_id] = p; });
+          rRes.value.pilots.forEach(p => { map[p.pilot_id] = p; });
           setRiskMap(map);
         }
+        if (sRes.status === 'fulfilled') setSummary(sRes.value);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -38,67 +50,100 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h2 style={s.heading}>👨‍✈️ Pilotos Registados</h2>
-      <input
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        placeholder="Pesquisar piloto ou função..."
-        style={{ width: '100%', padding: '10px 14px', marginBottom: 20,
-          background: '#1A3F7A', border: '1px solid #2A4F8A',
-          borderRadius: 8, color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-      />
-      <div style={s.grid}>
-        {filtered.map(p => (
-          <div key={p.id} style={s.card} onClick={() => navigate(`/pilots/${p.id}`)}>
-            <div style={s.cardTop}>
-              <div style={s.name}>{p.nome}</div>
-              <div style={s.role}>{p.cargo}</div>
-              <div style={s.wallet}>{p.carteira_ethereum}</div>
-            </div>
-            <div style={s.cardBody}>
-              <div style={s.stats}>
-                <span style={{ ...s.stat, ...s.valid }}>✅ {p.validos} válidos</span>
-                {p.a_expirar_em_breve > 0 &&
-                  <span style={{ ...s.stat, ...s.expiring }}>⚠️ {p.a_expirar_em_breve} a expirar</span>}
-                {p.expirados > 0 &&
-                  <span style={{ ...s.stat, ...s.expired }}>❌ {p.expirados} expirados</span>}
-              </div>
-              <div style={{ fontSize: 12, marginTop: 10, fontWeight: 'bold',
-                color: p.compliance_ok ? '#27AE60' : '#E74C3C' }}>
-                {p.compliance_ok ? '✔ Compliance OK' : '✖ Ação necessária'}
-              </div>
-              {riskMap[p.id] && (
-                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{
-                    background: RISK_COLORS[riskMap[p.id].level],
-                    color: '#fff', fontWeight: 'bold', fontSize: 12,
-                    padding: '3px 10px', borderRadius: 20,
-                  }}>
-                    Risk Score: {riskMap[p.id].score}
+      {/* Page header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: c.text }}>Pilotos Registados</div>
+          <div style={{ fontSize: 13, color: c.textMuted, marginTop: 2 }}>
+            {pilots.length} profissionais · {summary?.total_documents ?? '—'} documentos geridos
+          </div>
+        </div>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Pesquisar piloto ou função..."
+          style={{ background: c.bgSurface, border: `1px solid ${c.border}`, borderRadius: 8,
+            padding: '8px 14px', color: c.text, fontSize: 13, width: 240,
+            outline: 'none', fontFamily: 'Inter, sans-serif' }}
+        />
+      </div>
+
+      {/* KPI row */}
+      {summary && (
+        <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+          <StatCard label="Total Pilotos"  value={summary.total_pilots} />
+          <StatCard label="Docs Válidos"   value={summary.valid}           color={c.green} />
+          <StatCard label="Expirados"      value={summary.expired}         color={c.red} />
+          <StatCard label="Compliance"     value={`${summary.compliance_rate}%`} color={c.amber} />
+        </div>
+      )}
+
+      {/* Pilot grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px,1fr))', gap: 16 }}>
+        {filtered.map(p => {
+          const risk = riskMap[p.id];
+          const badge = pilotStatusBadge(p.compliance_ok, p.expirados);
+          return (
+            <div key={p.id} onClick={() => navigate(`/pilots/${p.id}`)}
+              style={{ background: c.bgSurface, border: `1px solid ${c.border}`, borderRadius: 14,
+                overflow: 'hidden', cursor: 'pointer', transition: 'border-color .2s, transform .2s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = c.primary; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = c.border; e.currentTarget.style.transform = 'none'; }}
+            >
+              {/* Card top */}
+              <div style={{ padding: '18px 20px', borderBottom: `1px solid ${c.border}`,
+                display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: c.text }}>{p.nome}</div>
+                  <div style={{ fontSize: 11, color: c.textMuted, marginTop: 3, fontWeight: 500 }}>{p.cargo}</div>
+                  <div style={{ fontSize: 9, color: c.textDim, marginTop: 8, fontFamily: 'monospace' }}>
+                    {p.carteira_ethereum.slice(0,6)}...{p.carteira_ethereum.slice(-4)}
                   </div>
                 </div>
-              )}
+                <div style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
+                  whiteSpace: 'nowrap', background: `${badge.color}18`,
+                  color: badge.color, border: `1px solid ${badge.color}44` }}>
+                  {badge.label}
+                </div>
+              </div>
+
+              {/* Card body */}
+              <div style={{ padding: '16px 20px' }}>
+                {/* Mini stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 14 }}>
+                  {[
+                    { num: p.expirados,         color: c.red,   lbl: 'Expirados' },
+                    { num: p.a_expirar_em_breve, color: c.amber, lbl: 'A expirar' },
+                    { num: p.validos,            color: c.green, lbl: 'Válidos' },
+                  ].map(({ num, color, lbl }) => (
+                    <div key={lbl} style={{ background: c.bgElevated, borderRadius: 8, padding: 8, textAlign: 'center' }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, lineHeight: 1, color }}>{num}</div>
+                      <div style={{ fontSize: 9, color: c.textMuted, marginTop: 3, fontWeight: 500 }}>{lbl}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Risk score */}
+                {risk && (
+                  <div style={{ background: c.bgElevated, borderRadius: 8, padding: '8px 12px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 11, color: c.textMuted, fontWeight: 500 }}>Risk Score</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 80, height: 4, background: c.border, borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ width: `${risk.score}%`, height: '100%',
+                          background: riskColor[risk.level], borderRadius: 2 }} />
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: riskColor[risk.level] }}>
+                        {risk.score}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
-
-const s = {
-  heading: { color: '#F0A500', marginBottom: 20, fontSize: 18 },
-  grid:    { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 },
-  card:    { background: '#1A3F7A', borderRadius: 12, overflow: 'hidden', cursor: 'pointer',
-    border: '1px solid #2A4F8A', transition: 'transform 0.2s, border-color 0.2s' },
-  cardTop:  { background: '#0A1F44', padding: '16px 20px', borderBottom: '3px solid #0087CC' },
-  name:     { fontSize: 16, fontWeight: 'bold', color: '#fff' },
-  role:     { fontSize: 12, color: '#0087CC', marginTop: 4 },
-  wallet:   { fontSize: 10, color: '#667788', marginTop: 6, fontFamily: 'monospace' },
-  cardBody: { padding: '14px 20px' },
-  stats:    { display: 'flex', gap: 8, flexWrap: 'wrap' },
-  stat:     { padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 'bold' },
-  valid:    { background: '#1a4a2a', color: '#27AE60' },
-  expiring: { background: '#4a3a0a', color: '#F0A500' },
-  expired:  { background: '#4a0a0a', color: '#E74C3C' },
-};
