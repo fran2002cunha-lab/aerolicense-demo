@@ -91,7 +91,7 @@ const TECH_PILLS = [
 function HeroBanner() {
   return (
     <div style={{
-      background: c.bgSurface,
+      background: c.bgCard,
       border: `1px solid ${c.border}`,
       borderLeft: `3px solid ${c.primary}`,
       borderRadius: 12,
