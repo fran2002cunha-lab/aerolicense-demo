@@ -118,17 +118,163 @@ DEMO_PILOTS_RAW = [
              "issuer": "easyJet Training Academy"},
         ],
     },
+    # ── Novos pilotos ────────────────────────────────────────────────────────
+    {
+        "id": "P004", "name": "Sofia Andrade",
+        "role": "Captain — Wizz Air",
+        "ethereum_address": "0x2Fc4550b8E409462c9bF22D5A4061B4260aeE5F7",
+        "documents": [
+            {"doc_type": "ATPL",           "description": "Licença ATPL — ANAC Portugal",
+             "hash": "0xaa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
+             "tx_blockchain": "0xd2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3",
+             "issued_at": "2022-07-20", "expires_at": "2025-07-20",
+             "issuer": "ANAC — Autoridade Nacional de Aviação Civil"},
+            {"doc_type": "MEDICAL_CLASS1", "description": "Certificado Médico Classe 1",
+             "hash": "0xbb2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+             "tx_blockchain": "0xe3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4",
+             "issued_at": "2025-02-14", "expires_at": "2026-02-14",
+             "issuer": "Clínica de Medicina Aeronáutica Lisboa"},
+            {"doc_type": "ICAO_ENGLISH",   "description": "Proficiência Linguística ICAO — Nível 6",
+             "hash": "0xcc3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+             "tx_blockchain": "0xf4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5",
+             "issued_at": "2023-09-05", "expires_at": "2029-09-05",
+             "issuer": "Centro de Testes ICAO — Lisboa"},
+            {"doc_type": "TYPE_RATING",    "description": "Type Rating Airbus A321neo",
+             "hash": "0xdd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
+             "tx_blockchain": "0xa5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6",
+             "issued_at": "2023-11-12", "expires_at": "2025-11-12",
+             "issuer": "Airbus Training Centre — Toulouse"},
+            {"doc_type": "CRM_TRAINING",   "description": "Crew Resource Management — Initial",
+             "hash": "0xee5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
+             "tx_blockchain": "0xb6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7",
+             "issued_at": "2024-04-01", "expires_at": "2027-04-01",
+             "issuer": "Wizz Air Training Academy — Budapest"},
+        ],
+    },
+    {
+        "id": "P005", "name": "Carlos Rodrigues",
+        "role": "First Officer — Azores Airlines",
+        "ethereum_address": "0x3Gd5661c9F510573d0cG33E6B5172C6371bfF6G8",
+        "documents": [
+            {"doc_type": "ATPL",           "description": "Licença ATPL — ANAC Portugal",
+             "hash": "0xff6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
+             "tx_blockchain": "0xc7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8",
+             "issued_at": "2024-08-10", "expires_at": "2030-08-10",
+             "issuer": "ANAC — Autoridade Nacional de Aviação Civil"},
+            {"doc_type": "MEDICAL_CLASS1", "description": "Certificado Médico Classe 1",
+             "hash": "0x117b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b",
+             "tx_blockchain": "0xd8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9",
+             "issued_at": "2024-09-22", "expires_at": "2026-09-22",
+             "issuer": "Hospital das Forças Armadas — Lisboa"},
+            {"doc_type": "TYPE_RATING",    "description": "Type Rating ATR 72-600",
+             "hash": "0x228c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c",
+             "tx_blockchain": "0xe9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0",
+             "issued_at": "2024-06-15", "expires_at": "2026-06-15",
+             "issuer": "ATR Training Centre — Toulouse"},
+            {"doc_type": "ICAO_ENGLISH",   "description": "Proficiência Linguística ICAO — Nível 4",
+             "hash": "0x339d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d",
+             "tx_blockchain": "0xf0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1",
+             "issued_at": "2021-03-18", "expires_at": "2025-03-18",
+             "issuer": "Centro de Testes ICAO — Lisboa"},
+        ],
+    },
+    {
+        "id": "P006", "name": "Inês Tavares",
+        "role": "Cabin Crew — TAP Air Portugal",
+        "ethereum_address": "0x4He6772d0G621684e1dH44F7C6283D7482cgG7H9",
+        "documents": [
+            {"doc_type": "ATPL",           "description": "Licença de Tripulante de Cabine — ANAC",
+             "hash": "0x44ae1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e",
+             "tx_blockchain": "0xa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+             "issued_at": "2025-01-15", "expires_at": "2028-01-15",
+             "issuer": "ANAC — Autoridade Nacional de Aviação Civil"},
+            {"doc_type": "MEDICAL_CLASS1", "description": "Certificado Médico Cabin Crew",
+             "hash": "0x55bf2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f",
+             "tx_blockchain": "0xb2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+             "issued_at": "2025-03-01", "expires_at": "2026-09-01",
+             "issuer": "Clínica de Medicina Aeronáutica Lisboa"},
+            {"doc_type": "CRM_TRAINING",   "description": "Crew Resource Management — Initial",
+             "hash": "0x66c03b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a",
+             "tx_blockchain": "0xc3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
+             "issued_at": "2025-02-10", "expires_at": "2028-02-10",
+             "issuer": "TAP Air Portugal Training Center"},
+        ],
+    },
+    {
+        "id": "P007", "name": "Ricardo Santos",
+        "role": "Captain — Lufthansa",
+        "ethereum_address": "0x5If7883e1H732795f2eI55G8D7394E8593dhH8I0",
+        "documents": [
+            {"doc_type": "ATPL",           "description": "Licença ATPL — Luftfahrt-Bundesamt",
+             "hash": "0x77d14c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b",
+             "tx_blockchain": "0xd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
+             "issued_at": "2019-05-30", "expires_at": "2029-05-30",
+             "issuer": "LBA — Luftfahrt-Bundesamt Alemanha"},
+            {"doc_type": "MEDICAL_CLASS1", "description": "Certificado Médico Classe 1",
+             "hash": "0x88e25d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c",
+             "tx_blockchain": "0xe5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
+             "issued_at": "2024-10-05", "expires_at": "2025-10-05",
+             "issuer": "Flugmedizinisches Zentrum — Frankfurt"},
+            {"doc_type": "TYPE_RATING",    "description": "Type Rating Airbus A350-900",
+             "hash": "0x99f36e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d",
+             "tx_blockchain": "0xf6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7",
+             "issued_at": "2023-07-18", "expires_at": "2025-07-18",
+             "issuer": "Airbus Training Centre — Toulouse"},
+            {"doc_type": "ICAO_ENGLISH",   "description": "Proficiência Linguística ICAO — Nível 6",
+             "hash": "0xaa047f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e",
+             "tx_blockchain": "0xa7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8",
+             "issued_at": "2020-11-22", "expires_at": "2026-11-22",
+             "issuer": "Centro de Testes ICAO — Frankfurt"},
+            {"doc_type": "CRM_TRAINING",   "description": "Crew Resource Management — Recurrent",
+             "hash": "0xbb158a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f",
+             "tx_blockchain": "0xb8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9",
+             "issued_at": "2024-12-10", "expires_at": "2027-12-10",
+             "issuer": "Lufthansa Aviation Training — München"},
+        ],
+    },
+    {
+        "id": "P008", "name": "Mariana Pinto",
+        "role": "First Officer — Vueling",
+        "ethereum_address": "0x6Jg8994f2I843806g3fJ66H9E8405F9604eiI9J1",
+        "documents": [
+            {"doc_type": "ATPL",           "description": "Licença ATPL — AESA Espanha",
+             "hash": "0xcc269b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a",
+             "tx_blockchain": "0xc9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0",
+             "issued_at": "2023-04-25", "expires_at": "2029-04-25",
+             "issuer": "AESA — Agencia Estatal de Seguridad Aérea"},
+            {"doc_type": "MEDICAL_CLASS1", "description": "Certificado Médico Classe 1",
+             "hash": "0xdd37ac1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b",
+             "tx_blockchain": "0xd0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1",
+             "issued_at": "2024-07-08", "expires_at": "2026-01-08",
+             "issuer": "Centro de Reconhecimiento Médico — Barcelona"},
+            {"doc_type": "TYPE_RATING",    "description": "Type Rating Airbus A320ceo",
+             "hash": "0xee48bd2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c",
+             "tx_blockchain": "0xe1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2",
+             "issued_at": "2023-12-20", "expires_at": "2025-12-20",
+             "issuer": "Airbus Training Centre — Madrid"},
+            {"doc_type": "CRM_TRAINING",   "description": "Crew Resource Management — Recurrent",
+             "hash": "0xff59ce3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d",
+             "tx_blockchain": "0xf2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3",
+             "issued_at": "2024-11-05", "expires_at": "2027-11-05",
+             "issuer": "Vueling Training Academy — Barcelona"},
+        ],
+    },
 ]
 
 def seed_demo_data(db):
-    if db.query(Pilot).count() > 0:
-        return
+    existing_ids = {p.id for p in db.query(Pilot).all()}
+    existing_hashes = {d.hash for d in db.query(Document).all()}
+    changed = False
     for raw in DEMO_PILOTS_RAW:
-        pilot = Pilot(
-            id=raw["id"], name=raw["name"],
-            role=raw["role"], ethereum_address=raw["ethereum_address"],
-        )
-        db.add(pilot)
+        if raw["id"] not in existing_ids:
+            db.add(Pilot(
+                id=raw["id"], name=raw["name"],
+                role=raw["role"], ethereum_address=raw["ethereum_address"],
+            ))
+            changed = True
         for d in raw["documents"]:
-            db.add(Document(pilot_id=raw["id"], **d))
-    db.commit()
+            if d["hash"] not in existing_hashes:
+                db.add(Document(pilot_id=raw["id"], **d))
+                changed = True
+    if changed:
+        db.commit()
