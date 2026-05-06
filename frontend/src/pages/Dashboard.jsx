@@ -11,6 +11,7 @@ export default function Dashboard() {
   const [riskMap, setRiskMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(false);
+  const [search,  setSearch]  = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,11 +31,24 @@ export default function Dashboard() {
   if (loading) return <Spinner />;
   if (error)   return <ApiOfflineBanner />;
 
+  const filtered = pilots.filter(p =>
+    p.nome.toLowerCase().includes(search.toLowerCase()) ||
+    p.cargo.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div>
       <h2 style={s.heading}>👨‍✈️ Pilotos Registados</h2>
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Pesquisar piloto ou função..."
+        style={{ width: '100%', padding: '10px 14px', marginBottom: 20,
+          background: '#1A3F7A', border: '1px solid #2A4F8A',
+          borderRadius: 8, color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+      />
       <div style={s.grid}>
-        {pilots.map(p => (
+        {filtered.map(p => (
           <div key={p.id} style={s.card} onClick={() => navigate(`/pilots/${p.id}`)}>
             <div style={s.cardTop}>
               <div style={s.name}>{p.nome}</div>

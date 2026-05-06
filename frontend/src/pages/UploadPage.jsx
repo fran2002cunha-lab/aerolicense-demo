@@ -1,15 +1,18 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import UploadDocument from '../components/UploadDocument';
-
-const ADDRESSES = {
-  P001: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-  P002: '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
-  P003: '0x1Db3439a7D398351b8bE11C439e05C5B3259aeD4',
-};
+import { api } from '../api';
 
 export default function UploadPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [pilotAddress, setPilotAddress] = useState(null);
+
+  useEffect(() => {
+    api.pilot(id)
+      .then(data => setPilotAddress(data.carteira_ethereum))
+      .catch(() => setPilotAddress('0x0000000000000000000000000000000000000000'));
+  }, [id]);
 
   return (
     <div>
@@ -23,10 +26,13 @@ export default function UploadPage() {
         </button>
         <h2 style={{ color: '#fff', fontSize: 20 }}>Registar Documento — Piloto {id}</h2>
       </div>
-      <UploadDocument
-        pilotAddress={ADDRESSES[id] || '0x0000000000000000000000000000000000000000'}
-        onSuccess={() => setTimeout(() => navigate(`/pilots/${id}`), 1500)}
-      />
+      {pilotAddress === null
+        ? <p style={{ color: '#AABBCC' }}>A carregar...</p>
+        : <UploadDocument
+            pilotAddress={pilotAddress}
+            onSuccess={() => setTimeout(() => navigate(`/pilots/${id}`), 1500)}
+          />
+      }
     </div>
   );
 }

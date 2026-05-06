@@ -71,7 +71,7 @@ Se não souberes algo, diz-o claramente em vez de inventar.
 """
 
 
-def run_chat(user_message: str, db_tools_fn: dict) -> str:
+def run_chat(user_message: str, db_tools_fn: dict, history: list | None = None) -> str:
     """
     user_message: string from the user
     db_tools_fn: dict mapping tool_name -> callable(args) -> data
@@ -85,10 +85,10 @@ def run_chat(user_message: str, db_tools_fn: dict) -> str:
     from openai import OpenAI
     client = OpenAI(api_key=api_key)
 
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user",   "content": user_message},
-    ]
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    for h in (history or []):
+        messages.append({"role": h.get("role", "user"), "content": h.get("content", "")})
+    messages.append({"role": "user", "content": user_message})
 
     for _ in range(5):  # max 5 tool-call rounds to prevent infinite loops
         response = client.chat.completions.create(

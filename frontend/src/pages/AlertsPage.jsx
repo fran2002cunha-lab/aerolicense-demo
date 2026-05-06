@@ -7,6 +7,7 @@ export default function AlertsPage() {
   const [data, setData]     = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(false);
+  const [sort, setSort]       = useState('urgency');
 
   useEffect(() => {
     api.alerts()
@@ -18,13 +19,46 @@ export default function AlertsPage() {
   if (loading) return <Spinner />;
   if (error)   return <ApiOfflineBanner />;
 
+  const sorted = [...(data?.alertas || [])].sort((a, b) =>
+    sort === 'name' ? a.piloto.localeCompare(b.piloto) : a.dias_restantes - b.dias_restantes
+  );
+
+  function exportCSV() {
+    const header = 'Piloto,Cargo,Documento,Dias Restantes,Estado,Ação\n';
+    const rows = sorted.map(a =>
+      `"${a.piloto}","${a.cargo}","${a.documento}",${a.dias_restantes},${a.status},"${a.acao_necessaria}"`
+    ).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url; link.download = 'aerolicense-alertas.csv'; link.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div>
       <h2 style={{ color: '#F0A500', marginBottom: 6, fontSize: 18 }}>🔔 Alertas de Validade</h2>
-      <p style={{ color: '#AABBCC', fontSize: 13, marginBottom: 20 }}>
+      <p style={{ color: '#AABBCC', fontSize: 13, marginBottom: 12 }}>
         {data.total_alertas} documento(s) a requerer atenção.
       </p>
-      {data.alertas.map((a, i) => (
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {['urgency', 'name'].map(s => (
+          <button key={s} onClick={() => setSort(s)} style={{
+            padding: '5px 12px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
+            background: sort === s ? '#0087CC' : '#1A3F7A',
+            border: '1px solid #2A4F8A', color: '#fff',
+          }}>
+            {s === 'urgency' ? 'Por Urgência' : 'Por Nome'}
+          </button>
+        ))}
+        <button onClick={exportCSV} style={{
+          padding: '5px 12px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
+          background: '#1A3F7A', border: '1px solid #2A4F8A', color: '#AABBCC', marginLeft: 'auto',
+        }}>
+          📥 Exportar CSV
+        </button>
+      </div>
+      {sorted.map((a, i) => (
         <div key={i} style={{
           ...s.card, borderLeftColor: a.status === 'expired' ? '#E74C3C' : a.status === 'expiring_soon' ? '#F0A500' : '#667788',
         }}>

@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import Header     from './components/Header';
+import Header       from './components/Header';
+import ErrorBoundary from './components/ErrorBoundary';
 import Sidebar    from './components/Sidebar';
 import ChatPanel  from './components/ChatPanel';
 import Dashboard      from './pages/Dashboard';
@@ -17,6 +18,7 @@ export default function App() {
         <div style={{ display: 'flex', flex: 1 }}>
           <Sidebar />
           <main style={{ flex: 1, padding: '28px 32px', maxWidth: 1100 }}>
+            <ErrorBoundary>
             <Routes>
               <Route path="/"                      element={<Dashboard />} />
               <Route path="/pilots/:id"            element={<PilotDetail />} />
@@ -25,6 +27,7 @@ export default function App() {
               <Route path="/blockchain"            element={<BlockchainDemo />} />
               <Route path="/analytics"             element={<AnalyticsPage />} />
             </Routes>
+            </ErrorBoundary>
           </main>
         </div>
       </div>

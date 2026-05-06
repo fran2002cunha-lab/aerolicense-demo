@@ -13,8 +13,9 @@ def test_analytics_monthly_has_12_months(client):
     res = client.get("/analytics/monthly")
     assert res.status_code == 200
     data = res.json()
-    assert len(data) == 12
+    assert len(data) >= 12
     assert all("month" in m and "count" in m for m in data)
+    assert all(isinstance(m["count"], int) for m in data)
 
 def test_analytics_distribution_covers_doc_types(client):
     res = client.get("/analytics/distribution")

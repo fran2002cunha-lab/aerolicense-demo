@@ -25,13 +25,21 @@ export default function ChatPanel() {
     const msg = (text || input).trim();
     if (!msg || loading) return;
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: msg }]);
+    const newMessages = [...messages, { role: 'user', text: msg }];
+    setMessages(newMessages);
     setLoading(true);
     try {
-      const data = await api.chat(msg);
+      const history = newMessages.slice(0, -1).map(m => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.text,
+      }));
+      const data = await api.chat(msg, history);
       setMessages(prev => [...prev, { role: 'assistant', text: data.response }]);
-    } catch {
-      setMessages(prev => [...prev, { role: 'assistant', text: '❌ Erro ao contactar o assistente. Verifica se o backend está a correr.' }]);
+    } catch (err) {
+      const errMsg = err.message?.includes('Timeout')
+        ? '❌ O assistente não respondeu a tempo. Tenta novamente.'
+        : '❌ Erro ao contactar o assistente. Verifica se o backend está a correr.';
+      setMessages(prev => [...prev, { role: 'assistant', text: errMsg }]);
     } finally {
       setLoading(false);
     }

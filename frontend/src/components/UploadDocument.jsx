@@ -62,8 +62,8 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
     <div style={styles.container}>
       <h2 style={styles.title}>📁 Registar Novo Documento</h2>
       <p style={styles.subtitle}>
-        O ficheiro será encriptado, o seu hash guardado na blockchain Ethereum
-        e os dados de validade armazenados em segurança.
+        O ficheiro não é armazenado — apenas o seu hash SHA-256 é registado na blockchain Ethereum.
+        Qualquer alteração ao documento torna o hash inválido e a falsificação é imediatamente detetada.
       </p>
 
       <form onSubmit={handleSubmit} style={styles.form}>

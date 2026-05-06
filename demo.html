@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AeroLicense — Demonstração</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0A1F44; color: #ECF0F4; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+    /* Header */
+    .header { background: #061228; padding: 20px 40px; border-bottom: 3px solid #0087CC; display: flex; align-items: center; gap: 16px; }
+    .header h1 { font-size: 26px; color: #fff; }
+    .header span { font-size: 13px; color: #0087CC; margin-left: 4px; }
+    .badge { background: #0087CC; color: #fff; font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 20px; }
+
+    /* Layout */
+    .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+    .section-title { font-size: 18px; font-weight: bold; color: #F0A500; margin: 30px 0 14px; display: flex; align-items: center; gap: 8px; }
+
+    /* Cards de piloto */
+    .pilots-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+    .pilot-card { background: #1A3F7A; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s; border: 1px solid #2A4F8A; }
+    .pilot-card:hover { transform: translateY(-3px); border-color: #0087CC; }
+    .pilot-card-top { background: #0A1F44; padding: 16px 20px; border-bottom: 3px solid #0087CC; }
+    .pilot-name { font-size: 17px; font-weight: bold; color: #fff; }
+    .pilot-role { font-size: 12px; color: #0087CC; margin-top: 4px; }
+    .pilot-wallet { font-size: 10px; color: #667788; margin-top: 6px; font-family: monospace; }
+    .pilot-card-body { padding: 14px 20px; }
+    .doc-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+    .stat { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+    .stat.valid    { background: #1a4a2a; color: #27AE60; }
+    .stat.expiring { background: #4a3a0a; color: #F0A500; }
+    .stat.expired  { background: #4a0a0a; color: #E74C3C; }
+    .compliance-ok   { display: inline-block; margin-top: 10px; font-size: 12px; color: #27AE60; font-weight: bold; }
+    .compliance-fail { display: inline-block; margin-top: 10px; font-size: 12px; color: #E74C3C; font-weight: bold; }
+
+    /* Documentos */
+    .docs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+    .doc-card { background: #1A3F7A; border-radius: 10px; overflow: hidden; border-left: 4px solid #0087CC; }
+    .doc-card.valid    { border-left-color: #27AE60; }
+    .doc-card.expiring { border-left-color: #F0A500; }
+    .doc-card.expired  { border-left-color: #E74C3C; }
+    .doc-card-inner { padding: 14px 16px; }
+    .doc-type  { font-size: 10px; font-weight: bold; letter-spacing: 1px; color: #0087CC; text-transform: uppercase; }
+    .doc-name  { font-size: 14px; font-weight: bold; color: #fff; margin: 4px 0; }
+    .doc-issuer { font-size: 11px; color: #778899; margin-bottom: 10px; }
+    .doc-dates { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; }
+    .doc-hash  { font-family: monospace; font-size: 10px; color: #445566; word-break: break-all; }
+    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 8px; }
+    .status-badge.valid    { background: #1a4a2a; color: #27AE60; }
+    .status-badge.expiring { background: #4a3a0a; color: #F0A500; }
+    .status-badge.expired  { background: #4a0a0a; color: #E74C3C; }
+    .days-bar { background: #0A1F44; border-radius: 6px; height: 6px; margin: 6px 0; overflow: hidden; }
+    .days-fill { height: 100%; border-radius: 6px; }
+
+    /* Alertas */
+    .alert-card { background: #1A3F7A; border-radius: 10px; padding: 14px 18px; border-left: 4px solid #F0A500; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .alert-card.expired { border-left-color: #E74C3C; }
+    .alert-left { flex: 1; min-width: 200px; }
+    .alert-pilot { font-size: 14px; font-weight: bold; color: #fff; }
+    .alert-doc   { font-size: 12px; color: #AABBCC; margin-top: 2px; }
+    .alert-action { font-size: 12px; font-weight: bold; padding: 5px 12px; border-radius: 6px; }
+    .alert-action.urgent  { background: #E74C3C; color: #fff; }
+    .alert-action.warning { background: #F0A500; color: #000; }
+
+    /* Blockchain demo */
+    .hash-demo { background: #061228; border-radius: 10px; padding: 20px; font-family: monospace; font-size: 13px; }
+    .hash-row  { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: flex-start; }
+    .hash-label { color: #667788; min-width: 160px; font-size: 12px; margin-top: 2px; }
+    .hash-value { color: #0087CC; word-break: break-all; }
+    .hash-value.fake { color: #E74C3C; }
+    .hash-doc { color: #AABBCC; font-size: 12px; margin-bottom: 6px; }
+    .hash-doc.fake { color: #FF8888; }
+    .result-box { background: #E74C3C22; border: 1px solid #E74C3C; border-radius: 8px; padding: 12px 16px; margin-top: 16px; }
+    .result-box p { color: #E74C3C; font-size: 13px; font-weight: bold; }
+    .result-box small { color: #AABBCC; font-size: 11px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab { padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; border: 2px solid transparent; transition: all 0.2s; color: #AABBCC; background: #1A3F7A; }
+    .tab.active { background: #0087CC; color: #fff; border-color: #0087CC; }
+    .tab:hover:not(.active) { border-color: #0087CC; color: #fff; }
+
+    /* Botões */
+    .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: bold; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #0087CC; color: #fff; }
+    .btn-outline { background: transparent; border: 2px solid #0087CC; color: #0087CC; }
+
+    /* Status API */
+    .api-status { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.online  { background: #27AE60; box-shadow: 0 0 6px #27AE60; }
+    .dot.offline { background: #E74C3C; }
+
+    .loader { color: #0087CC; font-size: 13px; padding: 20px 0; }
+    .section { display: none; }
+    .section.active { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span style="font-size:28px">✈</span>
+  <div>
+    <h1>AeroLicense <span>Demonstração</span></h1>
+    <div class="api-status" id="apiStatus">
+      <div class="dot offline" id="statusDot"></div>
+      <span id="statusText">A ligar à API...</span>
+    </div>
+  </div>
+  <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+    <span class="badge">Python · FastAPI</span>
+    <span class="badge" style="background:#8E44AD">Ethereum · Solidity</span>
+    <span class="badge" style="background:#27AE60">React · JS</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="tabs">
+    <div class="tab active" onclick="showSection('pilotos')">👨‍✈️ Pilotos & Documentos</div>
+    <div class="tab" onclick="showSection('alertas')">🔔 Alertas de Validade</div>
+    <div class="tab" onclick="showSection('blockchain')">⛓ Demo Blockchain</div>
+    <div class="tab" onclick="showSection('api')">📡 API Endpoints</div>
+  </div>
+
+  <!-- SECÇÃO: PILOTOS -->
+  <div id="section-pilotos" class="section active">
+    <div class="section-title">👨‍✈️ Pilotos Registados na Plataforma</div>
+    <div class="pilots-grid" id="pilotsList"><div class="loader">A carregar...</div></div>
+
+    <div id="pilotDetail" style="display:none; margin-top:24px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+        <button class="btn btn-outline" onclick="closePilotDetail()">← Voltar</button>
+        <div class="section-title" style="margin:0" id="pilotDetailTitle"></div>
+      </div>
+      <div class="docs-grid" id="docsList"></div>
+    </div>
+  </div>
+
+  <!-- SECÇÃO: ALERTAS -->
+  <div id="section-alertas" class="section">
+    <div class="section-title">🔔 Documentos a Expirar — Alertas do Sistema</div>
+    <div id="alertasList"><div class="loader">A carregar...</div></div>
+  </div>
+
+  <!-- SECÇÃO: BLOCKCHAIN DEMO -->
+  <div id="section-blockchain" class="section">
+    <div class="section-title">⛓ Demonstração: Como a Blockchain Deteta Falsificações</div>
+    <div id="blockchainDemo"><div class="loader">A carregar...</div></div>
+  </div>
+
+  <!-- SECÇÃO: API -->
+  <div id="section-api" class="section">
+    <div class="section-title">📡 Endpoints da API</div>
+    <p style="color:#AABBCC; font-size:13px; margin-bottom:16px;">
+      Abre <strong style="color:#0087CC">http://localhost:8000/docs</strong> para a interface interativa completa (Swagger UI).
+    </p>
+    <div style="display:grid; gap:10px;">
+    </div>
+    <div id="endpointsList"></div>
+  </div>
+
+</div>
+
+<script>
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : 'https://RAILWAY_BACKEND_URL';
+
+const STATUS_MAP = {
+  valid:         { label: 'Válido',       class: 'valid',    icon: '✅' },
+  expiring_soon: { label: 'A expirar',    class: 'expiring', icon: '⚠️' },
+  expired:       { label: 'Expirado',     class: 'expired',  icon: '❌' },
+};
+
+const DOC_ICONS = {
+  ATPL: '🪪', MEDICAL_CLASS1: '🏥', ICAO_ENGLISH: '🌐',
+  TYPE_RATING: '✈️', CRM_TRAINING: '👥', OTHER: '📄',
+};
+
+// ── Tabs ─────────────────────────────────────────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'alertas')    loadAlertas();
+  if (name === 'blockchain') loadBlockchain();
+  if (name === 'api')        loadEndpoints();
+}
+
+// ── Estado da API ─────────────────────────────────────────────────────────
+async function checkApiStatus() {
+  try {
+    const res  = await fetch(API + '/');
+    const data = await res.json();
+    document.getElementById('statusDot').className  = 'dot online';
+    document.getElementById('statusText').textContent =
+      `API online · ${data.modo} · Blockchain: ${data.blockchain_connected ? 'ligada' : 'offline'}`;
+  } catch {
+    document.getElementById('statusText').textContent = 'API offline — corre: uvicorn main:app --reload';
+  }
+}
+
+// ── Pilotos ───────────────────────────────────────────────────────────────
+async function loadPilotos() {
+  try {
+    const res  = await fetch(API + '/demo/pilotos');
+    const data = await res.json();
+    const el   = document.getElementById('pilotsList');
+    el.innerHTML = data.pilotos.map(p => `
+      <div class="pilot-card" onclick="loadPilotoDetail('${p.id}')">
+        <div class="pilot-card-top">
+          <div class="pilot-name">👨‍✈️ ${p.nome}</div>
+          <div class="pilot-role">${p.cargo}</div>
+          <div class="pilot-wallet">${p.carteira_ethereum}</div>
+        </div>
+        <div class="pilot-card-body">
+          <div class="doc-stats">
+            <span class="stat valid">✅ ${p.validos} válidos</span>
+            ${p.a_expirar_em_breve ? `<span class="stat expiring">⚠️ ${p.a_expirar_em_breve} a expirar</span>` : ''}
+            ${p.expirados ? `<span class="stat expired">❌ ${p.expirados} expirados</span>` : ''}
+          </div>
+          <div class="${p.compliance_ok ? 'compliance-ok' : 'compliance-fail'}">
+            ${p.compliance_ok ? '✔ Compliance OK' : '✖ Ação necessária'}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch {
+    document.getElementById('pilotsList').innerHTML =
+      '<p style="color:#E74C3C">Erro: API não está a correr. Corre <code>python3 -m uvicorn main:app --reload</code> no terminal.</p>';
+  }
+}
+
+async function loadPilotoDetail(id) {
+  const res    = await fetch(API + '/demo/pilotos/' + id);
+  const piloto = await res.json();
+  document.getElementById('pilotsList').style.display = 'none';
+  document.getElementById('pilotDetail').style.display = 'block';
+  document.getElementById('pilotDetailTitle').textContent = `${piloto.nome} — ${piloto.cargo}`;
+  document.getElementById('docsList').innerHTML = piloto.documentos.map(d => {
+    const s       = STATUS_MAP[d.status] || STATUS_MAP.valid;
+    const maxDays = 365;
+    const pct     = Math.max(0, Math.min(100, (d.dias_restantes / maxDays) * 100));
+    const barColor = d.status === 'valid' ? '#27AE60' : (d.status === 'expiring_soon' ? '#F0A500' : '#E74C3C');
+    return `
+      <div class="doc-card ${s.class}">
+        <div class="doc-card-inner">
+          <div class="doc-type">${DOC_ICONS[d.tipo] || '📄'} ${d.tipo.replace('_',' ')}</div>
+          <div class="doc-name">${d.descricao}</div>
+          <div class="doc-issuer">🏛 ${d.entidade_emissora}</div>
+          <span class="status-badge ${s.class}">${s.icon} ${s.label}</span>
+          <div class="doc-dates">
+            <span style="color:#778899">Emitido: ${d.emitido_em}</span>
+            <span style="color:${barColor}; font-weight:bold">Validade: ${d.validade}</span>
+          </div>
+          ${d.dias_restantes > 0 ? `
+            <div class="days-bar"><div class="days-fill" style="width:${pct}%; background:${barColor}"></div></div>
+            <div style="font-size:11px; color:#778899">${d.dias_restantes} dias restantes</div>
+          ` : `<div style="font-size:12px; color:#E74C3C; font-weight:bold;">Expirado há ${Math.abs(d.dias_restantes)} dias</div>`}
+          <div style="margin-top:10px; padding-top:8px; border-top:1px solid #2A4F8A;">
+            <div style="font-size:10px; color:#556677; margin-bottom:3px;">Hash na Blockchain:</div>
+            <div class="doc-hash">${d.hash}</div>
+            <div style="font-size:10px; color:#556677; margin-top:6px; margin-bottom:3px;">Transação Ethereum:</div>
+            <div class="doc-hash" style="color:#334455">${d.tx_blockchain}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function closePilotDetail() {
+  document.getElementById('pilotsList').style.display = '';
+  document.getElementById('pilotDetail').style.display = 'none';
+}
+
+// ── Alertas ───────────────────────────────────────────────────────────────
+async function loadAlertas() {
+  const el = document.getElementById('alertasList');
+  if (el.dataset.loaded) return;
+  try {
+    const res  = await fetch(API + '/demo/alertas');
+    const data = await res.json();
+    el.innerHTML = `
+      <p style="color:#AABBCC; font-size:13px; margin-bottom:16px;">
+        ${data.total_alertas} documento(s) a requerer atenção — ${data.nota}
+      </p>` +
+      data.alertas.map(a => `
+        <div class="alert-card ${a.status === 'expired' ? 'expired' : ''}">
+          <div class="alert-left">
+            <div class="alert-pilot">👨‍✈️ ${a.piloto} · <span style="color:#0087CC; font-size:12px">${a.cargo}</span></div>
+            <div class="alert-doc">📄 ${a.documento} · Hash: <span style="font-family:monospace; font-size:10px; color:#445566">${a.hash_blockchain.slice(0,20)}...</span></div>
+          </div>
+          <div>
+            <div style="font-size:20px; font-weight:bold; color:${a.status === 'expired' ? '#E74C3C' : '#F0A500'}; text-align:right">
+              ${a.status === 'expired' ? 'EXPIRADO' : a.dias_restantes + ' dias'}
+            </div>
+            <div class="alert-action ${a.status === 'expired' ? 'urgent' : 'warning'}">${a.acao_necessaria}</div>
+          </div>
+        </div>`).join('');
+    el.dataset.loaded = '1';
+  } catch { el.innerHTML = '<p style="color:#E74C3C">Erro ao carregar alertas.</p>'; }
+}
+
+// ── Blockchain Demo ────────────────────────────────────────────────────────
+async function loadBlockchain() {
+  const el = document.getElementById('blockchainDemo');
+  if (el.dataset.loaded) return;
+  try {
+    const res  = await fetch(API + '/demo/blockchain');
+    const data = await res.json();
+    el.innerHTML = `
+      <p style="color:#AABBCC; font-size:13px; margin-bottom:16px;">${data.conceito}</p>
+      <div class="hash-demo">
+        <div style="color:#F0A500; font-size:12px; font-weight:bold; margin-bottom:12px;">DOCUMENTO ORIGINAL</div>
+        <div class="hash-doc">📄 "${data.documento_original.conteudo}"</div>
+        <div class="hash-row">
+          <span class="hash-label">SHA-256:</span>
+          <span class="hash-value">${data.documento_original.sha256}</span>
+        </div>
+
+        <div style="color:#E74C3C; font-size:12px; font-weight:bold; margin:16px 0 12px;">DOCUMENTO FALSIFICADO</div>
+        <div class="hash-doc fake">📄 "${data.documento_falsificado.conteudo}"</div>
+        <div style="font-size:11px; color:#F0A500; margin-bottom:8px;">⚠ Alteração: ${data.documento_falsificado.alteracao}</div>
+        <div class="hash-row">
+          <span class="hash-label">SHA-256:</span>
+          <span class="hash-value fake">${data.documento_falsificado.sha256}</span>
+        </div>
+
+        <div class="result-box">
+          <p>❌ Hashes diferentes — Falsificação detetada automaticamente!</p>
+          <small style="display:block; margin-top:6px">${data.conclusao}</small>
+        </div>
+      </div>`;
+    el.dataset.loaded = '1';
+  } catch { el.innerHTML = '<p style="color:#E74C3C">Erro ao carregar demo blockchain.</p>'; }
+}
+
+// ── Endpoints ─────────────────────────────────────────────────────────────
+function loadEndpoints() {
+  const el = document.getElementById('endpointsList');
+  if (el.dataset.loaded) return;
+  const endpoints = [
+    { method:'GET',  path:'/demo/pilotos',         tag:'Demo',       desc:'Lista todos os pilotos com resumo de compliance' },
+    { method:'GET',  path:'/demo/pilotos/{id}',     tag:'Demo',       desc:'Detalhe de um piloto com todos os documentos' },
+    { method:'GET',  path:'/demo/alertas',          tag:'Demo',       desc:'Documentos urgentes de todos os pilotos' },
+    { method:'GET',  path:'/demo/blockchain',       tag:'Demo',       desc:'Demonstração de hashing SHA-256 vs falsificação' },
+    { method:'POST', path:'/documents/upload',      tag:'Documentos', desc:'Upload de documento + registo na blockchain' },
+    { method:'POST', path:'/documents/hash',        tag:'Documentos', desc:'Calcula SHA-256 de um ficheiro (sem blockchain)' },
+    { method:'GET',  path:'/documents/verify/{hash}',tag:'Documentos',desc:'Verifica autenticidade na blockchain' },
+    { method:'GET',  path:'/documents/expiring',    tag:'Alertas',    desc:'Documentos a expirar nos próximos N dias' },
+  ];
+  const colors = { GET:'#27AE60', POST:'#0087CC', DELETE:'#E74C3C' };
+  el.innerHTML = endpoints.map(e => `
+    <div style="background:#1A3F7A; border-radius:8px; padding:12px 16px; margin-bottom:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <span style="background:${colors[e.method]}; color:#fff; font-size:11px; font-weight:bold; padding:3px 10px; border-radius:4px; min-width:50px; text-align:center;">${e.method}</span>
+      <code style="color:#0087CC; font-size:13px; flex:1; min-width:200px;">${e.path}</code>
+      <span style="font-size:11px; color:#556677; background:#0A1F44; padding:2px 8px; border-radius:4px;">${e.tag}</span>
+      <span style="font-size:12px; color:#AABBCC; flex:2; min-width:200px;">${e.desc}</span>
+      <a href="${API + e.path.replace('{id}','P001').replace('{hash}','0xf5fa1228922f7b4e3e13181d7054cf56785891b7025e0361906b8964ec62eb73')}" target="_blank"
+         style="color:#0087CC; font-size:12px; text-decoration:none; white-space:nowrap;">Testar →</a>
+    </div>`).join('');
+  el.dataset.loaded = '1';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+checkApiStatus();
+loadPilotos();
+</script>
+</body>
+</html>

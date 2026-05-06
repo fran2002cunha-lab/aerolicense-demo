@@ -14,6 +14,7 @@ from datetime import date
 try:
     import numpy as np
     from sklearn.ensemble import IsolationForest
+    from sklearn.preprocessing import StandardScaler
     ML_AVAILABLE = True
 except ImportError:
     ML_AVAILABLE = False
@@ -46,10 +47,12 @@ def detect_anomalies(documents: list) -> list:
         ])
 
     X = np.array(features, dtype=float)
+    scaler   = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
     clf = IsolationForest(contamination=0.15, random_state=42, n_estimators=100)
-    predictions = clf.fit_predict(X)
-    scores      = clf.score_samples(X)
+    predictions = clf.fit_predict(X_scaled)
+    scores      = clf.score_samples(X_scaled)
 
     anomalies = []
     for i, (pred, score) in enumerate(zip(predictions, scores)):

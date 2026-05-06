@@ -42,6 +42,32 @@ def test_critical_score():
     assert result["score"] == 0
     assert result["level"] == "critical"
 
+def test_risk_empty_documents():
+    result = compute_pilot_score([], set())
+    assert result["score"] == 100
+    assert result["level"] == "safe"
+    assert result["penalties"] == []
+
+
+def test_risk_time_decay():
+    from datetime import date, timedelta
+    today = date.today()
+    doc_urgent = [{"hash": "0xaaa", "expires_at": (today + timedelta(days=1)).isoformat(), "description": "Urgent"}]
+    doc_soon   = [{"hash": "0xbbb", "expires_at": (today + timedelta(days=29)).isoformat(), "description": "Soon"}]
+    score_urgent = compute_pilot_score(doc_urgent, set())["score"]
+    score_soon   = compute_pilot_score(doc_soon, set())["score"]
+    assert score_urgent < score_soon, "Document expiring sooner should score lower"
+
+
+def test_risk_anomaly_with_valid_doc():
+    from datetime import date, timedelta
+    future = (date.today() + timedelta(days=365)).isoformat()
+    docs = [{"hash": "0xbad", "expires_at": future, "description": "Suspicious Doc"}]
+    result = compute_pilot_score(docs, {"0xbad"})
+    assert result["score"] == 85
+    assert any("anomalia" in p.lower() for p in result["penalties"])
+
+
 def test_risk_endpoint(client):
     res = client.get("/analytics/risk-scores")
     assert res.status_code == 200

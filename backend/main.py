@@ -13,7 +13,7 @@ import hashlib
 import io
 import os
 import re
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from typing import Optional
 
 import qrcode
@@ -184,6 +184,7 @@ class VerifyResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=500)
+    history: list = Field(default_factory=list)
 
 # ── Helper: calcular SHA-256 ───────────────────────────────────────────────
 def sha256_file(data: bytes) -> bytes:
@@ -261,7 +262,8 @@ async def upload_document(
         tx_hash = "0x" + hashlib.sha256(f"demo_{hash_hex}".encode()).hexdigest()
 
     # 3. Estado do documento
-    days_left = (expires_at - datetime.utcnow()).days
+    expires_aware = expires_at.replace(tzinfo=timezone.utc) if expires_at.tzinfo is None else expires_at
+    days_left = (expires_aware - datetime.now(timezone.utc)).days
     status = "expired" if days_left <= 0 else ("expiring_soon" if days_left <= 30 else "valid")
 
     return {
@@ -303,10 +305,10 @@ def verify_document(doc_hash: str):
     if not contract:
         return VerifyResponse(
             hash         = doc_hash,
-            is_authentic = True,
+            is_authentic = False,
             is_expired   = False,
             expires_at   = None,
-            message      = "Modo demo: em produção, este endpoint verifica o hash diretamente na blockchain Ethereum.",
+            message      = "Modo demo: verificação blockchain inativa. Em produção, este endpoint verifica o hash diretamente na blockchain Ethereum.",
         )
     try:
         hash_bytes                    = bytes.fromhex(doc_hash.replace("0x", ""))
@@ -314,7 +316,7 @@ def verify_document(doc_hash: str):
     except Exception as e:
         raise HTTPException(404, f"Documento não encontrado na blockchain: {str(e)}")
 
-    expires_at = datetime.utcfromtimestamp(expires_ts) if expires_ts else None
+    expires_at = datetime.fromtimestamp(expires_ts, tz=timezone.utc) if expires_ts else None
     if not valid:
         msg = "Documento REVOGADO — não é válido."
     elif expired:
@@ -332,7 +334,7 @@ def get_expiring_documents(days: int = 30):
     Sistema de alertas: documentos que expiram nos próximos N dias.
     Em produção, chamado diariamente por um cron job.
     """
-    threshold = datetime.utcnow() + timedelta(days=days)
+    threshold = datetime.now(timezone.utc) + timedelta(days=days)
     return {
         "alert_threshold_days": days,
         "threshold_date":       threshold.isoformat(),
@@ -721,5 +723,5 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         "get_anomalies":          _get_anomalies,
     }
 
-    response_text = run_chat(req.message, db_tools)
+    response_text = run_chat(req.message, db_tools, req.history)
     return {"response": response_text}

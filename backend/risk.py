@@ -21,15 +21,16 @@ def compute_pilot_score(pilot_docs: list, anomalous_hashes: set) -> dict:
         days = (date.fromisoformat(d["expires_at"]) - today).days
         if days <= 0:
             score -= 25
-            penalties.append(f"Documento expirado: {d.get('description', d['hash'][:10])}")
+            penalties.append(f"Documento expirado: {d.get('description', d['hash'][:10])} (-25 pts)")
         elif days <= 30:
-            score -= 10
-            penalties.append(f"A expirar em {days} dias: {d.get('description', d['hash'][:10])}")
+            penalty = max(2, round(10 * (1 - days / 30)))
+            score -= penalty
+            penalties.append(f"A expirar em {days} dias: {d.get('description', d['hash'][:10])} (-{penalty} pts)")
 
     pilot_hashes = {d["hash"] for d in pilot_docs}
     if pilot_hashes & anomalous_hashes:
         score -= 15
-        penalties.append("Anomalia ML detectada nos documentos")
+        penalties.append("Anomalia ML detectada nos documentos (-15 pts)")
 
     score = max(0, score)
 
