@@ -4,13 +4,14 @@ import { api } from '../api';
 import DocumentCard from '../components/DocumentCard';
 import Spinner from '../components/Spinner';
 import ApiOfflineBanner from '../components/ApiOfflineBanner';
+import { c, gradientPrimary } from '../theme';
 
 export default function PilotDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [pilot, setPilot]   = useState(null);
+  const [pilot,   setPilot]   = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(false);
+  const [error,   setError]   = useState(false);
 
   useEffect(() => {
     api.pilot(id)
@@ -22,7 +23,6 @@ export default function PilotDetail() {
   if (loading) return <Spinner />;
   if (error)   return <ApiOfflineBanner />;
 
-  // Normalise field names from demo backend to what DocumentCard expects
   const docs = pilot.documentos.map(d => ({
     hash:              d.hash,
     doc_type:          d.tipo,
@@ -32,31 +32,45 @@ export default function PilotDetail() {
     status:            d.status,
   }));
 
+  const initials = pilot.nome.split(' ').slice(0,2).map(n => n[0]).join('');
+
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button onClick={() => navigate('/')} style={s.back}>← Voltar</button>
-        <div>
-          <h2 style={s.name}>{pilot.nome}</h2>
-          <div style={s.role}>{pilot.cargo}</div>
+      {/* Header */}
+      <div style={{ background: c.bgSurface, border: `1px solid ${c.border}`,
+        borderRadius: 14, padding: '20px 24px', marginBottom: 24,
+        display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ width: 52, height: 52, borderRadius: '50%', background: gradientPrimary,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 18, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+          {initials}
         </div>
-        <button onClick={() => navigate(`/pilots/${id}/upload`)} style={s.upload}>
-          + Novo Documento
-        </button>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: c.text }}>{pilot.nome}</div>
+          <div style={{ fontSize: 12, color: c.textMuted, marginTop: 3 }}>{pilot.cargo}</div>
+          <div style={{ fontSize: 9, color: c.textDim, marginTop: 6, fontFamily: 'monospace' }}>
+            {pilot.carteira_ethereum}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => navigate('/')}
+            style={{ padding: '8px 16px', background: 'transparent',
+              border: `1px solid ${c.border}`, borderRadius: 8,
+              color: c.textMuted, fontWeight: 600, cursor: 'pointer', fontSize: 13, fontFamily: 'Inter, sans-serif' }}>
+            ← Voltar
+          </button>
+          <button onClick={() => navigate(`/pilots/${id}/upload`)}
+            style={{ padding: '8px 16px', background: c.primary, border: 'none',
+              borderRadius: 8, color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 13, fontFamily: 'Inter, sans-serif' }}>
+            + Novo Documento
+          </button>
+        </div>
       </div>
-      <div style={s.grid}>
-        {docs.map((doc) => <DocumentCard key={doc.hash} document={doc} />)}
+
+      {/* Document grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px,1fr))', gap: 14 }}>
+        {docs.map(doc => <DocumentCard key={doc.hash} document={doc} />)}
       </div>
     </div>
   );
 }
-
-const s = {
-  name:   { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  role:   { color: '#0087CC', fontSize: 13 },
-  back:   { padding: '8px 16px', background: 'transparent', border: '2px solid #0087CC',
-    borderRadius: 8, color: '#0087CC', fontWeight: 'bold', cursor: 'pointer', fontSize: 13 },
-  upload: { marginLeft: 'auto', padding: '8px 16px', background: '#0087CC', border: 'none',
-    borderRadius: 8, color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: 13 },
-  grid:   { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12 },
-};

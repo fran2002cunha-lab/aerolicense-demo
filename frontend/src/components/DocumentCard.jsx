@@ -1,235 +1,151 @@
-// AeroLicense — Componente React: Cartão de Documento
-// Mostra o estado de um documento e permite verificar autenticidade na blockchain
+import { useState, useEffect } from 'react';
+import { c, statusColor, statusLabel } from '../theme';
 
-import { useState, useEffect } from "react";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
-
-// Cores e labels por estado
-const STATUS_CONFIG = {
-  valid:          { color: "#27AE60", label: "Válido",          icon: "✅" },
-  expiring_soon:  { color: "#F0A500", label: "A expirar",       icon: "⚠️" },
-  expired:        { color: "#C0392B", label: "Expirado",        icon: "❌" },
-};
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 const DOC_TYPE_LABELS = {
-  ATPL:           "Licença ATPL",
-  MEDICAL_CLASS1: "Médico Classe 1",
-  ICAO_ENGLISH:   "Proficiência ICAO",
-  TYPE_RATING:    "Type Rating",
-  CRM_TRAINING:   "Formação CRM",
-  OTHER:          "Outro",
+  ATPL: 'Licença ATPL', MEDICAL_CLASS1: 'Médico Classe 1', ICAO_ENGLISH: 'Proficiência ICAO',
+  TYPE_RATING: 'Type Rating', CRM_TRAINING: 'Formação CRM', OTHER: 'Outro',
 };
 
 export default function DocumentCard({ document }) {
-  const [verifying, setVerifying]     = useState(false);
+  const [verifying,    setVerifying]    = useState(false);
   const [verification, setVerification] = useState(null);
-  const [error, setError]             = useState(null);
-  const [showQr, setShowQr] = useState(false);
-  const [qrUrl, setQrUrl]   = useState(null);
-  const [qrLoading, setQrLoading] = useState(false);
+  const [verifyError,  setVerifyError]  = useState(null);
+  const [showQr,   setShowQr]   = useState(false);
+  const [qrUrl,    setQrUrl]    = useState(null);
+  const [qrLoading,setQrLoading]= useState(false);
 
-  const { color, label, icon } = STATUS_CONFIG[document.status] || STATUS_CONFIG.valid;
-  const daysLeft = document.days_until_expiry;
-  const expiryDate = new Date(document.expires_at).toLocaleDateString("pt-PT");
+  const color     = statusColor[document.status] || c.textMuted;
+  const label     = statusLabel[document.status] || document.status;
+  const daysLeft  = document.days_until_expiry;
+  const expiryDate= new Date(document.expires_at).toLocaleDateString('pt-PT');
 
-  useEffect(() => {
-    return () => {
-      if (qrUrl) URL.revokeObjectURL(qrUrl);
-    };
-  }, [qrUrl]);
+  useEffect(() => () => { if (qrUrl) URL.revokeObjectURL(qrUrl); }, [qrUrl]);
 
-  // Chama o backend que por sua vez consulta a blockchain
   async function verifyOnBlockchain() {
-    setVerifying(true);
-    setVerification(null);
-    setError(null);
+    setVerifying(true); setVerification(null); setVerifyError(null);
     try {
       const res  = await fetch(`${API_URL}/documents/verify/${document.hash}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail);
       setVerification(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setVerifying(false);
-    }
+    } catch (err) { setVerifyError(err.message); }
+    finally { setVerifying(false); }
   }
 
   async function loadQr() {
     if (qrUrl) { setShowQr(true); return; }
     setQrLoading(true);
     try {
-      const res = await fetch(`${API_URL}/documents/qr/${document.hash}`);
+      const res  = await fetch(`${API_URL}/documents/qr/${document.hash}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      setQrUrl(URL.createObjectURL(blob));
+      setQrUrl(URL.createObjectURL(await res.blob()));
       setShowQr(true);
-    } catch {
-      setError('Não foi possível gerar o QR Code.');
-    } finally {
-      setQrLoading(false);
-    }
+    } catch { setVerifyError('Não foi possível gerar o QR Code.'); }
+    finally { setQrLoading(false); }
   }
 
   return (
-    <div style={styles.card}>
-
+    <>
+      {/* QR Modal */}
       {showQr && (
-        <div style={styles.qrOverlay} onClick={() => setShowQr(false)}>
-          <div style={styles.qrBox} onClick={e => e.stopPropagation()}>
-            <p style={{ color: '#667788', fontSize: 12, marginTop: 0, marginBottom: 8 }}>
+        <div onClick={() => setShowQr(false)} style={{ position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.75)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 14,
+            padding: '24px 28px', textAlign: 'center' }}>
+            <div style={{ fontSize: 12, color: '#667', marginBottom: 12 }}>
               Digitalize para verificar na blockchain
-            </p>
-            {qrUrl && <img src={qrUrl} alt="QR Code" style={{ width: 180, height: 180 }} />}
-            <button onClick={() => setShowQr(false)} style={styles.qrClose}>Fechar</button>
+            </div>
+            {qrUrl && <img src={qrUrl} alt="QR" style={{ width: 180, height: 180 }} />}
+            <button onClick={() => setShowQr(false)} style={{ display: 'block', margin: '12px auto 0',
+              padding: '8px 24px', background: c.bgHeader, border: 'none',
+              borderRadius: 8, color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
+              Fechar
+            </button>
           </div>
         </div>
       )}
 
-      {/* Barra colorida de estado */}
-      <div style={{ ...styles.statusBar, backgroundColor: color }} />
+      <div style={{ background: c.bgSurface, border: `1px solid ${c.border}`,
+        borderTop: `3px solid ${color}`, borderRadius: 12, padding: '18px 20px' }}>
 
-      {/* Cabeçalho */}
-      <div style={styles.header}>
-        <div>
-          <span style={styles.icon}>{icon}</span>
-          <span style={{ ...styles.statusBadge, backgroundColor: color }}>{label}</span>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: c.primaryLt,
+            textTransform: 'uppercase', letterSpacing: '.5px' }}>
+            {DOC_TYPE_LABELS[document.doc_type] || document.doc_type}
+          </span>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+            background: `${color}18`, color, border: `1px solid ${color}44` }}>
+            {label}
+          </span>
         </div>
-        <span style={styles.docType}>{DOC_TYPE_LABELS[document.doc_type]}</span>
-      </div>
 
-      {/* Nome do documento */}
-      <p style={styles.description}>{document.description}</p>
-
-      {/* Datas */}
-      <div style={styles.dateRow}>
-        <span style={styles.dateLabel}>Validade:</span>
-        <span style={{ color, fontWeight: "bold" }}>{expiryDate}</span>
-      </div>
-
-      {/* Barra de progresso dos dias restantes */}
-      {document.status !== "expired" && (
-        <div style={styles.progressContainer}>
-          <div
-            style={{
-              ...styles.progressBar,
-              width: `${Math.min(100, (daysLeft / 365) * 100)}%`,
-              backgroundColor: color,
-            }}
-          />
-          <span style={styles.progressLabel}>{daysLeft} dias restantes</span>
+        {/* Description */}
+        <div style={{ fontSize: 14, fontWeight: 700, color: c.text, marginBottom: 10 }}>
+          {document.description}
         </div>
-      )}
 
-      {/* Hash do documento (identificador na blockchain) */}
-      <div style={styles.hashRow}>
-        <span style={styles.hashLabel}>Hash blockchain:</span>
-        <code style={styles.hash}>
-          {document.hash.slice(0, 10)}...{document.hash.slice(-6)}
-        </code>
-      </div>
-
-      {/* Botão de verificação na blockchain */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-        <button
-          onClick={verifyOnBlockchain}
-          disabled={verifying}
-          style={{ ...styles.button, flex: 1, marginTop: 0, opacity: verifying ? 0.6 : 1 }}
-        >
-          {verifying ? 'A verificar...' : '🔗 Verificar Blockchain'}
-        </button>
-        <button
-          onClick={loadQr}
-          disabled={qrLoading}
-          style={{ ...styles.button, width: 48, flex: 'none', marginTop: 0, opacity: qrLoading ? 0.6 : 1 }}
-          title="Gerar QR Code"
-        >
-          {qrLoading ? '⏳' : '📱'}
-        </button>
-      </div>
-
-      {/* Resultado da verificação */}
-      {verification && (
-        <div style={{
-          ...styles.verificationResult,
-          borderColor: verification.is_authentic && !verification.is_expired ? "#27AE60" : "#C0392B",
-        }}>
-          <p style={{ margin: 0, fontWeight: "bold", color: verification.is_authentic ? "#27AE60" : "#C0392B" }}>
-            {verification.message}
-          </p>
-          <p style={styles.txNote}>
-            Verificado diretamente na Ethereum — não pode ser falsificado.
-          </p>
+        {/* Expiry */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <span style={{ fontSize: 12, color: c.textMuted }}>Validade</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color }}>{expiryDate}</span>
         </div>
-      )}
 
-      {error && (
-        <div style={styles.errorBox}>
-          <p style={{ margin: 0, color: "#C0392B" }}>Erro: {error}</p>
+        {/* Progress bar */}
+        {document.status !== 'expired' && (
+          <div style={{ background: c.bgElevated, borderRadius: 4, height: 4, marginBottom: 10, overflow: 'hidden' }}>
+            <div style={{ width: `${Math.min(100, (daysLeft / 365) * 100)}%`,
+              height: '100%', background: color, borderRadius: 4 }} />
+          </div>
+        )}
+
+        {/* Hash */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <span style={{ fontSize: 11, color: c.textMuted }}>Hash</span>
+          <code style={{ fontSize: 11, color: c.primaryLt, background: c.bgElevated,
+            padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
+            {document.hash.slice(0,10)}…{document.hash.slice(-6)}
+          </code>
         </div>
-      )}
-    </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={verifyOnBlockchain} disabled={verifying}
+            style={{ flex: 1, padding: '9px 0', background: 'transparent',
+              border: `1px solid ${c.border}`, borderRadius: 8, color: c.textMuted,
+              fontWeight: 600, cursor: verifying ? 'wait' : 'pointer',
+              fontSize: 12, fontFamily: 'Inter, sans-serif', opacity: verifying ? .6 : 1 }}>
+            {verifying ? 'A verificar…' : '🔗 Verificar Blockchain'}
+          </button>
+          <button onClick={loadQr} disabled={qrLoading}
+            style={{ width: 40, background: 'transparent', border: `1px solid ${c.border}`,
+              borderRadius: 8, color: c.textMuted, cursor: 'pointer',
+              fontSize: 16, opacity: qrLoading ? .6 : 1 }}
+            title="QR Code">
+            {qrLoading ? '⏳' : '📱'}
+          </button>
+        </div>
+
+        {/* Verification result */}
+        {verification && (
+          <div style={{ marginTop: 10, background: c.bgElevated, borderRadius: 8,
+            padding: '10px 14px', border: `1px solid ${c.border}` }}>
+            <div style={{ fontSize: 12, fontWeight: 600,
+              color: verification.is_authentic && !verification.is_expired ? c.green : c.red }}>
+              {verification.message}
+            </div>
+          </div>
+        )}
+        {verifyError && (
+          <div style={{ marginTop: 10, background: `${c.red}11`, borderRadius: 8,
+            padding: '10px 14px', fontSize: 12, color: c.red }}>
+            {verifyError}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
-
-const styles = {
-  card: {
-    background:   "#1A3F7A",
-    borderRadius: 12,
-    padding:      "20px 24px",
-    marginBottom: 16,
-    position:     "relative",
-    overflow:     "hidden",
-    boxShadow:    "0 4px 16px rgba(0,0,0,0.3)",
-  },
-  statusBar:   { position: "absolute", top: 0, left: 0, right: 0, height: 4 },
-  header:      { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  icon:        { fontSize: 20, marginRight: 8 },
-  statusBadge: { color: "#fff", fontSize: 12, fontWeight: "bold", borderRadius: 20, padding: "3px 10px" },
-  docType:     { color: "#00AAEE", fontSize: 13, fontWeight: "600" },
-  description: { color: "#ECF0F4", fontSize: 16, fontWeight: "bold", margin: "8px 0" },
-  dateRow:     { display: "flex", gap: 8, alignItems: "center", margin: "8px 0" },
-  dateLabel:   { color: "#AABBCC", fontSize: 13 },
-  progressContainer: { background: "#0A1F44", borderRadius: 8, height: 8, margin: "10px 0", position: "relative" },
-  progressBar:       { height: "100%", borderRadius: 8, transition: "width 0.5s ease" },
-  progressLabel:     { color: "#AABBCC", fontSize: 11, display: "block", marginTop: 4 },
-  hashRow:     { display: "flex", gap: 8, alignItems: "center", margin: "10px 0" },
-  hashLabel:   { color: "#AABBCC", fontSize: 12 },
-  hash:        { color: "#00AAEE", fontSize: 12, background: "#0A1F44", padding: "2px 8px", borderRadius: 4 },
-  button: {
-    width:        "100%",
-    marginTop:    12,
-    padding:      "10px 0",
-    background:   "transparent",
-    border:       "2px solid #0087CC",
-    borderRadius: 8,
-    color:        "#0087CC",
-    fontWeight:   "bold",
-    cursor:       "pointer",
-    fontSize:     14,
-    transition:   "all 0.2s",
-  },
-  verificationResult: {
-    marginTop:    12,
-    padding:      12,
-    borderRadius: 8,
-    border:       "1.5px solid",
-    background:   "#0A1F44",
-  },
-  txNote: { margin: "6px 0 0", color: "#AABBCC", fontSize: 12 },
-  errorBox: { marginTop: 10, padding: 10, background: "#2C0A0A", borderRadius: 8 },
-  qrOverlay: {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    background: 'rgba(0,0,0,0.75)', zIndex: 1000,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  qrBox: {
-    background: '#fff', borderRadius: 12, padding: '24px 28px',
-    textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-  },
-  qrClose: {
-    marginTop: 12, padding: '8px 24px', background: '#0A1F44',
-    border: 'none', borderRadius: 8, color: '#fff', fontWeight: 'bold', cursor: 'pointer',
-  },
-};
