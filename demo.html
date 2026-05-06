@@ -168,7 +168,7 @@
 <script>
 const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:8000'
-  : 'https://RAILWAY_BACKEND_URL';
+  : (window.AEROLICENSE_API || 'http://localhost:8000');
 
 const STATUS_MAP = {
   valid:         { label: 'Válido',       class: 'valid',    icon: '✅' },
