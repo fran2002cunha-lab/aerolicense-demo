@@ -1,6 +1,6 @@
-export const config = { api: { bodyParser: false } };
+module.exports.config = { api: { bodyParser: false } };
 
-export default async function handler(req, res) {
+module.exports.default = async function handler(req, res) {
   const base = process.env.RAILWAY_API_URL;
   if (!base) {
     res.status(500).json({ error: 'RAILWAY_API_URL not configured' });
@@ -37,4 +37,4 @@ export default async function handler(req, res) {
 
   const buffer = await upstream.arrayBuffer();
   res.end(Buffer.from(buffer));
-}
+};
