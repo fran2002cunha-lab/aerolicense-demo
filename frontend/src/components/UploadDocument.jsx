@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { c } from '../theme';
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+const API_URL = process.env.NODE_ENV === 'development'
+  ? (process.env.REACT_APP_API_URL || 'http://localhost:8000')
+  : '/api/backend';
 
 const DOC_TYPES = [
   { value: "ATPL",           label: "Licença ATPL" },

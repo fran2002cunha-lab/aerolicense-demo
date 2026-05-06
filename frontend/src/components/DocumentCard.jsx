@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { c, statusColor, statusLabel } from '../theme';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NODE_ENV === 'development'
+  ? (process.env.REACT_APP_API_URL || 'http://localhost:8000')
+  : '/api/backend';
 
 const DOC_TYPE_LABELS = {
   ATPL: 'Licença ATPL', MEDICAL_CLASS1: 'Médico Classe 1', ICAO_ENGLISH: 'Proficiência ICAO',
