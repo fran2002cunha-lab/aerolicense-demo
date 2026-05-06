@@ -13,11 +13,11 @@ import AnalyticsPage from './pages/AnalyticsPage';
 export default function App() {
   return (
     <HashRouter>
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#030D1A' }}>
         <Header />
-        <div style={{ display: 'flex', flex: 1 }}>
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           <Sidebar />
-          <main style={{ flex: 1, padding: '28px 32px', maxWidth: 1100 }}>
+          <main style={{ flex: 1, padding: '28px 32px', overflowY: 'auto' }}>
             <ErrorBoundary>
             <Routes>
               <Route path="/"                      element={<Dashboard />} />
