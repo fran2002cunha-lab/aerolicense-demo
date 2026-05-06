@@ -1,7 +1,5 @@
-// AeroLicense — Componente React: Upload de Documento
-// Faz upload do ficheiro, o backend calcula o hash e regista na blockchain
-
 import { useState } from "react";
+import { c } from '../theme';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
@@ -107,8 +105,8 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
           onClick={() => document.getElementById("fileInput").click()}
         >
           {file
-            ? <span style={{ color: "#00AAEE" }}>📄 {file.name}</span>
-            : <span style={{ color: "#AABBCC" }}>Clique para selecionar o ficheiro</span>
+            ? <span style={{ color: c.primaryLt }}>📄 {file.name}</span>
+            : <span style={{ color: c.textMuted }}>Clique para selecionar o ficheiro</span>
           }
           <input
             id="fileInput"
@@ -156,7 +154,7 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
 
       {error && (
         <div style={styles.errorBox}>
-          <p style={{ margin: 0, color: "#C0392B" }}>❌ Erro: {error}</p>
+          ❌ Erro: {error}
         </div>
       )}
     </div>
@@ -164,50 +162,29 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
 }
 
 const styles = {
-  container: { background: "#1A3F7A", borderRadius: 12, padding: "24px 28px", maxWidth: 520 },
-  title:     { color: "#FFFFFF", fontSize: 20, fontWeight: "bold", margin: "0 0 8px" },
-  subtitle:  { color: "#AABBCC", fontSize: 13, margin: "0 0 24px", lineHeight: 1.5 },
-  form:      { display: "flex", flexDirection: "column", gap: 12 },
-  label:     { color: "#ECF0F4", fontSize: 13, fontWeight: "600" },
-  input: {
-    background:   "#0A1F44",
-    border:       "1.5px solid #2C4F7A",
-    borderRadius: 8,
-    padding:      "10px 14px",
-    color:        "#FFFFFF",
-    fontSize:     14,
-    outline:      "none",
-  },
-  dropzone: {
-    background:   "#0A1F44",
-    border:       "2px dashed #2C4F7A",
-    borderRadius: 8,
-    padding:      "20px",
-    textAlign:    "center",
-    cursor:       "pointer",
-  },
-  button: {
-    padding:      "12px 0",
-    background:   "#0087CC",
-    border:       "none",
-    borderRadius: 8,
-    color:        "#FFFFFF",
-    fontWeight:   "bold",
-    fontSize:     15,
-    cursor:       "pointer",
-    marginTop:    8,
-  },
-  success: {
-    marginTop:    20,
-    background:   "#0A1F44",
-    border:       "1.5px solid #27AE60",
-    borderRadius: 8,
-    padding:      16,
-  },
-  successTitle: { color: "#27AE60", fontWeight: "bold", margin: "0 0 12px", fontSize: 15 },
-  detailRow:    { display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 8, flexWrap: "wrap" },
-  detailLabel:  { color: "#AABBCC", fontSize: 12, minWidth: 150 },
-  code:         { color: "#00AAEE", fontSize: 11, background: "#0A1F44", padding: "2px 6px", borderRadius: 4, wordBreak: "break-all" },
-  note:         { color: "#AABBCC", fontSize: 12, marginTop: 12, lineHeight: 1.5 },
-  errorBox:     { marginTop: 12, padding: 12, background: "#2C0A0A", borderRadius: 8 },
+  container:   { background: c.bgSurface, border: `1px solid ${c.border}`,
+    borderRadius: 14, padding: '28px 32px', maxWidth: 560 },
+  title:       { fontSize: 18, fontWeight: 700, color: c.text, marginBottom: 6 },
+  subtitle:    { fontSize: 13, color: c.textMuted, marginBottom: 24, lineHeight: 1.5 },
+  form:        { display: 'flex', flexDirection: 'column', gap: 16 },
+  label:       { fontSize: 12, fontWeight: 600, color: c.textMuted,
+    textTransform: 'uppercase', letterSpacing: '.5px', display: 'block', marginBottom: 6 },
+  input:       { width: '100%', background: c.bgElevated, border: `1px solid ${c.border}`,
+    borderRadius: 8, padding: '10px 14px', color: c.text, fontSize: 14,
+    outline: 'none', fontFamily: 'Inter, sans-serif' },
+  dropzone:    { background: c.bgElevated, border: `1px solid ${c.border}`,
+    borderRadius: 8, padding: '20px', textAlign: 'center', cursor: 'pointer' },
+  button:      { padding: '12px', background: c.primary, border: 'none',
+    borderRadius: 8, color: '#fff', fontWeight: 700, cursor: 'pointer',
+    fontSize: 14, fontFamily: 'Inter, sans-serif', marginTop: 8 },
+  success:     { background: `${c.green}11`, border: `1px solid ${c.green}33`,
+    borderRadius: 8, padding: '12px 16px', color: c.green, fontSize: 13, marginTop: 16 },
+  successTitle:{ color: c.green, fontWeight: 700, margin: '0 0 12px', fontSize: 15 },
+  detailRow:   { display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 8, flexWrap: 'wrap' },
+  detailLabel: { color: c.textMuted, fontSize: 12, minWidth: 150 },
+  code:        { color: c.primaryLt, fontSize: 11, background: c.bgElevated,
+    padding: '2px 6px', borderRadius: 4, wordBreak: 'break-all' },
+  note:        { color: c.textMuted, fontSize: 12, marginTop: 12, lineHeight: 1.5 },
+  errorBox:    { background: `${c.red}11`, border: `1px solid ${c.red}33`,
+    borderRadius: 8, padding: '12px 16px', color: c.red, fontSize: 13, marginTop: 16 },
 };
