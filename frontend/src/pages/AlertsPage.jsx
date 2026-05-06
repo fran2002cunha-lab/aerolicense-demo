@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import Spinner from '../components/Spinner';
 import ApiOfflineBanner from '../components/ApiOfflineBanner';
+import { c, statusColor } from '../theme';
 
 export default function AlertsPage() {
-  const [data, setData]     = useState(null);
+  const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(false);
-  const [sort, setSort]       = useState('urgency');
+  const [error,   setError]   = useState(false);
+  const [sort,    setSort]    = useState('urgency');
 
   useEffect(() => {
     api.alerts()
@@ -37,57 +38,52 @@ export default function AlertsPage() {
 
   return (
     <div>
-      <h2 style={{ color: '#F0A500', marginBottom: 6, fontSize: 18 }}>🔔 Alertas de Validade</h2>
-      <p style={{ color: '#AABBCC', fontSize: 13, marginBottom: 12 }}>
-        {data.total_alertas} documento(s) a requerer atenção.
-      </p>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: c.text }}>Alertas de Validade</div>
+        <div style={{ fontSize: 13, color: c.textMuted, marginTop: 2 }}>
+          {data.total_alertas} documento(s) a requerer atenção
+        </div>
+      </div>
+
+      {/* Controls */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        {['urgency', 'name'].map(s => (
-          <button key={s} onClick={() => setSort(s)} style={{
-            padding: '5px 12px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
-            background: sort === s ? '#0087CC' : '#1A3F7A',
-            border: '1px solid #2A4F8A', color: '#fff',
-          }}>
-            {s === 'urgency' ? 'Por Urgência' : 'Por Nome'}
-          </button>
+        {[['urgency', 'Por Urgência'], ['name', 'Por Nome']].map(([val, lbl]) => (
+          <button key={val} onClick={() => setSort(val)} style={{
+            padding: '6px 14px', fontSize: 12, fontWeight: 600, borderRadius: 6, cursor: 'pointer',
+            background: sort === val ? c.primary : c.bgSurface,
+            border: `1px solid ${sort === val ? c.primary : c.border}`,
+            color: sort === val ? '#fff' : c.textMuted, fontFamily: 'Inter, sans-serif',
+          }}>{lbl}</button>
         ))}
         <button onClick={exportCSV} style={{
-          padding: '5px 12px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
-          background: '#1A3F7A', border: '1px solid #2A4F8A', color: '#AABBCC', marginLeft: 'auto',
-        }}>
-          📥 Exportar CSV
-        </button>
+          marginLeft: 'auto', padding: '6px 14px', fontSize: 12, fontWeight: 600,
+          borderRadius: 6, cursor: 'pointer', background: c.bgSurface,
+          border: `1px solid ${c.border}`, color: c.textMuted, fontFamily: 'Inter, sans-serif',
+        }}>📥 Exportar CSV</button>
       </div>
-      {sorted.map((a, i) => (
-        <div key={i} style={{
-          ...s.card, borderLeftColor: a.status === 'expired' ? '#E74C3C' : a.status === 'expiring_soon' ? '#F0A500' : '#667788',
-        }}>
-          <div>
-            <div style={s.pilot}>👨‍✈️ {a.piloto} · <span style={{ color: '#0087CC', fontSize: 12 }}>{a.cargo}</span></div>
-            <div style={s.doc}>📄 {a.documento}</div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 20, fontWeight: 'bold',
-              color: a.status === 'expired' ? '#E74C3C' : a.status === 'expiring_soon' ? '#F0A500' : '#667788' }}>
-              {a.status === 'expired' ? 'EXPIRADO' : `${a.dias_restantes} dias`}
+
+      {/* Alert items */}
+      {sorted.map((a, i) => {
+        const color = statusColor[a.status] || c.textMuted;
+        return (
+          <div key={i} style={{ background: c.bgSurface, border: `1px solid ${c.border}`,
+            borderLeft: `3px solid ${color}`, borderRadius: 10,
+            padding: '14px 18px', display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: c.text }}>{a.piloto}</div>
+              <div style={{ fontSize: 11, color: c.textMuted, marginTop: 3 }}>{a.documento}</div>
             </div>
-            <div style={{
-              ...s.action,
-              background: a.status === 'expired' ? '#E74C3C' : a.status === 'expiring_soon' ? '#F0A500' : '#667788',
-              color: a.status === 'expired' ? '#fff' : '#000',
-            }}>{a.acao_necessaria}</div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 6,
+                background: `${color}18`, color, border: `1px solid ${color}44` }}>
+                {a.status === 'expired' ? 'EXPIRADO' : `${a.dias_restantes} dias`}
+              </div>
+              <div style={{ fontSize: 10, color: c.textMuted, marginTop: 4 }}>{a.acao_necessaria}</div>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
-
-const s = {
-  card:   { background: '#1A3F7A', borderRadius: 10, padding: '14px 18px',
-    borderLeft: '4px solid', marginBottom: 10, display: 'flex',
-    alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' },
-  pilot:  { fontSize: 14, fontWeight: 'bold', color: '#fff' },
-  doc:    { fontSize: 12, color: '#AABBCC', marginTop: 4 },
-  action: { fontSize: 12, fontWeight: 'bold', padding: '4px 10px', borderRadius: 6, marginTop: 6 },
-};
