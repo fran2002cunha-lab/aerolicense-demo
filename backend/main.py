@@ -216,7 +216,7 @@ def root():
         "blockchain_connected": w3.is_connected(),
         "blockchain_url": BLOCKCHAIN_URL,
         "contract_configured": contract is not None,
-        "modo": "demo (sem blockchain)" if contract is None else "produção",
+        "modo": "Smart contract em modo simulação" if contract is None else "Smart contract · Produção",
     }
 
 

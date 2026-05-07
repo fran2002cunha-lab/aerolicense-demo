@@ -11,6 +11,7 @@ import AlertsPage    from './pages/AlertsPage';
 import BlockchainDemo from './pages/BlockchainDemo';
 import AnalyticsPage from './pages/AnalyticsPage';
 import LoginPage     from './pages/LoginPage';
+import AboutPage     from './pages/AboutPage';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -45,6 +46,7 @@ export default function App() {
                 <Route path="/alerts"            element={<AlertsPage />} />
                 <Route path="/blockchain"        element={<BlockchainDemo />} />
                 <Route path="/analytics"         element={<AnalyticsPage />} />
+                <Route path="/sobre"             element={<AboutPage />} />
               </Routes>
             </ErrorBoundary>
           </main>

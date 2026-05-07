@@ -210,6 +210,16 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── Demo dataset banner ── */}
+      <div style={sk.demoBanner}>
+        <span style={sk.demoBannerIcon}>⚠️</span>
+        <span>
+          <strong>Dataset de demonstração</strong> — Este ambiente contém 12 documentos expirados
+          intencionalmente para ilustrar o sistema de alertas e detecção de anomalias. Em ambiente
+          de produção, organizações com AeroLicense atingem ≥99% de compliance regulamentar.
+        </span>
+      </div>
+
       {/* ── KPI row ── */}
       {summary && (
         <div style={sk.kpiRow}>
@@ -351,6 +361,17 @@ function PilotCard({ pilot: p, badge, risk, onClick }) {
 /* ─── Styles ─── */
 const sk = {
   page: { maxWidth: 1200 },
+
+  demoBanner: {
+    display: 'flex', alignItems: 'flex-start', gap: 10,
+    background: `${c.amber}12`,
+    border: `1px solid ${c.amber}40`,
+    borderLeft: `3px solid ${c.amber}`,
+    borderRadius: 10, padding: '12px 16px',
+    fontSize: 12, color: c.textSub, lineHeight: 1.55,
+    marginBottom: 20,
+  },
+  demoBannerIcon: { flexShrink: 0, fontSize: 14 },
 
   pageHeader: {
     display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
