@@ -318,7 +318,11 @@ function PilotCard({ pilot: p, badge, risk, onClick }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={sk.pilotName}>{p.nome}</div>
           <div style={sk.pilotCargo}>{p.cargo}</div>
-          <div style={sk.pilotWallet}>
+          <div
+            style={sk.pilotWallet}
+            title="Identificador on-chain do piloto — endereço Ethereum usado para registo imutável de credenciais na blockchain. Verificável publicamente."
+          >
+            <span style={{ color: c.textDim, marginRight: 4 }}>{p.id}</span>
             {p.carteira_ethereum.slice(0, 6)}…{p.carteira_ethereum.slice(-4)}
           </div>
         </div>
