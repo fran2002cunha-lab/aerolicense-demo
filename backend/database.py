@@ -84,8 +84,8 @@ DEMO_PILOTS_RAW = [
         "role": "Cabin Crew Senior — Ryanair",
         "ethereum_address": "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
         "documents": [
-            {"doc_type": "ATPL",           "description": "Licença de Tripulante de Cabine — EASA",
-             "hash": "0x3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9d0c1b2a3f4",
+            {"doc_type": "OTHER",          "description": "Licença de Tripulante de Cabine — EASA CC",
+             "hash": "0x3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9d0c1b2a3f5",
              "tx_blockchain": "0xe7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8",
              "issued_at": "2024-05-01", "expires_at": "2027-05-01",
              "issuer": "EASA — European Union Aviation Safety Agency"},
@@ -94,6 +94,11 @@ DEMO_PILOTS_RAW = [
              "tx_blockchain": "0xf8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9",
              "issued_at": "2024-12-01", "expires_at": "2026-06-02",
              "issuer": "Clínica de Medicina Aeronáutica Porto"},
+            {"doc_type": "CRM_TRAINING",   "description": "Crew Resource Management — Cabin Crew",
+             "hash": "0x6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c",
+             "tx_blockchain": "0xa9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b1",
+             "issued_at": "2024-07-01", "expires_at": "2026-07-20",
+             "issuer": "Ryanair Training Academy — Dublin"},
         ],
     },
     {
@@ -114,7 +119,7 @@ DEMO_PILOTS_RAW = [
             {"doc_type": "CRM_TRAINING","description": "Crew Resource Management — Recurrent",
              "hash": "0x1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
              "tx_blockchain": "0xc1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2",
-             "issued_at": "2025-01-10", "expires_at": "2027-01-10",
+             "issued_at": "2024-08-10", "expires_at": "2026-08-10",
              "issuer": "easyJet Training Academy"},
         ],
     },
@@ -154,7 +159,7 @@ DEMO_PILOTS_RAW = [
     {
         "id": "P005", "name": "Carlos Rodrigues",
         "role": "First Officer — Azores Airlines",
-        "ethereum_address": "0x3Gd5661c9F510573d0cG33E6B5172C6371bfF6G8",
+        "ethereum_address": "0x3Ab5661c9F510573d0cA33E6B5172C6371bfF6A8",
         "documents": [
             {"doc_type": "ATPL",           "description": "Licença ATPL — ANAC Portugal",
              "hash": "0xff6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
@@ -181,10 +186,10 @@ DEMO_PILOTS_RAW = [
     {
         "id": "P006", "name": "Inês Tavares",
         "role": "Cabin Crew — TAP Air Portugal",
-        "ethereum_address": "0x4He6772d0G621684e1dH44F7C6283D7482cgG7H9",
+        "ethereum_address": "0x4Be6772d0C621684e1dB44F7C6283D7482ceC7B9",
         "documents": [
-            {"doc_type": "ATPL",           "description": "Licença de Tripulante de Cabine — ANAC",
-             "hash": "0x44ae1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e",
+            {"doc_type": "OTHER",          "description": "Licença de Tripulante de Cabine — ANAC",
+             "hash": "0x44ae1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0f",
              "tx_blockchain": "0xa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
              "issued_at": "2025-01-15", "expires_at": "2028-01-15",
              "issuer": "ANAC — Autoridade Nacional de Aviação Civil"},
@@ -196,14 +201,14 @@ DEMO_PILOTS_RAW = [
             {"doc_type": "CRM_TRAINING",   "description": "Crew Resource Management — Initial",
              "hash": "0x66c03b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a",
              "tx_blockchain": "0xc3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
-             "issued_at": "2025-02-10", "expires_at": "2028-02-10",
+             "issued_at": "2025-02-10", "expires_at": "2027-02-10",
              "issuer": "TAP Air Portugal Training Center"},
         ],
     },
     {
         "id": "P007", "name": "Ricardo Santos",
         "role": "Captain — Lufthansa",
-        "ethereum_address": "0x5If7883e1H732795f2eI55G8D7394E8593dhH8I0",
+        "ethereum_address": "0x5Cf7883e1B732795f2eC55D8D7394E8593dbB8C0",
         "documents": [
             {"doc_type": "ATPL",           "description": "Licença ATPL — Luftfahrt-Bundesamt",
              "hash": "0x77d14c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b",
@@ -228,14 +233,14 @@ DEMO_PILOTS_RAW = [
             {"doc_type": "CRM_TRAINING",   "description": "Crew Resource Management — Recurrent",
              "hash": "0xbb158a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f",
              "tx_blockchain": "0xb8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9",
-             "issued_at": "2024-12-10", "expires_at": "2027-12-10",
+             "issued_at": "2024-12-10", "expires_at": "2026-12-10",
              "issuer": "Lufthansa Aviation Training — München"},
         ],
     },
     {
         "id": "P008", "name": "Mariana Pinto",
         "role": "First Officer — Vueling",
-        "ethereum_address": "0x6Jg8994f2I843806g3fJ66H9E8405F9604eiI9J1",
+        "ethereum_address": "0x6Df8994f2C843806f3fD66E9E8405F9604efD9E1",
         "documents": [
             {"doc_type": "ATPL",           "description": "Licença ATPL — AESA Espanha",
              "hash": "0xcc269b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a",
@@ -255,26 +260,48 @@ DEMO_PILOTS_RAW = [
             {"doc_type": "CRM_TRAINING",   "description": "Crew Resource Management — Recurrent",
              "hash": "0xff59ce3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d",
              "tx_blockchain": "0xf2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3",
-             "issued_at": "2024-11-05", "expires_at": "2027-11-05",
+             "issued_at": "2024-11-05", "expires_at": "2027-03-05",
              "issuer": "Vueling Training Academy — Barcelona"},
         ],
     },
 ]
 
 def seed_demo_data(db):
-    existing_ids = {p.id for p in db.query(Pilot).all()}
-    existing_hashes = {d.hash for d in db.query(Document).all()}
-    changed = False
+    # Versão do seed — incrementar para forçar reset dos dados demo
+    SEED_VERSION = "3"
+    from sqlalchemy import text
+
+    # Ensure meta table exists (safe across SQLite + PostgreSQL)
+    db.execute(text("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"))
+    db.commit()
+
+    try:
+        row = db.execute(text("SELECT value FROM meta WHERE key='seed_version'")).fetchone()
+        current = row[0] if row else None
+    except Exception:
+        db.rollback()
+        current = None
+
+    if current == SEED_VERSION:
+        return  # dados já actualizados
+
+    # Reset completo e reseed
+    db.query(Document).delete()
+    db.query(Pilot).delete()
+    db.execute(text("DELETE FROM meta"))
+    db.commit()
+
     for raw in DEMO_PILOTS_RAW:
-        if raw["id"] not in existing_ids:
-            db.add(Pilot(
-                id=raw["id"], name=raw["name"],
-                role=raw["role"], ethereum_address=raw["ethereum_address"],
-            ))
-            changed = True
+        db.add(Pilot(
+            id=raw["id"], name=raw["name"],
+            role=raw["role"], ethereum_address=raw["ethereum_address"],
+        ))
         for d in raw["documents"]:
-            if d["hash"] not in existing_hashes:
-                db.add(Document(pilot_id=raw["id"], **d))
-                changed = True
-    if changed:
-        db.commit()
+            db.add(Document(pilot_id=raw["id"], **d))
+
+    # Guardar versão do seed (sintaxe compatível com SQLite e PostgreSQL)
+    db.execute(text(
+        "INSERT INTO meta (key, value) VALUES ('seed_version', :v) "
+        "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
+    ), {"v": SEED_VERSION})
+    db.commit()
