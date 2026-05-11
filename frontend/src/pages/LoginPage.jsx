@@ -83,14 +83,18 @@ export default function LoginPage({ onLogin }) {
             <div style={s.panelTitle}>Acesso à plataforma</div>
             <div style={s.panelSub}>Escolhe o teu perfil de acesso</div>
 
-            <div style={s.roleList}>
+            <div style={s.roleList} role="radiogroup" aria-label="Perfil de acesso">
               {ROLES.map(({ id, label, sub, icon }) => {
                 const active = selected === id;
                 return (
                   <div
                     key={id}
                     data-testid={`role-card-${id}`}
+                    role="radio"
+                    tabIndex={0}
+                    aria-checked={active}
                     onClick={() => handleSelect(id)}
+                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleSelect(id)}
                     style={{
                       ...s.roleCard,
                       borderColor: active ? c.primary    : c.border,
@@ -144,7 +148,7 @@ export default function LoginPage({ onLogin }) {
 const s = {
   page: {
     minHeight: '100vh',
-    background: '#020B16',
+    background: c.bgDeep,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 24,
   },
