@@ -1,16 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import Header from './Header';
 
-test('renders role badge for operador', () => {
-  render(<Header activeRole="operador" />);
+test('renders role badge for gestor', () => {
+  render(<Header activeRole="gestor" />);
   expect(screen.getByTestId('role-badge')).toBeInTheDocument();
-  expect(screen.getByTestId('role-badge')).toHaveTextContent('Operador');
+  expect(screen.getByTestId('role-badge')).toHaveTextContent('Gestor');
 });
 
-test('renders role badge for inspector', () => {
-  render(<Header activeRole="inspector" />);
+test('renders role badge for regulador', () => {
+  render(<Header activeRole="regulador" />);
   expect(screen.getByTestId('role-badge')).toBeInTheDocument();
-  expect(screen.getByTestId('role-badge')).toHaveTextContent('Inspector ANAC');
+  expect(screen.getByTestId('role-badge')).toHaveTextContent('Regulador ANAC');
 });
 
 test('does not render role badge when activeRole is null', () => {
