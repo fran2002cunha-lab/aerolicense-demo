@@ -94,17 +94,6 @@ function PilotAvatar({ name, color }) {
   );
 }
 
-/* ─── Mini stat cell ─── */
-function MiniStat({ value, label, color }) {
-  return (
-    <div style={{ background: c.bgElevated, borderRadius: 8, padding: '8px 6px', textAlign: 'center', flex: 1 }}>
-      <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1, color }}>{value}</div>
-      <div style={{ fontSize: 9, color: c.textMuted, marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-        {label}
-      </div>
-    </div>
-  );
-}
 
 const TECH_PILLS = [
   { label: 'Ethereum',  color: c.purple    },
@@ -616,14 +605,17 @@ function PilotCard({ pilot: p, badge, risk, onClick }) {
         </div>
       </div>
 
-      <div style={sk.divider} />
-
-      <DocBadges
-        validos={p.validos}
-        aExpirar={p.a_expirar_em_breve}
-        expirados={p.expirados}
-        total={p.total_documentos}
-      />
+      {(p.validos > 0 || p.a_expirar_em_breve > 0 || p.expirados > 0) && (
+        <>
+          <div style={sk.divider} />
+          <DocBadges
+            validos={p.validos}
+            aExpirar={p.a_expirar_em_breve}
+            expirados={p.expirados}
+            total={p.total_documentos}
+          />
+        </>
+      )}
 
       {risk && (
         <div style={sk.riskRow}>
@@ -775,9 +767,6 @@ const sk = {
     whiteSpace: 'nowrap', alignSelf: 'flex-start',
   },
   divider: { height: 1, background: c.border, margin: '0 18px' },
-  miniStatsRow: {
-    display: 'flex', gap: 6, padding: '14px 18px',
-  },
 
   riskRow: {
     display: 'flex', alignItems: 'center', gap: 10,
