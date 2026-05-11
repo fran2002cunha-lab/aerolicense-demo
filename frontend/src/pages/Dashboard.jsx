@@ -1,9 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import Spinner from '../components/Spinner';
 import ApiOfflineBanner from '../components/ApiOfflineBanner';
 import { c, shadow, gradientPrimary, pilotStatusBadge, riskColor } from '../theme';
+
+const TYPE_LABELS = {
+  ATPL: 'ATPL', MEDICAL_CLASS1: 'Médico Cl.1', ICAO_ENGLISH: 'ICAO English',
+  TYPE_RATING: 'Type Rating', CRM_TRAINING: 'CRM', OTHER: 'Outro',
+};
 
 /* ─── KPI icons ─── */
 const IconPilots = () => (
@@ -31,9 +36,19 @@ const IconSearch = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/>
   </svg>
 );
+const IconChain = () => (
+  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 0 0-5.656 0l-4 4a4 4 0 1 0 5.656 5.656l1.102-1.101m-.758-4.899a4 4 0 0 0 5.656 0l4-4a4 4 0 0 0-5.656-5.656l-1.1 1.1"/>
+  </svg>
+);
+const IconArrow = () => (
+  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+  </svg>
+);
 
 /* ─── KPI Card ─── */
-function KpiCard({ label, value, icon: Icon, color, bg, subtitle }) {
+function KpiCard({ label, value, icon: Icon, color, bg, subtitle, action, onAction }) {
   return (
     <div style={{ ...sk.kpiCard, borderTop: `3px solid ${color}` }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -47,7 +62,18 @@ function KpiCard({ label, value, icon: Icon, color, bg, subtitle }) {
       <div style={{ fontSize: 32, fontWeight: 800, color: c.text, lineHeight: 1, letterSpacing: '-1px' }}>
         {value ?? '—'}
       </div>
-      <div style={{ fontSize: 12, color: c.textMuted, marginTop: 6, fontWeight: 500 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
+        <div style={{ fontSize: 12, color: c.textMuted, fontWeight: 500 }}>{label}</div>
+        {action && (
+          <button onClick={onAction} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 11, color, fontWeight: 600, fontFamily: 'Inter, sans-serif',
+            display: 'flex', alignItems: 'center', gap: 3, padding: 0,
+          }}>
+            {action} <IconArrow />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -102,7 +128,6 @@ function HeroBanner() {
       justifyContent: 'space-between',
       gap: 16,
     }}>
-      {/* Left: identity */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
@@ -124,22 +149,15 @@ function HeroBanner() {
           Projeto académico · ISEC Lisboa · 2025
         </div>
       </div>
-
-      {/* Right: tech pills */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-end' }}>
         {TECH_PILLS.map(({ label, color }) => (
           <span key={label} style={{
             display: 'flex', alignItems: 'center', gap: 5,
-            background: `${color}18`,
-            border: `1px solid ${color}44`,
-            borderRadius: 20,
-            padding: '3px 10px',
+            background: `${color}18`, border: `1px solid ${color}44`,
+            borderRadius: 20, padding: '3px 10px',
             fontSize: 11, fontWeight: 700, color,
           }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: color, display: 'inline-block', flexShrink: 0,
-            }} />
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />
             {label}
           </span>
         ))}
@@ -148,29 +166,216 @@ function HeroBanner() {
   );
 }
 
+/* ─── Próximas Expirações ─── */
+function UpcomingExpirations({ alerts, onViewAll }) {
+  const top = alerts.slice(0, 6);
+  return (
+    <div style={{ ...sk.panel, flex: 2, minWidth: 280 }}>
+      <div style={sk.panelHeader}>
+        <div style={sk.panelTitle}>Próximas Expirações</div>
+        <button onClick={onViewAll} style={sk.panelLink}>Ver todas <IconArrow /></button>
+      </div>
+      {top.length === 0 ? (
+        <div style={{ padding: '20px 0', textAlign: 'center', color: c.green, fontSize: 13 }}>
+          ✓ Nenhum documento a expirar nos próximos 30 dias
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {top.map((a, i) => {
+            const urgent = a.dias_restantes <= 0;
+            const soon   = a.dias_restantes > 0 && a.dias_restantes <= 14;
+            const color  = urgent ? c.red : soon ? c.amber : c.textMuted;
+            const dayTxt = urgent
+              ? `Expirado há ${Math.abs(a.dias_restantes)}d`
+              : `${a.dias_restantes}d restantes`;
+            return (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '9px 12px', borderRadius: 8,
+                background: urgent ? `${c.red}0A` : soon ? `${c.amber}0A` : c.bgElevated,
+                border: `1px solid ${urgent ? c.red : soon ? c.amber : c.border}30`,
+              }}>
+                <div style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: color, flexShrink: 0,
+                }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: c.text,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {a.piloto}
+                  </div>
+                  <div style={{ fontSize: 10, color: c.textMuted, marginTop: 1 }}>
+                    {TYPE_LABELS[a.tipo] || a.tipo}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 700, color, flexShrink: 0 }}>
+                  {dayTxt}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Blockchain Status Widget ─── */
+function BlockchainWidget({ totalDocs }) {
+  const verified = totalDocs ?? 0;
+  return (
+    <div style={{
+      background: `${c.primary}0C`, border: `1px solid ${c.primary}30`,
+      borderRadius: 12, padding: '16px 18px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <div style={{
+          width: 30, height: 30, borderRadius: 8,
+          background: gradientPrimary,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <IconChain />
+        </div>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: c.primaryLt }}>Blockchain</div>
+          <div style={{ fontSize: 10, color: c.textMuted }}>Ethereum · Modo Simulação</div>
+        </div>
+        <div style={{
+          marginLeft: 'auto', width: 8, height: 8, borderRadius: '50%',
+          background: c.green, boxShadow: `0 0 8px ${c.green}`,
+        }} />
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ flex: 1, textAlign: 'center', background: c.bgElevated, borderRadius: 8, padding: '10px 6px' }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: c.primaryLt, lineHeight: 1 }}>{verified}</div>
+          <div style={{ fontSize: 9, color: c.textMuted, marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Registados</div>
+        </div>
+        <div style={{ flex: 1, textAlign: 'center', background: c.bgElevated, borderRadius: 8, padding: '10px 6px' }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: c.green, lineHeight: 1 }}>100%</div>
+          <div style={{ fontSize: 9, color: c.textMuted, marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Imutáveis</div>
+        </div>
+        <div style={{ flex: 1, textAlign: 'center', background: c.bgElevated, borderRadius: 8, padding: '10px 6px' }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: c.amber, lineHeight: 1 }}>0</div>
+          <div style={{ fontSize: 9, color: c.textMuted, marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Falsif.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Compliance por Tipo de Documento ─── */
+function ComplianceByType({ distribution, alerts }) {
+  const items = useMemo(() => {
+    return distribution.map(d => {
+      const nAlerts = alerts.filter(a => a.tipo === d.type).length;
+      const rate = d.count > 0 ? Math.round(((d.count - nAlerts) / d.count) * 100) : 100;
+      const color = rate >= 90 ? c.green : rate >= 70 ? c.amber : c.red;
+      return { type: d.type, rate, color };
+    }).sort((a, b) => a.rate - b.rate);
+  }, [distribution, alerts]);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div style={sk.panel}>
+      <div style={sk.panelHeader}>
+        <div style={sk.panelTitle}>Compliance por Tipo</div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+        {items.map(({ type, rate, color }) => (
+          <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 80, fontSize: 10, fontWeight: 600, color: c.textMuted, flexShrink: 0 }}>
+              {TYPE_LABELS[type] || type}
+            </div>
+            <div style={{ flex: 1, height: 6, background: c.bgElevated, borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ width: `${rate}%`, height: '100%', background: color, borderRadius: 3, transition: 'width .6s ease' }} />
+            </div>
+            <div style={{ width: 32, fontSize: 11, fontWeight: 700, color, textAlign: 'right', flexShrink: 0 }}>
+              {rate}%
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Feed de Actividade ─── */
+const ACTIVITY_ICONS = { verified: '🔗', alert: '⚠️', registered: '📄', renewed: '✅' };
+
+function ActivityFeed({ pilots }) {
+  const feed = useMemo(() => {
+    if (!pilots.length) return [];
+    const events = [
+      { type: 'verified',   pilot: pilots[1]?.nome ?? 'P002', doc: 'Médico Cl.1',      time: 'há 3h' },
+      { type: 'alert',      pilot: pilots[0]?.nome ?? 'P001', doc: 'ATPL',              time: 'há 6h' },
+      { type: 'registered', pilot: pilots[2]?.nome ?? 'P003', doc: 'ICAO English',      time: 'há 1 dia' },
+      { type: 'verified',   pilot: pilots[0]?.nome ?? 'P001', doc: 'Type Rating B737',  time: 'há 1 dia' },
+      { type: 'renewed',    pilot: pilots[1]?.nome ?? 'P002', doc: 'CRM Training',      time: 'há 2 dias' },
+      { type: 'alert',      pilot: pilots[2]?.nome ?? 'P003', doc: 'Médico Cl.1',       time: 'há 3 dias' },
+    ];
+    return events;
+  }, [pilots]);
+
+  const colors = { verified: c.primaryLt, alert: c.amber, registered: c.green, renewed: c.green };
+
+  return (
+    <div style={{ ...sk.panel, marginBottom: 24 }}>
+      <div style={sk.panelHeader}>
+        <div style={sk.panelTitle}>Actividade Recente</div>
+        <span style={{ fontSize: 10, color: c.textDim, fontStyle: 'italic' }}>Simulado para demo</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+        {feed.map((e, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '9px 0',
+            borderBottom: i < feed.length - 1 ? `1px solid ${c.border}` : 'none',
+          }}>
+            <div style={{ fontSize: 14, flexShrink: 0, width: 22, textAlign: 'center' }}>{ACTIVITY_ICONS[e.type]}</div>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: colors[e.type] }}>{e.pilot}</span>
+              <span style={{ fontSize: 12, color: c.textMuted }}> · {e.doc}</span>
+            </div>
+            <div style={{ fontSize: 11, color: c.textDim, flexShrink: 0 }}>{e.time}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main page ─── */
 export default function Dashboard() {
-  const [pilots,  setPilots]  = useState([]);
-  const [riskMap, setRiskMap] = useState({});
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(false);
-  const [search,  setSearch]  = useState('');
+  const [pilots,       setPilots]       = useState([]);
+  const [riskMap,      setRiskMap]      = useState({});
+  const [summary,      setSummary]      = useState(null);
+  const [alerts,       setAlerts]       = useState([]);
+  const [distribution, setDistribution] = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState(false);
+  const [search,       setSearch]       = useState('');
   const navigate = useNavigate();
 
+  const role = sessionStorage.getItem('aero_role');
+  const isInspector = role === 'inspector';
+
   useEffect(() => {
-    Promise.allSettled([api.pilots(), api.riskScores(), api.analyticsSummary()])
-      .then(([pRes, rRes, sRes]) => {
-        if (pRes.status === 'fulfilled') setPilots(pRes.value.pilotos);
-        else setError(true);
-        if (rRes.status === 'fulfilled') {
-          const map = {};
-          rRes.value.pilots.forEach(p => { map[p.pilot_id] = p; });
-          setRiskMap(map);
-        }
-        if (sRes.status === 'fulfilled') setSummary(sRes.value);
-      })
-      .finally(() => setLoading(false));
+    Promise.allSettled([
+      api.pilots(), api.riskScores(), api.analyticsSummary(),
+      api.alerts(), api.analyticsDistribution(),
+    ]).then(([pRes, rRes, sRes, aRes, dRes]) => {
+      if (pRes.status === 'fulfilled') setPilots(pRes.value.pilotos);
+      else setError(true);
+      if (rRes.status === 'fulfilled') {
+        const map = {};
+        rRes.value.pilots.forEach(p => { map[p.pilot_id] = p; });
+        setRiskMap(map);
+      }
+      if (sRes.status === 'fulfilled') setSummary(sRes.value);
+      if (aRes.status === 'fulfilled') setAlerts(aRes.value.alertas ?? []);
+      if (dRes.status === 'fulfilled') setDistribution(dRes.value);
+    }).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <Spinner />;
@@ -181,10 +386,27 @@ export default function Dashboard() {
     p.cargo.toLowerCase().includes(search.toLowerCase())
   );
 
+  const criticalCount = alerts.filter(a => a.status === 'expired').length;
+
   return (
     <div style={sk.page}>
 
       <HeroBanner />
+
+      {/* ── Role-aware context line ── */}
+      {isInspector && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: `${c.purple}0D`, border: `1px solid ${c.purple}30`,
+          borderRadius: 8, padding: '8px 14px', marginBottom: 20,
+          fontSize: 12, color: c.purpleLt,
+        }}>
+          <span>🛡️</span>
+          <span><strong>Vista Inspector ANAC</strong> — Foco em conformidade regulatória e alertas críticos.
+            {criticalCount > 0 && <span style={{ color: c.red, fontWeight: 700 }}> {criticalCount} documento(s) expirado(s) requerem acção imediata.</span>}
+          </span>
+        </div>
+      )}
 
       {/* ── Page header ── */}
       <div style={sk.pageHeader}>
@@ -194,8 +416,6 @@ export default function Dashboard() {
             {pilots.length} profissionais · {summary?.total_documents ?? '—'} documentos geridos
           </p>
         </div>
-
-        {/* Search */}
         <div style={sk.searchWrap}>
           <span style={sk.searchIcon}><IconSearch /></span>
           <input
@@ -246,6 +466,8 @@ export default function Dashboard() {
             color={c.red}
             bg={c.redBg}
             subtitle="Requerem ação imediata"
+            action="Ver alertas"
+            onAction={() => navigate('/alerts')}
           />
           <KpiCard
             label="Compliance Geral"
@@ -254,9 +476,23 @@ export default function Dashboard() {
             color={c.amber}
             bg={c.amberBg}
             subtitle="Taxa de conformidade"
+            action="Analytics"
+            onAction={() => navigate('/analytics')}
           />
         </div>
       )}
+
+      {/* ── Intelligence row ── */}
+      <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+        <UpcomingExpirations alerts={alerts} onViewAll={() => navigate('/alerts')} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1, minWidth: 260 }}>
+          <BlockchainWidget totalDocs={summary?.total_documents} />
+          <ComplianceByType distribution={distribution} alerts={alerts} />
+        </div>
+      </div>
+
+      {/* ── Activity feed ── */}
+      <ActivityFeed pilots={pilots} />
 
       {/* ── Section label ── */}
       <div style={sk.sectionHeader}>
@@ -276,7 +512,7 @@ export default function Dashboard() {
           <div style={sk.emptySubtext}>Tenta um termo de pesquisa diferente</div>
         </div>
       ) : (
-        <div style={sk.grid}>
+        <div style={sk.grid} className="pilot-grid">
           {filtered.map(p => {
             const risk  = riskMap[p.id];
             const badge = pilotStatusBadge(p.compliance_ok, p.expirados);
@@ -296,9 +532,49 @@ export default function Dashboard() {
   );
 }
 
+/* ─── Helpers ─── */
+function extractCompany(cargo) {
+  const parts = cargo.split(' — ');
+  return parts.length > 1 ? parts[parts.length - 1] : null;
+}
+
+function DocBadges({ validos, aExpirar, expirados, total }) {
+  const items = [
+    { count: validos,   icon: '✓', color: c.green },
+    { count: aExpirar,  icon: '⚠', color: c.amber },
+    { count: expirados, icon: '✗', color: c.red },
+  ].filter(i => i.count > 0);
+
+  if (items.length === 0) return null;
+  const compliantPct = total > 0 ? Math.round((validos / total) * 100) : 100;
+  const barColor = expirados > 0 ? c.red : aExpirar > 0 ? c.amber : c.green;
+
+  return (
+    <div style={{ padding: '0 18px 16px' }}>
+      <div style={{ height: 4, background: c.border, borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}>
+        <div style={{ width: `${compliantPct}%`, height: '100%', background: barColor, borderRadius: 2, transition: 'width .5s ease' }} />
+      </div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {items.map(({ count, icon, color }) => (
+          <span key={icon} style={{
+            fontSize: 11, fontWeight: 700,
+            color, background: `${color}18`,
+            border: `1px solid ${color}35`,
+            borderRadius: 6, padding: '3px 8px',
+            display: 'flex', alignItems: 'center', gap: 4,
+          }}>
+            {icon} {count}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Pilot Card ─── */
 function PilotCard({ pilot: p, badge, risk, onClick }) {
   const [hovered, setHovered] = useState(false);
+  const company = extractCompany(p.cargo);
 
   return (
     <div
@@ -312,12 +588,16 @@ function PilotCard({ pilot: p, badge, risk, onClick }) {
         boxShadow:   hovered ? shadow.hover : shadow.card,
       }}
     >
-      {/* Card header */}
       <div style={sk.cardHeader}>
         <PilotAvatar name={p.nome} color={badge.color} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={sk.pilotName}>{p.nome}</div>
-          <div style={sk.pilotCargo}>{p.cargo}</div>
+          <div style={sk.pilotCargo}>{p.cargo.split(' — ')[0]}</div>
+          {company && (
+            <div style={{ fontSize: 10, color: c.primaryLt, marginTop: 2, fontWeight: 600 }}>
+              {company}
+            </div>
+          )}
           <div
             style={sk.pilotWallet}
             title="Identificador on-chain do piloto — endereço Ethereum usado para registo imutável de credenciais na blockchain. Verificável publicamente."
@@ -336,17 +616,15 @@ function PilotCard({ pilot: p, badge, risk, onClick }) {
         </div>
       </div>
 
-      {/* Divider */}
       <div style={sk.divider} />
 
-      {/* Mini stats */}
-      <div style={sk.miniStatsRow}>
-        <MiniStat value={p.expirados}          color={c.red}   label="Expirados" />
-        <MiniStat value={p.a_expirar_em_breve} color={c.amber} label="A expirar" />
-        <MiniStat value={p.validos}            color={c.green} label="Válidos" />
-      </div>
+      <DocBadges
+        validos={p.validos}
+        aExpirar={p.a_expirar_em_breve}
+        expirados={p.expirados}
+        total={p.total_documentos}
+      />
 
-      {/* Risk score */}
       {risk && (
         <div style={sk.riskRow}>
           <span style={sk.riskLabel}>Risk Score</span>
@@ -365,6 +643,22 @@ function PilotCard({ pilot: p, badge, risk, onClick }) {
 /* ─── Styles ─── */
 const sk = {
   page: { maxWidth: 1200 },
+
+  panel: {
+    background: c.bgCard, border: `1px solid ${c.border}`,
+    borderRadius: 12, padding: '18px 20px', boxShadow: shadow.card,
+  },
+  panelHeader: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  panelTitle: { fontSize: 13, fontWeight: 700, color: c.textMuted },
+  panelLink: {
+    background: 'none', border: 'none', cursor: 'pointer',
+    fontSize: 11, color: c.primaryLt, fontWeight: 600,
+    fontFamily: 'Inter, sans-serif',
+    display: 'flex', alignItems: 'center', gap: 3, padding: 0,
+  },
 
   demoBanner: {
     display: 'flex', alignItems: 'flex-start', gap: 10,
@@ -417,7 +711,7 @@ const sk = {
   kpiRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px,1fr))',
-    gap: 16, marginBottom: 32,
+    gap: 16, marginBottom: 24,
   },
   kpiCard: {
     background: c.bgCard,
