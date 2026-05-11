@@ -2,41 +2,40 @@ import { useState } from 'react';
 import { c, gradientPrimary, shadow } from '../theme';
 
 const ROLES = [
-  {
-    id: 'operador',
-    label: 'Operador de Companhia',
-    sub: 'TAP Air Portugal',
-    Icon: BriefcaseIcon,
-  },
-  {
-    id: 'inspector',
-    label: 'Inspector ANAC',
-    sub: 'Autoridade Nacional de Aviação Civil',
-    Icon: ShieldIcon,
-  },
+  { id: 'gestor',    label: 'Gestor de Frota', sub: 'Operador / Companhia Aérea', icon: '✈' },
+  { id: 'piloto',    label: 'Piloto',           sub: 'Tripulante certificado EASA', icon: '👨‍✈️' },
+  { id: 'regulador', label: 'Regulador',        sub: 'ANAC / Autoridade Civil',    icon: '🏛' },
 ];
 
-function PlaneIcon() {
+const BADGES = [
+  { icon: '🔐', label: 'Blockchain SHA-256',   color: c.primaryLt },
+  { icon: '🤖', label: 'ML Anomaly Detection', color: c.green },
+  { icon: '📋', label: 'QR Verification',      color: c.amber },
+  { icon: '⚡', label: 'Alertas Automáticos',  color: c.purple },
+];
+
+function TapLogo() {
   return (
-    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
-      <path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2h0A1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5Z" fill="#fff"/>
+    <svg width="82" height="38" viewBox="0 0 82 38" aria-label="TAP Air Portugal">
+      <text x="20" y="35" fontFamily="'Arial Black', Arial, sans-serif" fontWeight="900" fontSize="38" fill="#5B8C1A">A</text>
+      <text x="0"  y="35" fontFamily="'Arial Black', Arial, sans-serif" fontWeight="900" fontSize="38" fill="#8DB82A">T</text>
+      <text x="46" y="35" fontFamily="'Arial Black', Arial, sans-serif" fontWeight="900" fontSize="38" fill="#C0281E">P</text>
     </svg>
   );
 }
 
-function BriefcaseIcon() {
+function AnacLogo() {
+  const blue = '#3A8DC5';
   return (
-    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.6">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-    </svg>
-  );
-}
-
-function ShieldIcon() {
-  return (
-    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.6">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <svg width="120" height="52" viewBox="0 0 120 52" aria-label="ANAC - Autoridade Nacional da Aviação Civil">
+      <path d="M58 18 C50 10, 28 8, 4 18 C4 22, 26 16, 52 24 Z" fill={blue}/>
+      <path d="M62 18 C70 10, 92 8, 116 18 C116 22, 94 16, 68 24 Z" fill={blue}/>
+      <circle cx="60" cy="16" r="14" fill="white" stroke={blue} strokeWidth="1.5"/>
+      <rect x="57.5" y="5"    width="5"  height="22" rx="0.5" fill={blue}/>
+      <rect x="51"   y="9"    width="18" height="5"  rx="0.5" fill={blue}/>
+      <rect x="53.5" y="15.5" width="13" height="4"  rx="0.5" fill={blue}/>
+      <text x="60" y="42" textAnchor="middle" fontFamily="'Arial Black', Arial, sans-serif" fontWeight="900" fontSize="13" fill={blue} letterSpacing="2">ANAC</text>
+      <text x="60" y="50" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="400" fontSize="4.8" fill={blue} letterSpacing="0.3">AUTORIDADE NACIONAL DA AVIAÇÃO CIVIL</text>
     </svg>
   );
 }
@@ -48,64 +47,95 @@ export default function LoginPage({ onLogin }) {
     setSelected(prev => (prev === id ? null : id));
   }
 
-  function handleEnter() {
-    if (selected) onLogin(selected);
-  }
-
   return (
     <div style={s.page}>
-      <div style={s.card}>
-        <div style={s.logoRow}>
-          <div style={s.logoIcon}><PlaneIcon /></div>
-          <div>
-            <div style={s.logoText}>
-              Aero<span style={{ color: c.primaryLt }}>License</span>
+      <div style={s.split}>
+
+        {/* ── Coluna esquerda: proposta de valor ── */}
+        <div style={s.left}>
+          <div style={s.brand}>
+            <span style={{ color: c.text, fontWeight: 900 }}>AERO</span>
+            <span style={{ color: c.primaryLt, fontWeight: 900 }}>LICENSE</span>
+          </div>
+          <h1 style={s.headline}>O futuro da conformidade aeronáutica</h1>
+          <p style={s.sub}>Blockchain · IA · Conformidade EASA</p>
+
+          <div style={s.badges}>
+            {BADGES.map(({ icon, label, color }) => (
+              <span key={label} style={{ ...s.badge, color, background: `${color}18`, border: `1px solid ${color}35` }}>
+                {icon} {label}
+              </span>
+            ))}
+          </div>
+
+          <div style={s.logoRow}>
+            <span style={s.logoLabel}>Parceiros de referência</span>
+            <div style={s.logos}>
+              <TapLogo />
+              <AnacLogo />
             </div>
-            <div style={s.tagline}>Gestão de Licenças de Aviação</div>
           </div>
         </div>
 
-        <p style={s.subtitle}>Selecione o perfil para aceder à demonstração</p>
+        {/* ── Coluna direita: acesso ── */}
+        <div style={s.right}>
+          <div style={s.panel}>
+            <div style={s.panelTitle}>Acesso à plataforma</div>
+            <div style={s.panelSub}>Escolhe o teu perfil de acesso</div>
 
-        <div style={s.rolesRow}>
-          {ROLES.map(({ id, label, sub, Icon }) => {
-            const active = selected === id;
-            return (
-              <div
-                key={id}
-                data-testid={`role-card-${id}`}
-                onClick={() => handleSelect(id)}
-                style={{
-                  ...s.roleCard,
-                  borderColor: active ? c.primary : c.border,
-                  background:  active ? c.primaryGlow : c.bgElevated,
-                  boxShadow:   active ? shadow.glow : 'none',
-                }}
-              >
-                <span style={{ color: active ? c.primaryLt : c.textMuted }}>
-                  <Icon />
-                </span>
-                <div style={s.roleLabel}>{label}</div>
-                <div style={s.roleSub}>{sub}</div>
-              </div>
-            );
-          })}
+            <div style={s.roleList}>
+              {ROLES.map(({ id, label, sub, icon }) => {
+                const active = selected === id;
+                return (
+                  <div
+                    key={id}
+                    data-testid={`role-card-${id}`}
+                    onClick={() => handleSelect(id)}
+                    style={{
+                      ...s.roleCard,
+                      borderColor: active ? c.primary    : c.border,
+                      background:  active ? `${c.primary}12` : c.bgElevated,
+                      boxShadow:   active ? shadow.glow  : 'none',
+                    }}
+                  >
+                    <span style={{ fontSize: 20 }}>{icon}</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{label}</div>
+                      <div style={{ fontSize: 11, color: c.textMuted, marginTop: 2 }}>{sub}</div>
+                    </div>
+                    {active && (
+                      <div style={{ marginLeft: 'auto', width: 8, height: 8, borderRadius: '50%', background: c.primaryLt, flexShrink: 0 }} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              data-testid="enter-btn"
+              onClick={() => selected && onLogin(selected)}
+              disabled={!selected}
+              style={{
+                ...s.enterBtn,
+                opacity: selected ? 1 : 0.4,
+                cursor:  selected ? 'pointer' : 'not-allowed',
+              }}
+            >
+              Entrar na Demo →
+            </button>
+
+            <button
+              data-testid="guest-link"
+              onClick={() => onLogin('visitante')}
+              style={s.guestLink}
+            >
+              Explorar sem selecionar perfil
+            </button>
+
+            <p style={s.footer}>Demo académico · ISEC Lisboa · Dados simulados</p>
+          </div>
         </div>
 
-        <button
-          data-testid="enter-btn"
-          onClick={handleEnter}
-          disabled={!selected}
-          style={{
-            ...s.enterBtn,
-            opacity: selected ? 1 : 0.45,
-            cursor:  selected ? 'pointer' : 'not-allowed',
-          }}
-        >
-          Entrar
-        </button>
-
-        <p style={s.footer}>Demo académico · ISEC Lisboa · Dados simulados</p>
       </div>
     </div>
   );
@@ -114,54 +144,93 @@ export default function LoginPage({ onLogin }) {
 const s = {
   page: {
     minHeight: '100vh',
-    background: c.bgDeep,
+    background: '#020B16',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 24,
   },
-  card: {
-    background: c.bgCard,
+  split: {
+    display: 'flex',
+    gap: 0,
+    maxWidth: 900,
+    width: '100%',
+    borderRadius: 20,
+    overflow: 'hidden',
     border: `1px solid ${c.border}`,
-    borderRadius: 16,
-    padding: '36px 40px',
-    maxWidth: 480, width: '100%',
     boxShadow: shadow.card,
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    flexWrap: 'wrap',
   },
-  logoRow: {
-    display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8,
+  left: {
+    flex: '1 1 340px',
+    background: 'linear-gradient(160deg, #0C1E34 0%, #060F1E 100%)',
+    padding: '48px 40px',
+    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+    borderRight: `1px solid ${c.border}`,
   },
-  logoIcon: {
-    width: 40, height: 40,
-    background: gradientPrimary,
-    borderRadius: 12,
+  right: {
+    flex: '1 1 300px',
+    background: c.bgCard,
+    padding: '40px 36px',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0,
-    boxShadow: '0 2px 12px rgba(29,78,216,.45)',
   },
-  logoText: { fontSize: 20, fontWeight: 800, color: c.text, letterSpacing: '-0.4px', lineHeight: 1.1 },
-  tagline:  { fontSize: 11, color: c.textMuted, fontWeight: 500, marginTop: 3 },
-  subtitle: { fontSize: 13, color: c.textSub, margin: '20px 0 24px', textAlign: 'center' },
-  rolesRow: { display: 'flex', gap: 16, width: '100%', marginBottom: 24 },
+  panel: { width: '100%', maxWidth: 320 },
+
+  brand: {
+    fontSize: 26, letterSpacing: 3, marginBottom: 20,
+    fontFamily: 'Inter, system-ui, sans-serif',
+  },
+  headline: {
+    fontSize: 24, fontWeight: 900, color: c.text,
+    lineHeight: 1.25, margin: '0 0 10px',
+    letterSpacing: '-0.5px',
+  },
+  sub: {
+    fontSize: 13, color: c.textMuted, margin: '0 0 28px', fontWeight: 500,
+  },
+  badges: {
+    display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 36,
+  },
+  badge: {
+    fontSize: 11, fontWeight: 600,
+    padding: '5px 11px', borderRadius: 20,
+    display: 'flex', alignItems: 'center', gap: 5,
+  },
+  logoRow: { marginTop: 'auto' },
+  logoLabel: {
+    display: 'block',
+    fontSize: 10, color: c.textDim,
+    textTransform: 'uppercase', letterSpacing: '1px',
+    marginBottom: 10,
+  },
+  logos: { display: 'flex', alignItems: 'center', gap: 24 },
+
+  panelTitle: { fontSize: 18, fontWeight: 800, color: c.text, marginBottom: 4 },
+  panelSub:   { fontSize: 12, color: c.textMuted, marginBottom: 24 },
+
+  roleList: { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 },
   roleCard: {
-    flex: 1,
-    border: '1.5px solid',
-    borderRadius: 12,
-    padding: '20px 16px',
-    cursor: 'pointer',
-    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+    display: 'flex', alignItems: 'center', gap: 12,
+    padding: '12px 14px', borderRadius: 10,
+    border: '1.5px solid', cursor: 'pointer',
     transition: 'border-color .15s, background .15s, box-shadow .15s',
   },
-  roleLabel: { fontSize: 13, fontWeight: 700, color: c.text, textAlign: 'center' },
-  roleSub:   { fontSize: 11, color: c.textMuted, textAlign: 'center', lineHeight: 1.4 },
+
   enterBtn: {
-    width: '100%',
-    padding: '13px',
+    width: '100%', padding: '13px',
     background: gradientPrimary,
     border: 'none', borderRadius: 10,
     color: '#fff', fontWeight: 700, fontSize: 14,
     fontFamily: 'Inter, system-ui, sans-serif',
     boxShadow: '0 4px 14px rgba(29,78,216,.35)',
-    marginBottom: 20,
+    marginBottom: 12,
+    transition: 'opacity .15s',
   },
-  footer: { fontSize: 11, color: c.textDim, textAlign: 'center', margin: 0 },
+  guestLink: {
+    width: '100%', padding: '9px',
+    background: 'none', border: 'none',
+    color: c.textMuted, fontSize: 12,
+    fontFamily: 'Inter, system-ui, sans-serif',
+    cursor: 'pointer', marginBottom: 16,
+    textDecoration: 'underline',
+  },
+  footer: { fontSize: 10, color: c.textDim, textAlign: 'center', margin: 0 },
 };
