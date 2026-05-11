@@ -22,9 +22,10 @@ export default function AlertsPage() {
   const [data,       setData]       = useState(null);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState(false);
-  const [sort,       setSort]       = useState('urgency');
+  const [sort,         setSort]         = useState('urgency');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType,   setFilterType]   = useState('all');
+  const [search,       setSearch]       = useState('');
 
   useEffect(() => {
     api.alerts()
@@ -44,6 +45,8 @@ export default function AlertsPage() {
     return [...data.alertas]
       .filter(a => filterStatus === 'all' || a.status === filterStatus)
       .filter(a => filterType === 'all' || a.tipo === filterType)
+      .filter(a => !search || a.piloto.toLowerCase().includes(search.toLowerCase()) ||
+        (a.documento || '').toLowerCase().includes(search.toLowerCase()))
       .sort((a, b) =>
         sort === 'name' ? a.piloto.localeCompare(b.piloto) : a.dias_restantes - b.dias_restantes
       );
@@ -71,6 +74,23 @@ export default function AlertsPage() {
         <div style={{ fontSize: 13, color: c.textMuted, marginTop: 2 }}>
           {data.total_alertas} documento(s) a requerer atenção
         </div>
+      </div>
+
+      {/* ── Search ── */}
+      <div style={{ marginBottom: 12 }}>
+        <input
+          type="text"
+          placeholder="Pesquisar por piloto ou documento…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{
+            width: '100%', maxWidth: 360, padding: '8px 12px',
+            fontSize: 13, borderRadius: 8, fontFamily: 'Inter, sans-serif',
+            background: c.bgSurface, border: `1px solid ${c.border}`,
+            color: c.text, outline: 'none',
+          }}
+          aria-label="Pesquisar alertas"
+        />
       </div>
 
       {/* ── Sort + export ── */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../api';
 import Spinner from '../components/Spinner';
@@ -57,6 +57,7 @@ export default function AnalyticsPage() {
   const [riskScores,   setRiskScores]   = useState({ pilots: [] });
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(false);
+  const [riskSearch,   setRiskSearch]   = useState('');
 
   useEffect(() => {
     Promise.allSettled([
@@ -70,6 +71,13 @@ export default function AnalyticsPage() {
       if (rRes.status === 'fulfilled') setRiskScores(rRes.value);
     }).finally(() => setLoading(false));
   }, []);
+
+  const filteredRisk = useMemo(() => {
+    if (!riskSearch) return riskScores.pilots;
+    return riskScores.pilots.filter(p =>
+      p.pilot_name.toLowerCase().includes(riskSearch.toLowerCase())
+    );
+  }, [riskScores, riskSearch]);
 
   if (loading) return <Spinner />;
   if (error)   return <ApiOfflineBanner />;
@@ -143,11 +151,24 @@ export default function AnalyticsPage() {
         <div style={{ fontSize: 13, fontWeight: 600, color: c.textMuted, marginBottom: 4 }}>
           Risk Score por Piloto
         </div>
-        <div style={{ fontSize: 12, color: c.textDim, marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: c.textDim, marginBottom: 12 }}>
           Score 0–100: expirado −25 pts · a expirar −proporcional · anomalia ML −15 pts
         </div>
+        <input
+          type="text"
+          placeholder="Pesquisar por nome de piloto…"
+          value={riskSearch}
+          onChange={e => setRiskSearch(e.target.value)}
+          style={{
+            width: '100%', maxWidth: 300, padding: '7px 11px',
+            fontSize: 12, borderRadius: 7, fontFamily: 'Inter, sans-serif',
+            background: c.bgElevated, border: `1px solid ${c.border}`,
+            color: c.text, outline: 'none', marginBottom: 14, display: 'block',
+          }}
+          aria-label="Pesquisar pilotos por nome"
+        />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {riskScores.pilots.map(p => (
+          {filteredRisk.map(p => (
             <div key={p.pilot_id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 140, color: c.text, fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
                 {p.pilot_name}

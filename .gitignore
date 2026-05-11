@@ -12,3 +12,4 @@ __pycache__/
 smart_contract/node_modules/
 smart_contract/artifacts/
 smart_contract/cache/
+.vercel

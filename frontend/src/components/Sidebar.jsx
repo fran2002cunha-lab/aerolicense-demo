@@ -35,13 +35,13 @@ const links = [
   { to: '/sobre',      Icon: AboutIcon,      label: 'Sobre',      alert: false },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onNavigate }) {
   return (
-    <nav style={s.nav}>
+    <nav style={s.nav} aria-label="Navegação principal">
       <div style={s.section}>
-        <div style={s.sectionLabel}>Navegação</div>
+        <div style={s.sectionLabel} aria-hidden="true">Navegação</div>
         {links.map(({ to, Icon, label, alert }) => (
-          <NavLink key={to} to={to} end style={({ isActive }) => ({
+          <NavLink key={to} to={to} end onClick={onNavigate} style={({ isActive }) => ({
             ...s.link,
             background:   isActive ? `${c.primary}20` : 'transparent',
             color:        isActive ? c.primaryLt : c.textMuted,
@@ -49,12 +49,12 @@ export default function Sidebar() {
           })}>
             {({ isActive }) => (
               <>
-                <span style={{ color: isActive ? c.primaryLt : c.textMuted, display: 'flex' }}>
+                <span style={{ color: isActive ? c.primaryLt : c.textMuted, display: 'flex' }} aria-hidden="true">
                   <Icon />
                 </span>
                 <span style={{ flex: 1 }}>{label}</span>
                 {alert && (
-                  <span style={s.alertDot} />
+                  <span style={s.alertDot} aria-label="Tem alertas" />
                 )}
               </>
             )}

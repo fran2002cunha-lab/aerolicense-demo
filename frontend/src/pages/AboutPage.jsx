@@ -33,7 +33,12 @@ const REFS = [
   },
 ];
 
-const MEMBERS = ['[Nome 1]', '[Nome 2]', '[Nome 3]'];
+const MEMBERS = [
+  { nome: 'Francisco Cunha',   papel: 'Arquitectura de Sistema & Full-Stack' },
+  { nome: 'Manuel Dourado',    papel: 'Backend & Blockchain' },
+  { nome: 'Frederico Murta',   papel: 'Machine Learning & Analytics' },
+  { nome: 'João Leão',         papel: 'Frontend & UX' },
+];
 
 export default function AboutPage() {
   return (
@@ -65,7 +70,18 @@ export default function AboutPage() {
         </div>
         <div style={{ ...s.row, borderBottom: 'none', paddingBottom: 0 }}>
           <span style={s.label}>Grupo</span>
-          <span style={s.value}>{MEMBERS.join(' · ')}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {MEMBERS.map(m => (
+              <div key={m.nome} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: c.text }}>{m.nome}</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 600, color: c.primaryLt,
+                  background: `${c.primary}18`, border: `1px solid ${c.primary}30`,
+                  borderRadius: 20, padding: '2px 9px',
+                }}>{m.papel}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
