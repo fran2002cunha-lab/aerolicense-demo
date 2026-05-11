@@ -135,7 +135,7 @@ def _demo_response(user_message: str) -> str:
     if any(w in msg for w in ["expirar", "expirado", "validade", "alerta"]):
         return "Demo: Para ver documentos a expirar, vai a Alertas na barra lateral. (Define OPENAI_API_KEY em backend/.env para respostas com IA real.)"
     if any(w in msg for w in ["piloto", "pilotos", "quantos"]):
-        return "Demo: Há 3 pilotos registados: Miguel Ferreira, Ana Santos e Carlos Mendes. (Define OPENAI_API_KEY em backend/.env para respostas com IA real.)"
+        return "Demo: Há 8 pilotos registados: Miguel Ferreira, Ana Costa, João Matos, Sofia Andrade, Carlos Rodrigues, Inês Tavares, Ricardo Santos e Mariana Pinto. (Define OPENAI_API_KEY em backend/.env para respostas com IA real.)"
     if any(w in msg for w in ["risco", "score", "risk"]):
         return "Demo: O score de risco combina documentos expirados (-25 pts), a expirar (-10 pts) e anomalias ML (-15 pts). Vê Analytics para os detalhes. (Define OPENAI_API_KEY em backend/.env para IA real.)"
     if any(w in msg for w in ["anomalia", "anomal", "suspeito"]):

@@ -5,8 +5,15 @@ module.exports = async function handler(req, res) {
   const apiPath = decodeURIComponent(req.query.p || '/');
   const target = base + apiPath;
 
+  const hasBody = req.method !== 'GET' && req.method !== 'HEAD';
+  const contentType = req.headers['content-type'];
+
   try {
-    const upstream = await fetch(target, { method: req.method });
+    const upstream = await fetch(target, {
+      method: req.method,
+      headers: contentType ? { 'content-type': contentType } : undefined,
+      body: hasBody ? JSON.stringify(req.body) : undefined,
+    });
     res.status(upstream.status);
     const ct = upstream.headers.get('content-type');
     if (ct) res.setHeader('content-type', ct);

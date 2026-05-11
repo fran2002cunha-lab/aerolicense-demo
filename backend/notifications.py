@@ -11,7 +11,7 @@ Em modo demo: simula o envio e guarda log local.
 """
 
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 from dataclasses import dataclass, field, asdict
 
@@ -36,7 +36,7 @@ class Notification:
 _notification_log: list[Notification] = []
 
 def _gen_id(pilot_id: str, channel: str, title: str) -> str:
-    raw = f"{pilot_id}{channel}{title}{datetime.utcnow().isoformat()}"
+    raw = f"{pilot_id}{channel}{title}{datetime.now(timezone.utc).isoformat()}"
     return hashlib.sha256(raw.encode()).hexdigest()[:12]
 
 # ── Templates de mensagem ─────────────────────────────────────────────────
@@ -75,7 +75,7 @@ def send_push(pilot_id: str, pilot_name: str, doc_type: str, days_left: int) -> 
     n = Notification(
         id=_gen_id(pilot_id, "push", title), pilot_id=pilot_id, pilot_name=pilot_name,
         channel="push", level=level, title=title, message=message,
-        sent_at=datetime.utcnow().isoformat(), doc_type=doc_type, days_left=days_left,
+        sent_at=datetime.now(timezone.utc).isoformat(), doc_type=doc_type, days_left=days_left,
     )
     _notification_log.append(n)
     return n
@@ -91,7 +91,7 @@ def send_email(pilot_id: str, pilot_name: str, pilot_email: str, doc_type: str, 
         id=_gen_id(pilot_id, "email", title), pilot_id=pilot_id, pilot_name=pilot_name,
         channel="email", level=level, title=title,
         message=f"Para: {pilot_email} | {message}",
-        sent_at=datetime.utcnow().isoformat(), doc_type=doc_type, days_left=days_left,
+        sent_at=datetime.now(timezone.utc).isoformat(), doc_type=doc_type, days_left=days_left,
     )
     _notification_log.append(n)
     return n
@@ -106,7 +106,7 @@ def send_sms(pilot_id: str, pilot_name: str, pilot_phone: str, doc_type: str, da
         id=_gen_id(pilot_id, "sms", title), pilot_id=pilot_id, pilot_name=pilot_name,
         channel="sms", level=level, title=title,
         message=f"SMS para {pilot_phone}: {message}",
-        sent_at=datetime.utcnow().isoformat(), doc_type=doc_type, days_left=days_left,
+        sent_at=datetime.now(timezone.utc).isoformat(), doc_type=doc_type, days_left=days_left,
     )
     _notification_log.append(n)
     return n

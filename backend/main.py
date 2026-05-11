@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, date, timezone
 from typing import Optional
 
 import qrcode
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,10 +29,21 @@ from database import init_db, get_db, seed_demo_data, Pilot, Document
 from risk import compute_pilot_score
 
 # ── App ────────────────────────────────────────────────────────────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    db = database.SessionLocal()
+    try:
+        seed_demo_data(db)
+    finally:
+        db.close()
+    yield
+
 app = FastAPI(
     title="AeroLicense API",
     description="Plataforma de gestão documental para profissionais de aviação",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -40,15 +52,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.on_event("startup")
-def startup():
-    init_db()
-    db = database.SessionLocal()
-    try:
-        seed_demo_data(db)
-    finally:
-        db.close()
 
 # ── Ligação à blockchain (opcional em modo demo) ───────────────────────────
 BLOCKCHAIN_URL   = os.getenv("BLOCKCHAIN_URL", "http://127.0.0.1:8545")
