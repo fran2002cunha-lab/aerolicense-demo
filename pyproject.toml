@@ -13,8 +13,9 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["anomaly", "blockchain", "chat", "compliance", "database", "main",
-                     "notifications", "risk", "evals", "scripts", "tests", "backend"]
+known-first-party = ["anomaly", "chat", "chat_tools", "compliance", "config", "database", "deps", "main",
+                     "notifications", "risk", "routers", "schemas", "services", "evals", "scripts",
+                     "tests", "backend"]
 
 [tool.ruff.lint.per-file-ignores]
 # Scripts and tests put backend/ on sys.path before importing it.

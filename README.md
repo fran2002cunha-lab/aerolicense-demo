@@ -30,7 +30,7 @@ AeroLicense explores how an operator could see compliance at a glance, ask quest
 
 ```mermaid
 flowchart LR
-    U[Browser<br/>React CRA + recharts] -->|REST| API[FastAPI<br/>backend/main.py]
+    U[Browser<br/>React CRA + recharts] -->|REST| API[FastAPI<br/>backend/main.py + routers/]
     API --> DB[(SQLAlchemy<br/>SQLite default / Postgres)]
     API --> ML[IsolationForest + risk score<br/>anomaly.py / risk.py]
     API --> CHAT[Tool-calling loop<br/>chat.py]

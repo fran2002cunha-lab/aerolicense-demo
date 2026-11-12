@@ -50,7 +50,7 @@ MOCK_NOTICE = (
 def seeded_db():
     """Yield (db session, chat tools) for a fresh temporary SQLite DB."""
     import database
-    from main import build_db_tools
+    from chat_tools import build_db_tools
 
     previous_url = os.environ.get("DATABASE_URL")
     with tempfile.TemporaryDirectory() as tmp:

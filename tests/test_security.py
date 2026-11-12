@@ -9,8 +9,12 @@ from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
+from fastapi import HTTPException
 
+import config
+import deps
 import main
+from services import blockchain_service
 from tests.conftest import API_HEADERS
 
 BACKEND_DIR = os.path.join(os.path.dirname(__file__), "..", "backend")
@@ -65,8 +69,8 @@ def test_no_unprotected_write_routes():
         methods = getattr(route, "methods", set()) or set()
         if not methods & {"POST", "PUT", "PATCH", "DELETE"} or route.path == "/chat":
             continue
-        deps = [d.call for d in route.dependant.dependencies]
-        assert main.require_api_key in deps, route.path
+        route_deps = [d.call for d in route.dependant.dependencies]
+        assert deps.require_api_key in route_deps, route.path
 
 
 # ── b. Blockchain signer ───────────────────────────────────────────────────
@@ -84,8 +88,8 @@ def test_no_unprotected_write_routes():
 )
 def test_signing_allowlist(monkeypatch, network, allowed):
     monkeypatch.setenv("BLOCKCHAIN_NETWORK", network)
-    monkeypatch.setattr(main, "_chain_id", lambda: 11155111)
-    assert main.signing_allowed() is allowed
+    monkeypatch.setattr(blockchain_service, "_chain_id", lambda: 11155111)
+    assert blockchain_service.signing_allowed() is allowed
 
 
 @pytest.mark.parametrize(
@@ -102,8 +106,8 @@ def test_signing_allowlist(monkeypatch, network, allowed):
 def test_signing_requires_allowlisted_chain_id(monkeypatch, chain_id, allowed):
     """A testnet label is not enough: the node must report a testnet/local chain id."""
     monkeypatch.setenv("BLOCKCHAIN_NETWORK", "sepolia")
-    monkeypatch.setattr(main, "_chain_id", lambda: chain_id)
-    assert main.signing_allowed() is allowed
+    monkeypatch.setattr(blockchain_service, "_chain_id", lambda: chain_id)
+    assert blockchain_service.signing_allowed() is allowed
 
 
 def test_chain_id_unreachable_node_is_none(monkeypatch):
@@ -112,23 +116,25 @@ def test_chain_id_unreachable_node_is_none(monkeypatch):
         def chain_id(self):
             raise ConnectionError("no node")
 
-    monkeypatch.setattr(main, "w3", SimpleNamespace(eth=Boom()))
-    assert main._chain_id() is None
+    monkeypatch.setattr(blockchain_service, "w3", SimpleNamespace(eth=Boom()))
+    assert blockchain_service._chain_id() is None
 
 
 def test_send_transaction_refuses_on_mainnet(monkeypatch):
     monkeypatch.setenv("BLOCKCHAIN_NETWORK", "mainnet")
-    with pytest.raises(main.SigningRefused):
-        main.send_transaction(object())
+    with pytest.raises(blockchain_service.SigningRefused):
+        blockchain_service.send_transaction(object())
 
 
 def test_upload_refuses_to_sign_on_non_testnet(client, monkeypatch):
     sent = []
     monkeypatch.setattr(
-        main, "contract", SimpleNamespace(functions=SimpleNamespace(registerDocument=lambda *a: a))
+        blockchain_service,
+        "contract",
+        SimpleNamespace(functions=SimpleNamespace(registerDocument=lambda *a: a)),
     )
-    monkeypatch.setattr(main, "account", SimpleNamespace(address="0x0"))
-    monkeypatch.setattr(main, "send_transaction", lambda fn: sent.append(fn))
+    monkeypatch.setattr(blockchain_service, "account", SimpleNamespace(address="0x0"))
+    monkeypatch.setattr(blockchain_service, "send_transaction", lambda fn: sent.append(fn))
     monkeypatch.setenv("BLOCKCHAIN_NETWORK", "mainnet")
     res = _upload(client)
     assert res.status_code == 503
@@ -136,14 +142,19 @@ def test_upload_refuses_to_sign_on_non_testnet(client, monkeypatch):
 
 
 def test_load_signer_handles_empty_and_invalid_key():
-    assert main.load_signer("") is None
-    assert main.load_signer("not-a-key") is None
+    assert blockchain_service.load_signer("") is None
+    assert blockchain_service.load_signer("not-a-key") is None
 
 
 def test_startup_with_contract_but_no_key_does_not_crash():
     env = {**os.environ, "CONTRACT_ADDRESS": "0x" + "1" * 40, "PRIVATE_KEY": ""}
     proc = subprocess.run(
-        [sys.executable, "-c", "import main; assert main.contract is not None and main.account is None"],
+        [
+            sys.executable,
+            "-c",
+            "import main; from services.blockchain_service import contract, account; "
+            "assert contract is not None and account is None",
+        ],
         cwd=BACKEND_DIR,
         env=env,
         capture_output=True,
@@ -155,7 +166,7 @@ def test_startup_with_contract_but_no_key_does_not_crash():
 
 # ── c. Uploads ─────────────────────────────────────────────────────────────
 def test_upload_too_large_rejected(client):
-    big = PDF + b"\x00" * (main.MAX_UPLOAD_BYTES + 1)
+    big = PDF + b"\x00" * (config.MAX_UPLOAD_BYTES + 1)
     assert _upload(client, content=big).status_code == 413
 
 
@@ -174,7 +185,7 @@ def test_hash_accepts_pdf_png_jpeg(client, content):
 def test_root_does_not_expose_blockchain_url(client):
     data = client.get("/").json()
     assert "blockchain_url" not in data
-    assert main.BLOCKCHAIN_URL not in str(data)
+    assert config.BLOCKCHAIN_URL not in str(data)
 
 
 def test_blockchain_error_is_generic(client, monkeypatch):
@@ -182,12 +193,14 @@ def test_blockchain_error_is_generic(client, monkeypatch):
         raise RuntimeError("secret-rpc http://10.0.0.1:8545 key=abc")
 
     monkeypatch.setattr(
-        main, "contract", SimpleNamespace(functions=SimpleNamespace(registerDocument=lambda *a: a))
+        blockchain_service,
+        "contract",
+        SimpleNamespace(functions=SimpleNamespace(registerDocument=lambda *a: a)),
     )
-    monkeypatch.setattr(main, "account", SimpleNamespace(address="0x0"))
-    monkeypatch.setattr(main, "send_transaction", boom)
+    monkeypatch.setattr(blockchain_service, "account", SimpleNamespace(address="0x0"))
+    monkeypatch.setattr(blockchain_service, "send_transaction", boom)
     monkeypatch.setenv("BLOCKCHAIN_NETWORK", "sepolia")
-    monkeypatch.setattr(main, "_chain_id", lambda: 11155111)
+    monkeypatch.setattr(blockchain_service, "_chain_id", lambda: 11155111)
     res = _upload(client)
     assert res.status_code == 502
     assert "secret-rpc" not in res.text and "10.0.0.1" not in res.text
@@ -197,7 +210,9 @@ def test_verify_error_is_generic(client, monkeypatch):
     def boom(_):
         raise RuntimeError("secret-internal")
 
-    monkeypatch.setattr(main, "contract", SimpleNamespace(functions=SimpleNamespace(verifyDocument=boom)))
+    monkeypatch.setattr(
+        blockchain_service, "contract", SimpleNamespace(functions=SimpleNamespace(verifyDocument=boom))
+    )
     res = client.get("/documents/verify/0x" + "a" * 64)
     assert res.status_code == 404
     assert "secret-internal" not in res.text
@@ -227,7 +242,7 @@ def test_cors_blocks_unknown_origin(client):
 
 
 def test_parse_cors_origins_drops_wildcard():
-    assert main.parse_cors_origins(" https://a.app , *, ,http://b ") == ["https://a.app", "http://b"]
+    assert config.parse_cors_origins(" https://a.app , *, ,http://b ") == ["https://a.app", "http://b"]
 
 
 # ── f. Query params / hash format ──────────────────────────────────────────
@@ -243,7 +258,7 @@ def test_verify_rejects_bad_hash(client, bad):
 
 # ── g. /chat rate limit and length ─────────────────────────────────────────
 def test_chat_rate_limited(client):
-    for _ in range(main.CHAT_RATE_LIMIT):
+    for _ in range(config.CHAT_RATE_LIMIT):
         assert client.post("/chat", json={"message": "Olá"}).status_code == 200
     assert client.post("/chat", json={"message": "Olá"}).status_code == 429
 
@@ -266,8 +281,8 @@ def test_hash_with_trailing_newline_rejected(client, path):
 
 
 def test_check_hash_format_uses_fullmatch():
-    with pytest.raises(main.HTTPException):
-        main.check_hash_format("0x" + "a" * 64 + "\n")
+    with pytest.raises(HTTPException):
+        deps.check_hash_format("0x" + "a" * 64 + "\n")
 
 
 def test_documents_content_length_rejected_before_parsing(client, monkeypatch):
@@ -276,8 +291,8 @@ def test_documents_content_length_rejected_before_parsing(client, monkeypatch):
     async def never(*a, **k):
         raise AssertionError("upload handler must not run")
 
-    monkeypatch.setattr(main, "read_upload", never)
-    big = main.MAX_DOCUMENTS_REQUEST_BYTES + 1
+    monkeypatch.setattr(deps, "read_upload", never)
+    big = config.MAX_DOCUMENTS_REQUEST_BYTES + 1
     res = client.post(
         "/documents/hash",
         content=b"x",
@@ -294,7 +309,7 @@ def test_documents_guard_checks_api_key_before_parsing(client, monkeypatch):
     async def never(*a, **k):
         raise AssertionError("upload handler must not run")
 
-    monkeypatch.setattr(main, "read_upload", never)
+    monkeypatch.setattr(deps, "read_upload", never)
     res = client.post("/documents/hash", files={"file": ("a.pdf", PDF)}, headers={"X-API-Key": "wrong"})
     assert res.status_code == 401
     monkeypatch.setenv("AEROLICENSE_API_KEY", " ")
@@ -321,11 +336,11 @@ def test_chat_rate_limiter_evicts_stale_keys(client, monkeypatch):
     import time
     from collections import deque
 
-    old = time.monotonic() - 10 * main.CHAT_RATE_WINDOW
+    old = time.monotonic() - 10 * config.CHAT_RATE_WINDOW
     for i in range(50):
-        main._chat_hits[f"10.0.0.{i}"] = deque([old])
-    main._chat_hits["10.0.1.1"] = deque()
-    monkeypatch.setattr(main, "_chat_last_sweep", 0.0)
+        deps._chat_hits[f"10.0.0.{i}"] = deque([old])
+    deps._chat_hits["10.0.1.1"] = deque()
+    monkeypatch.setattr(deps, "_chat_last_sweep", 0.0)
     assert client.post("/chat", json={"message": "Olá"}).status_code == 200
-    assert all(not k.startswith("10.0.") for k in main._chat_hits)
-    assert len(main._chat_hits) == 1  # only the test client's own IP
+    assert all(not k.startswith("10.0.") for k in deps._chat_hits)
+    assert len(deps._chat_hits) == 1  # only the test client's own IP
