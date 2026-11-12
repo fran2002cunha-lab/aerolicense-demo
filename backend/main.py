@@ -5,8 +5,11 @@ Fluxo principal:
   1. Piloto faz upload de um ficheiro (PDF/JPG do documento)
   2. Backend calcula o SHA-256 do ficheiro
   3. Hash é enviado para o smart contract na blockchain Ethereum
-  4. Metadata é guardada em PostgreSQL (título, datas, tipo)
-  5. Sistema de alertas verifica documentos a expirar diariamente
+     (simulado em modo demo, sem CONTRACT_ADDRESS)
+  4. Metadata é guardada via SQLAlchemy: SQLite por omissão,
+     PostgreSQL se DATABASE_URL o indicar
+  5. GET /documents/expiring lista documentos a expirar (em produção,
+     seria chamado por um cron job)
 """
 
 import hashlib

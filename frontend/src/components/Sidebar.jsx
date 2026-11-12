@@ -74,7 +74,7 @@ export default function Sidebar({ onNavigate }) {
           <div style={s.avatarCircle}>AD</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={s.avatarName}>Admin</div>
-            <div style={s.avatarRole}>ANAC Portugal</div>
+            <div style={s.avatarRole}>Autoridade (demo)</div>
           </div>
           <div style={s.onlineDot} />
         </div>
