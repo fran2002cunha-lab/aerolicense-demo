@@ -361,7 +361,18 @@ def test_chat_rate_limiter_evicts_stale_keys(client, monkeypatch):
     for i in range(50):
         deps._chat_hits[f"10.0.0.{i}"] = deque([old])
     deps._chat_hits["10.0.1.1"] = deque()
-    monkeypatch.setattr(deps, "_chat_last_sweep", 0.0)
+    monkeypatch.setattr(deps, "_chat_last_sweep", float("-inf"))
     assert client.post("/chat", json={"message": "Olá"}).status_code == 200
     assert all(not k.startswith("10.0.") for k in deps._chat_hits)
     assert len(deps._chat_hits) == 1  # only the test client's own IP
+
+
+def test_chat_rate_limiter_sweeps_right_after_boot(client, monkeypatch):
+    """monotonic() counts from boot; a fresh CI runner can be younger than the window."""
+    from collections import deque
+
+    monkeypatch.setattr(deps.time, "monotonic", lambda: 1.0)
+    monkeypatch.setattr(deps, "_chat_last_sweep", float("-inf"))
+    deps._chat_hits["10.9.9.9"] = deque()
+    assert client.post("/chat", json={"message": "Olá"}).status_code == 200
+    assert "10.9.9.9" not in deps._chat_hits

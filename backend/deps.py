@@ -116,7 +116,7 @@ def check_hash_format(doc_hash: str):
 # Production would use Redis or the API gateway/WAF instead.
 _chat_hits: dict[str, deque] = defaultdict(deque)
 _chat_lock = threading.Lock()
-_chat_last_sweep = 0.0
+_chat_last_sweep = float("-inf")  # first request always sweeps, even right after boot
 
 
 def _evict_stale_chat_keys(now: float):
