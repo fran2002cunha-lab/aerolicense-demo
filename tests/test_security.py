@@ -1,10 +1,11 @@
 # tests/test_security.py
 """Security hardening: auth, signer allowlist, uploads, error leaks, CORS, params, rate limit."""
+
 import io
 import os
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -25,7 +26,7 @@ def _upload(client, content=PDF, headers=API_HEADERS):
             "pilot_address": "0x00000000000000000000000000000000Ae1c0001",
             "doc_type": "ATPL",
             "description": "Test",
-            "expires_at": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(days=365)).isoformat(),
         },
         files={"file": ("doc.pdf", io.BytesIO(content), "application/pdf")},
         headers=headers,
@@ -38,7 +39,9 @@ def test_write_endpoints_disabled_without_server_key(client, monkeypatch):
     res = _upload(client)
     assert res.status_code == 503
     assert res.json()["detail"] == "write endpoints disabled"
-    assert client.post("/documents/hash", files={"file": ("a.pdf", PDF)}, headers=API_HEADERS).status_code == 503
+    assert (
+        client.post("/documents/hash", files={"file": ("a.pdf", PDF)}, headers=API_HEADERS).status_code == 503
+    )
 
 
 @pytest.mark.parametrize("headers", [{}, {"X-API-Key": "wrong"}, {"X-API-Key": ""}])
@@ -67,13 +70,50 @@ def test_no_unprotected_write_routes():
 
 
 # ── b. Blockchain signer ───────────────────────────────────────────────────
-@pytest.mark.parametrize("network,allowed", [
-    ("local", True), ("hardhat", True), ("sepolia", True), ("Holesky", True),
-    ("mainnet", False), ("", False), ("polygon", False),
-])
+@pytest.mark.parametrize(
+    "network,allowed",
+    [
+        ("local", True),
+        ("hardhat", True),
+        ("sepolia", True),
+        ("Holesky", True),
+        ("mainnet", False),
+        ("", False),
+        ("polygon", False),
+    ],
+)
 def test_signing_allowlist(monkeypatch, network, allowed):
     monkeypatch.setenv("BLOCKCHAIN_NETWORK", network)
+    monkeypatch.setattr(main, "_chain_id", lambda: 11155111)
     assert main.signing_allowed() is allowed
+
+
+@pytest.mark.parametrize(
+    "chain_id,allowed",
+    [
+        (31337, True),
+        (11155111, True),
+        (17000, True),
+        (1, False),
+        (137, False),
+        (None, False),
+    ],
+)
+def test_signing_requires_allowlisted_chain_id(monkeypatch, chain_id, allowed):
+    """A testnet label is not enough: the node must report a testnet/local chain id."""
+    monkeypatch.setenv("BLOCKCHAIN_NETWORK", "sepolia")
+    monkeypatch.setattr(main, "_chain_id", lambda: chain_id)
+    assert main.signing_allowed() is allowed
+
+
+def test_chain_id_unreachable_node_is_none(monkeypatch):
+    class Boom:
+        @property
+        def chain_id(self):
+            raise ConnectionError("no node")
+
+    monkeypatch.setattr(main, "w3", SimpleNamespace(eth=Boom()))
+    assert main._chain_id() is None
 
 
 def test_send_transaction_refuses_on_mainnet(monkeypatch):
@@ -84,7 +124,9 @@ def test_send_transaction_refuses_on_mainnet(monkeypatch):
 
 def test_upload_refuses_to_sign_on_non_testnet(client, monkeypatch):
     sent = []
-    monkeypatch.setattr(main, "contract", SimpleNamespace(functions=SimpleNamespace(registerDocument=lambda *a: a)))
+    monkeypatch.setattr(
+        main, "contract", SimpleNamespace(functions=SimpleNamespace(registerDocument=lambda *a: a))
+    )
     monkeypatch.setattr(main, "account", SimpleNamespace(address="0x0"))
     monkeypatch.setattr(main, "send_transaction", lambda fn: sent.append(fn))
     monkeypatch.setenv("BLOCKCHAIN_NETWORK", "mainnet")
@@ -102,7 +144,11 @@ def test_startup_with_contract_but_no_key_does_not_crash():
     env = {**os.environ, "CONTRACT_ADDRESS": "0x" + "1" * 40, "PRIVATE_KEY": ""}
     proc = subprocess.run(
         [sys.executable, "-c", "import main; assert main.contract is not None and main.account is None"],
-        cwd=BACKEND_DIR, env=env, capture_output=True, text=True, timeout=60,
+        cwd=BACKEND_DIR,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert proc.returncode == 0, proc.stderr
 
@@ -134,10 +180,14 @@ def test_root_does_not_expose_blockchain_url(client):
 def test_blockchain_error_is_generic(client, monkeypatch):
     def boom(fn):
         raise RuntimeError("secret-rpc http://10.0.0.1:8545 key=abc")
-    monkeypatch.setattr(main, "contract", SimpleNamespace(functions=SimpleNamespace(registerDocument=lambda *a: a)))
+
+    monkeypatch.setattr(
+        main, "contract", SimpleNamespace(functions=SimpleNamespace(registerDocument=lambda *a: a))
+    )
     monkeypatch.setattr(main, "account", SimpleNamespace(address="0x0"))
     monkeypatch.setattr(main, "send_transaction", boom)
     monkeypatch.setenv("BLOCKCHAIN_NETWORK", "sepolia")
+    monkeypatch.setattr(main, "_chain_id", lambda: 11155111)
     res = _upload(client)
     assert res.status_code == 502
     assert "secret-rpc" not in res.text and "10.0.0.1" not in res.text
@@ -146,6 +196,7 @@ def test_blockchain_error_is_generic(client, monkeypatch):
 def test_verify_error_is_generic(client, monkeypatch):
     def boom(_):
         raise RuntimeError("secret-internal")
+
     monkeypatch.setattr(main, "contract", SimpleNamespace(functions=SimpleNamespace(verifyDocument=boom)))
     res = client.get("/documents/verify/0x" + "a" * 64)
     assert res.status_code == 404
@@ -154,8 +205,10 @@ def test_verify_error_is_generic(client, monkeypatch):
 
 def test_chat_internal_error_is_generic(client, monkeypatch):
     import chat
+
     def boom(*a, **k):
         raise RuntimeError("secret-llm-error")
+
     monkeypatch.setattr(chat, "run_chat", boom)
     res = client.post("/chat", json={"message": "Olá"})
     assert res.status_code == 502
@@ -197,3 +250,82 @@ def test_chat_rate_limited(client):
 
 def test_chat_message_too_long_rejected(client):
     assert client.post("/chat", json={"message": "x" * 501}).status_code == 422
+
+
+# ── h. Second pass ─────────────────────────────────────────────────────────
+@pytest.mark.parametrize("value", ["   ", "\t\n", ""])
+def test_whitespace_server_key_counts_as_unset(client, monkeypatch, value):
+    monkeypatch.setenv("AEROLICENSE_API_KEY", value)
+    assert _upload(client, headers={"X-API-Key": value}).status_code == 503
+
+
+@pytest.mark.parametrize("path", ["verify", "qr"])
+def test_hash_with_trailing_newline_rejected(client, path):
+    assert client.get(f"/documents/{path}/0x" + "a" * 64 + "%0A").status_code == 400
+    assert client.get(f"/documents/{path}/0x" + "a" * 64).status_code == 200
+
+
+def test_check_hash_format_uses_fullmatch():
+    with pytest.raises(main.HTTPException):
+        main.check_hash_format("0x" + "a" * 64 + "\n")
+
+
+def test_documents_content_length_rejected_before_parsing(client, monkeypatch):
+    """The guard answers 413 from the header alone: the route is never reached."""
+
+    async def never(*a, **k):
+        raise AssertionError("upload handler must not run")
+
+    monkeypatch.setattr(main, "read_upload", never)
+    big = main.MAX_DOCUMENTS_REQUEST_BYTES + 1
+    res = client.post(
+        "/documents/hash",
+        content=b"x",
+        headers={
+            **API_HEADERS,
+            "Content-Length": str(big),
+            "Content-Type": "multipart/form-data; boundary=x",
+        },
+    )
+    assert res.status_code == 413
+
+
+def test_documents_guard_checks_api_key_before_parsing(client, monkeypatch):
+    async def never(*a, **k):
+        raise AssertionError("upload handler must not run")
+
+    monkeypatch.setattr(main, "read_upload", never)
+    res = client.post("/documents/hash", files={"file": ("a.pdf", PDF)}, headers={"X-API-Key": "wrong"})
+    assert res.status_code == 401
+    monkeypatch.setenv("AEROLICENSE_API_KEY", " ")
+    res = client.post("/documents/hash", files={"file": ("a.pdf", PDF)}, headers=API_HEADERS)
+    assert res.status_code == 503
+
+
+def test_documents_guard_keeps_cors_headers(client):
+    res = client.post(
+        "/documents/hash",
+        files={"file": ("a.pdf", PDF)},
+        headers={"X-API-Key": "wrong", "Origin": "http://localhost:3000"},
+    )
+    assert res.status_code == 401
+    assert res.headers.get("access-control-allow-origin") == "http://localhost:3000"
+
+
+def test_documents_guard_ignores_get_and_other_paths(client):
+    assert client.get("/documents/expiring").status_code == 200
+    assert client.post("/chat", json={"message": "Olá"}).status_code == 200
+
+
+def test_chat_rate_limiter_evicts_stale_keys(client, monkeypatch):
+    import time
+    from collections import deque
+
+    old = time.monotonic() - 10 * main.CHAT_RATE_WINDOW
+    for i in range(50):
+        main._chat_hits[f"10.0.0.{i}"] = deque([old])
+    main._chat_hits["10.0.1.1"] = deque()
+    monkeypatch.setattr(main, "_chat_last_sweep", 0.0)
+    assert client.post("/chat", json={"message": "Olá"}).status_code == 200
+    assert all(not k.startswith("10.0.") for k in main._chat_hits)
+    assert len(main._chat_hits) == 1  # only the test client's own IP

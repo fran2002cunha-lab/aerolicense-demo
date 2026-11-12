@@ -1,7 +1,9 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.database import Base, Pilot, Document, seed_demo_data, DEMO_PILOTS_RAW
+
+from backend.database import DEMO_PILOTS_RAW, Base, Document, Pilot, seed_demo_data
+
 
 @pytest.fixture
 def db():
@@ -12,6 +14,7 @@ def db():
     yield session
     session.close()
 
+
 def test_pilot_model(db):
     p = Pilot(id="P001", name="Test Pilot", role="Captain", ethereum_address="0xABC")
     db.add(p)
@@ -19,11 +22,13 @@ def test_pilot_model(db):
     found = db.query(Pilot).filter_by(id="P001").first()
     assert found.name == "Test Pilot"
 
+
 def test_seed_creates_pilots(db):
     seed_demo_data(db)
     pilots = db.query(Pilot).all()
     assert len(pilots) == len(DEMO_PILOTS_RAW)
     assert any(p.id == "P001" for p in pilots)
+
 
 def test_seed_creates_documents(db):
     seed_demo_data(db)

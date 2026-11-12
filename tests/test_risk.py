@@ -1,8 +1,11 @@
 # tests/test_risk.py
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
-from risk import compute_pilot_score
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 from database import DEMO_PILOTS_RAW
+from risk import compute_pilot_score
+
 
 def test_perfect_score_no_issues():
     docs = [{"hash": "0xabc", "expires_at": "2030-01-01", "description": "ATPL"}]
@@ -11,11 +14,13 @@ def test_perfect_score_no_issues():
     assert result["level"] == "safe"
     assert result["penalties"] == []
 
+
 def test_expired_doc_reduces_score():
     docs = [{"hash": "0xabc", "expires_at": "2020-01-01", "description": "ATPL"}]
     result = compute_pilot_score(docs, set())
     assert result["score"] == 75
     assert result["level"] == "attention"
+
 
 def test_two_expired_docs():
     docs = [
@@ -26,11 +31,13 @@ def test_two_expired_docs():
     assert result["score"] == 50
     assert result["level"] == "attention"
 
+
 def test_anomaly_penalty():
     docs = [{"hash": "0xabc", "expires_at": "2030-01-01", "description": "ATPL"}]
     result = compute_pilot_score(docs, {"0xabc"})
     assert result["score"] == 85
     assert result["level"] == "safe"
+
 
 def test_critical_score():
     docs = [
@@ -43,6 +50,7 @@ def test_critical_score():
     assert result["score"] == 0
     assert result["level"] == "critical"
 
+
 def test_risk_empty_documents():
     result = compute_pilot_score([], set())
     assert result["score"] == 100
@@ -52,16 +60,22 @@ def test_risk_empty_documents():
 
 def test_risk_time_decay():
     from datetime import date, timedelta
+
     today = date.today()
-    doc_urgent = [{"hash": "0xaaa", "expires_at": (today + timedelta(days=1)).isoformat(), "description": "Urgent"}]
-    doc_soon   = [{"hash": "0xbbb", "expires_at": (today + timedelta(days=29)).isoformat(), "description": "Soon"}]
+    doc_urgent = [
+        {"hash": "0xaaa", "expires_at": (today + timedelta(days=1)).isoformat(), "description": "Urgent"}
+    ]
+    doc_soon = [
+        {"hash": "0xbbb", "expires_at": (today + timedelta(days=29)).isoformat(), "description": "Soon"}
+    ]
     score_urgent = compute_pilot_score(doc_urgent, set())["score"]
-    score_soon   = compute_pilot_score(doc_soon, set())["score"]
+    score_soon = compute_pilot_score(doc_soon, set())["score"]
     assert score_urgent < score_soon, "Document expiring sooner should score lower"
 
 
 def test_risk_anomaly_with_valid_doc():
     from datetime import date, timedelta
+
     future = (date.today() + timedelta(days=365)).isoformat()
     docs = [{"hash": "0xbad", "expires_at": future, "description": "Suspicious Doc"}]
     result = compute_pilot_score(docs, {"0xbad"})

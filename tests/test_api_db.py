@@ -1,17 +1,21 @@
-import pytest
-import sys
 import os
-from datetime import datetime, timedelta, timezone
+import sys
+from datetime import UTC, datetime, timedelta
+
+import pytest
+
 # Add backend/ to sys.path so main.py's `from database import ...` resolves correctly
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from database import Base, get_db, seed_demo_data, Pilot, Document, DEMO_PILOTS_RAW
+
+from database import DEMO_PILOTS_RAW, Base, get_db, seed_demo_data
 from main import app
 from tests.conftest import API_HEADERS
+
 
 @pytest.fixture
 def client():
@@ -36,10 +40,12 @@ def client():
         yield c
     app.dependency_overrides.clear()
 
+
 def test_demo_pilotos_returns_all_seeded(client):
     res = client.get("/demo/pilotos")
     assert res.status_code == 200
     assert res.json()["total"] == len(DEMO_PILOTS_RAW)
+
 
 def test_demo_piloto_detalhe(client):
     res = client.get("/demo/pilotos/P001")
@@ -49,9 +55,11 @@ def test_demo_piloto_detalhe(client):
     p001 = next(p for p in DEMO_PILOTS_RAW if p["id"] == "P001")
     assert len(data["documentos"]) == len(p001["documents"])
 
+
 def test_demo_piloto_not_found(client):
     res = client.get("/demo/pilotos/P999")
     assert res.status_code == 404
+
 
 def test_demo_alertas_contains_expiring(client):
     res = client.get("/demo/alertas")
@@ -94,6 +102,7 @@ def test_blockchain_demo(client):
 
 def test_qr_code_valid_hash(client):
     import hashlib
+
     valid_hash = "0x" + hashlib.sha256(b"test").hexdigest()
     response = client.get(f"/documents/qr/{valid_hash}")
     assert response.status_code == 200
@@ -108,8 +117,8 @@ def test_qr_code_invalid_hash(client):
 
 def test_upload_document_demo_mode(client):
     import io
-    from datetime import datetime, timedelta
-    future_date = (datetime.now(timezone.utc) + timedelta(days=365)).isoformat()
+
+    future_date = (datetime.now(UTC) + timedelta(days=365)).isoformat()
     content = b"%PDF-1.4 ATPL License content for hashing"
     response = client.post(
         "/documents/upload",
@@ -132,8 +141,8 @@ def test_upload_document_demo_mode(client):
 
 def test_upload_invalid_doc_type(client):
     import io
-    from datetime import datetime, timedelta
-    future_date = (datetime.now(timezone.utc) + timedelta(days=365)).isoformat()
+
+    future_date = (datetime.now(UTC) + timedelta(days=365)).isoformat()
     response = client.post(
         "/documents/upload",
         params={

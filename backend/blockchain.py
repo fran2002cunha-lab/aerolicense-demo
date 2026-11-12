@@ -12,6 +12,7 @@ from web3 import Web3
 
 logger = logging.getLogger(__name__)
 
+
 # ── Conceito 1: Hashing ────────────────────────────────────────────────────
 def hash_document(file_bytes: bytes) -> str:
     """
@@ -28,10 +29,10 @@ def hash_document(file_bytes: bytes) -> str:
 
 def demonstrate_hashing():
     """Demonstração do conceito de hashing para a apresentação."""
-    doc_original  = b"ATPL License - Miguel Ferreira - Valid until 2026-03-15"
+    doc_original = b"ATPL License - Miguel Ferreira - Valid until 2026-03-15"
     doc_falsified = b"ATPL License - Miguel Ferreira - Valid until 2028-03-15"  # 1 ano a mais
 
-    hash_original  = hash_document(doc_original)
+    hash_original = hash_document(doc_original)
     hash_falsified = hash_document(doc_falsified)
 
     logger.info("=" * 60)
@@ -69,7 +70,7 @@ def create_pilot_wallet() -> dict:
     w3 = Web3()
     account = w3.eth.account.create()
     return {
-        "address":     account.address,
+        "address": account.address,
         "private_key": account.key.hex(),
         "note": "Guardar a chave privada em segurança — nunca partilhar!",
     }
@@ -86,13 +87,13 @@ def get_transaction_details(w3: Web3, tx_hash: str) -> dict:
       - Que não foi alterado (hash é imutável)
     """
     receipt = w3.eth.get_transaction_receipt(tx_hash)
-    block   = w3.eth.get_block(receipt.blockNumber)
+    block = w3.eth.get_block(receipt.blockNumber)
     return {
-        "tx_hash":      tx_hash,
+        "tx_hash": tx_hash,
         "block_number": receipt.blockNumber,
-        "timestamp":    block.timestamp,
-        "gas_used":     receipt.gasUsed,
-        "status":       "sucesso" if receipt.status == 1 else "falhou",
+        "timestamp": block.timestamp,
+        "gas_used": receipt.gasUsed,
+        "status": "sucesso" if receipt.status == 1 else "falhou",
     }
 
 

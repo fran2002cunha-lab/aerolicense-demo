@@ -2,7 +2,7 @@ import importlib
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 
 def test_init_db_reads_database_url_env(monkeypatch, tmp_path):
@@ -10,6 +10,7 @@ def test_init_db_reads_database_url_env(monkeypatch, tmp_path):
     db_path = tmp_path / "test.db"
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
     import database
+
     importlib.reload(database)
     database.init_db()
     assert database._engine is not None
@@ -21,6 +22,7 @@ def test_init_db_sqlite_uses_check_same_thread(monkeypatch, tmp_path):
     db_path = tmp_path / "test2.db"
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
     import database
+
     importlib.reload(database)
     database.init_db()
     # If connect_args were missing, SQLite would raise on multi-thread access.
@@ -34,6 +36,7 @@ def test_init_db_explicit_url_overrides_env(monkeypatch, tmp_path):
     monkeypatch.setenv("DATABASE_URL", "sqlite:///should-not-be-used.db")
     explicit = f"sqlite:///{tmp_path}/explicit.db"
     import database
+
     importlib.reload(database)
     database.init_db(url=explicit)
     assert str(database._engine.url) == explicit

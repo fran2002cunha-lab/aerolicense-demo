@@ -1,16 +1,19 @@
 # tests/conftest.py
-import pytest
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
+import sys
+
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
+import main
 from database import Base, get_db, seed_demo_data
 from main import app
-import main
 
 TEST_API_KEY = "test-api-key"
 API_HEADERS = {"X-API-Key": TEST_API_KEY}
@@ -26,6 +29,7 @@ def _test_env(monkeypatch):
     main._chat_hits.clear()
     yield
     main._chat_hits.clear()
+
 
 @pytest.fixture
 def client():
