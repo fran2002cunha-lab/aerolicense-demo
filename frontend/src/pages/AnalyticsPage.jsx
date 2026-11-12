@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { api } from '../api';
+import { api, IS_DEMO } from '../api';
 import Spinner from '../components/Spinner';
 import ApiOfflineBanner from '../components/ApiOfflineBanner';
 import { c, riskColor, riskLabel, shadow } from '../theme';
@@ -30,21 +30,6 @@ function LiveKpi({ label, value, color }) {
       <div style={{ fontSize: 10, fontWeight: 600, color: c.textMuted,
         textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 800, color: color || c.text, lineHeight: 1 }}>{value ?? '—'}</div>
-    </div>
-  );
-}
-
-/* ── Target metric card (projections, not measured data) ── */
-function TargetKpi({ value, label, desc, color, bg }) {
-  return (
-    <div style={{ background: c.bgCard, border: `1px solid ${c.border}`,
-      borderLeft: `4px solid ${color}`, borderRadius: 12,
-      padding: '18px 20px', flex: 1, minWidth: 160, boxShadow: shadow.card }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: c.textMuted, textTransform: 'uppercase',
-        letterSpacing: '.5px', marginBottom: 10 }}>{label}</div>
-      <div style={{ fontSize: 30, fontWeight: 900, color, lineHeight: 1,
-        letterSpacing: '-1px', marginBottom: 6 }}>{value}</div>
-      <div style={{ fontSize: 11, color: c.textMuted, lineHeight: 1.4 }}>{desc}</div>
     </div>
   );
 }
@@ -96,7 +81,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* ── Live KPIs (real data) ── */}
-      <SectionLabel label="Dados Reais — Sistema Demo" live />
+      <SectionLabel label="Dados fictícios — calculados a partir do seed de demonstração" live={!IS_DEMO} />
       <div style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
         <LiveKpi label="Pilotos"    value={summary.total_pilots} />
         <LiveKpi label="Documentos" value={summary.total_documents} />
@@ -239,66 +224,17 @@ export default function AnalyticsPage() {
       <div style={s.mlDatasetNote}>
         <span style={{ fontSize: 13, flexShrink: 0 }}>ℹ</span>
         <span>
-          <strong>Nota técnica:</strong> Modelo treinado com dataset reduzido (n=30) para fins
+          <strong>Nota técnica:</strong> Modelo treinado com dataset reduzido (n=31 documentos fictícios) para fins
           demonstrativos. A robustez do IsolationForest aumenta significativamente com volumes
           maiores (n &gt; 1000 documentos), típicos de uma autoridade reguladora ou companhia
           aérea em produção.
         </span>
       </div>
-
-      {/* ── Target Metrics (Phase Beta) ── */}
-      <SectionLabel label="Resultados Esperados — Fase Beta" target />
-
-      <div style={s.targetDisclaimer}>
-        <strong>Nota metodológica:</strong> Os indicadores abaixo são métricas target estimadas com base em
-        literatura sobre digitalização de processos administrativos em aviação (Bhardwaj & Purdy 2019,
-        Burns et al. 2019). Não são dados medidos — serão validados numa fase piloto com escola de aviação parceira.
-      </div>
-
-      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
-        <TargetKpi
-          value="70%"
-          label="Redução Tempo Admin."
-          desc="Estimativa baseada em ordens de grandeza de digitalização de processos similares"
-          color={c.primaryLt}
-        />
-        <TargetKpi
-          value="≥99%"
-          label="Conformidade Regulamentar"
-          desc="Com alertas automáticos 90/60/30/7 dias antes da expiração"
-          color={c.green}
-        />
-        <TargetKpi
-          value="Zero"
-          label="Documentos Perdidos"
-          desc="Cópia cifrada em cloud com redundância — eliminação de perda por extravio físico"
-          color={c.amber}
-        />
-        <TargetKpi
-          value="3×"
-          label="Velocidade de Verificação"
-          desc="QR criptográfico vs. verificação manual em ramp checks (segundos vs. minutos)"
-          color={c.purple}
-        />
-      </div>
-
-      <div style={s.sustainabilityRow}>
-        {[
-          { label: 'Sustentabilidade Operacional', desc: 'Redução de carga administrativa liberta tempo para operações. Menos erros humanos por fadiga de gestão documental.', color: c.primaryLt },
-          { label: 'Sustentabilidade Humana',       desc: 'Melhoria da experiência dos pilotos contribui para retenção num setor em escassez (previsão IATA: 80k pilotos em falta até 2032).', color: c.green },
-          { label: 'Sustentabilidade Ambiental',    desc: 'Digitalização elimina documentação em papel. Impacto direto limitado mas mensurável em operações de grande escala.', color: c.amber },
-        ].map(({ label, desc, color }) => (
-          <div key={label} style={{ ...s.sustainCard, borderTop: `3px solid ${color}` }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color, marginBottom: 8 }}>{label}</div>
-            <div style={{ fontSize: 11, color: c.textMuted, lineHeight: 1.5 }}>{desc}</div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
 
-function SectionLabel({ label, live, target }) {
+function SectionLabel({ label, live }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
       <span style={{ fontSize: 11, fontWeight: 700, color: c.textMuted,
@@ -310,13 +246,6 @@ function SectionLabel({ label, live, target }) {
           background: c.greenBg, border: `1px solid ${c.green}40`,
           padding: '2px 8px', borderRadius: 20, letterSpacing: '0.4px' }}>
           AO VIVO
-        </span>
-      )}
-      {target && (
-        <span style={{ fontSize: 9, fontWeight: 700, color: c.amber,
-          background: c.amberBg, border: `1px solid ${c.amber}40`,
-          padding: '2px 8px', borderRadius: 20, letterSpacing: '0.4px' }}>
-          ESTIMATIVA · NÃO MEDIDO
         </span>
       )}
     </div>
@@ -334,19 +263,5 @@ const s = {
     display: 'flex', alignItems: 'flex-start', gap: 8,
     fontSize: 11, color: c.textMuted, lineHeight: 1.55,
     marginBottom: 28, marginTop: -12,
-  },
-  targetDisclaimer: {
-    background: c.amberBg, border: `1px solid ${c.amber}35`,
-    borderRadius: 10, padding: '12px 16px',
-    fontSize: 12, color: c.textSub, lineHeight: 1.55,
-    marginBottom: 16,
-  },
-  sustainabilityRow: {
-    display: 'flex', gap: 14, flexWrap: 'wrap',
-  },
-  sustainCard: {
-    background: c.bgCard, border: `1px solid ${c.border}`,
-    borderRadius: 12, padding: '18px 20px', flex: 1, minWidth: 200,
-    boxShadow: shadow.card,
   },
 };

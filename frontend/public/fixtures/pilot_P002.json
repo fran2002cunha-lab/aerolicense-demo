@@ -1,0 +1,41 @@
+{
+ "id": "P002",
+ "nome": "Ana Costa",
+ "cargo": "Cabin Crew Senior — Lusoavia",
+ "carteira_ethereum": "0x00000000000000000000000000000000Ae1c0002",
+ "documentos": [
+  {
+   "tipo": "OTHER",
+   "descricao": "Licença de Tripulante de Cabine — EASA CC",
+   "hash": "0x3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9d0c1b2a3f5",
+   "tx_blockchain": "0xe7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8",
+   "emitido_em": "2024-05-01",
+   "validade": "2027-05-01",
+   "dias_restantes": 170,
+   "status": "valid",
+   "entidade_emissora": "EASA — European Union Aviation Safety Agency"
+  },
+  {
+   "tipo": "MEDICAL_CLASS1",
+   "descricao": "Certificado Médico Cabin Crew",
+   "hash": "0x5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b",
+   "tx_blockchain": "0xf8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9",
+   "emitido_em": "2024-12-01",
+   "validade": "2026-06-02",
+   "dias_restantes": -163,
+   "status": "expired",
+   "entidade_emissora": "Clínica de Medicina Aeronáutica Porto"
+  },
+  {
+   "tipo": "CRM_TRAINING",
+   "descricao": "Crew Resource Management — Cabin Crew",
+   "hash": "0x6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c",
+   "tx_blockchain": "0xa9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b1",
+   "emitido_em": "2024-07-01",
+   "validade": "2026-07-20",
+   "dias_restantes": -115,
+   "status": "expired",
+   "entidade_emissora": "Lusoavia Training Academy — Porto"
+  }
+ ]
+}

@@ -10,6 +10,22 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from database import Base, get_db, seed_demo_data
 from main import app
+import main
+
+TEST_API_KEY = "test-api-key"
+API_HEADERS = {"X-API-Key": TEST_API_KEY}
+
+
+@pytest.fixture(autouse=True)
+def _test_env(monkeypatch):
+    """Every test: API key set, no LLM key (no external calls), fresh chat rate limiter."""
+    monkeypatch.setenv("AEROLICENSE_API_KEY", TEST_API_KEY)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("LLM_MODEL", raising=False)
+    main._chat_hits.clear()
+    yield
+    main._chat_hits.clear()
 
 @pytest.fixture
 def client():

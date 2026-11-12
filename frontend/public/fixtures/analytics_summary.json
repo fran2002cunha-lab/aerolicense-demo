@@ -1,0 +1,9 @@
+{
+ "total_pilots": 8,
+ "total_documents": 31,
+ "valid": 10,
+ "expiring_soon": 2,
+ "expired": 19,
+ "compliance_rate": 0.0,
+ "compliant_pilots": 0
+}

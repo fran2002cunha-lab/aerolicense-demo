@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.database import Base, Pilot, Document, seed_demo_data
+from backend.database import Base, Pilot, Document, seed_demo_data, DEMO_PILOTS_RAW
 
 @pytest.fixture
 def db():
@@ -22,10 +22,10 @@ def test_pilot_model(db):
 def test_seed_creates_pilots(db):
     seed_demo_data(db)
     pilots = db.query(Pilot).all()
-    assert len(pilots) == 3
+    assert len(pilots) == len(DEMO_PILOTS_RAW)
     assert any(p.id == "P001" for p in pilots)
 
 def test_seed_creates_documents(db):
     seed_demo_data(db)
     docs = db.query(Document).all()
-    assert len(docs) == 9  # 4 + 2 + 3 from DEMO_PILOTS_RAW
+    assert len(docs) == sum(len(p["documents"]) for p in DEMO_PILOTS_RAW)

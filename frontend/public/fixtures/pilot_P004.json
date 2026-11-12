@@ -1,0 +1,63 @@
+{
+ "id": "P004",
+ "nome": "Sofia Andrade",
+ "cargo": "Captain — Serra Aviation",
+ "carteira_ethereum": "0x2Fc4550b8E409462c9bF22D5A4061B4260aeE5F7",
+ "documentos": [
+  {
+   "tipo": "ATPL",
+   "descricao": "Licença ATPL — ANAC Portugal",
+   "hash": "0xaa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
+   "tx_blockchain": "0xd2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3",
+   "emitido_em": "2022-07-20",
+   "validade": "2025-07-20",
+   "dias_restantes": -480,
+   "status": "expired",
+   "entidade_emissora": "ANAC — Autoridade Nacional de Aviação Civil"
+  },
+  {
+   "tipo": "MEDICAL_CLASS1",
+   "descricao": "Certificado Médico Classe 1",
+   "hash": "0xbb2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+   "tx_blockchain": "0xe3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4",
+   "emitido_em": "2025-02-14",
+   "validade": "2026-02-14",
+   "dias_restantes": -271,
+   "status": "expired",
+   "entidade_emissora": "Clínica de Medicina Aeronáutica Lisboa"
+  },
+  {
+   "tipo": "ICAO_ENGLISH",
+   "descricao": "Proficiência Linguística ICAO — Nível 6",
+   "hash": "0xcc3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+   "tx_blockchain": "0xf4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5",
+   "emitido_em": "2023-09-05",
+   "validade": "2029-09-05",
+   "dias_restantes": 1028,
+   "status": "valid",
+   "entidade_emissora": "Centro de Testes ICAO — Lisboa"
+  },
+  {
+   "tipo": "TYPE_RATING",
+   "descricao": "Type Rating Airbus A321neo",
+   "hash": "0xdd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
+   "tx_blockchain": "0xa5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6",
+   "emitido_em": "2023-11-12",
+   "validade": "2025-11-12",
+   "dias_restantes": -365,
+   "status": "expired",
+   "entidade_emissora": "Airbus Training Centre — Toulouse"
+  },
+  {
+   "tipo": "CRM_TRAINING",
+   "descricao": "Crew Resource Management — Initial",
+   "hash": "0xee5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
+   "tx_blockchain": "0xb6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7",
+   "emitido_em": "2024-04-01",
+   "validade": "2027-04-01",
+   "dias_restantes": 140,
+   "status": "valid",
+   "entidade_emissora": "Serra Aviation Training Academy — Covilhã"
+  }
+ ]
+}

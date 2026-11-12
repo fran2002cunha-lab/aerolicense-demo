@@ -4,7 +4,7 @@ import { c, gradientPrimary, shadow } from '../theme';
 const ROLES = [
   { id: 'gestor',    label: 'Gestor de Frota', sub: 'Operador / Companhia Aérea', icon: '✈' },
   { id: 'piloto',    label: 'Piloto',           sub: 'Tripulante certificado EASA', icon: '👨‍✈️' },
-  { id: 'regulador', label: 'Regulador',        sub: 'ANAC / Autoridade Civil',    icon: '🏛' },
+  { id: 'regulador', label: 'Regulador',        sub: 'Autoridade de aviação (demo)', icon: '🏛' },
 ];
 
 const BADGES = [
@@ -13,32 +13,6 @@ const BADGES = [
   { icon: '📋', label: 'QR Verification',      color: c.amber },
   { icon: '⚡', label: 'Alertas Automáticos',  color: c.purple },
 ];
-
-function TapLogo() {
-  return (
-    <svg width="82" height="38" viewBox="0 0 82 38" aria-label="TAP Air Portugal">
-      <text x="20" y="35" fontFamily="'Arial Black', Arial, sans-serif" fontWeight="900" fontSize="38" fill="#5B8C1A">A</text>
-      <text x="0"  y="35" fontFamily="'Arial Black', Arial, sans-serif" fontWeight="900" fontSize="38" fill="#8DB82A">T</text>
-      <text x="46" y="35" fontFamily="'Arial Black', Arial, sans-serif" fontWeight="900" fontSize="38" fill="#C0281E">P</text>
-    </svg>
-  );
-}
-
-function AnacLogo() {
-  const blue = '#3A8DC5';
-  return (
-    <svg width="120" height="52" viewBox="0 0 120 52" aria-label="ANAC - Autoridade Nacional da Aviação Civil">
-      <path d="M58 18 C50 10, 28 8, 4 18 C4 22, 26 16, 52 24 Z" fill={blue}/>
-      <path d="M62 18 C70 10, 92 8, 116 18 C116 22, 94 16, 68 24 Z" fill={blue}/>
-      <circle cx="60" cy="16" r="14" fill="white" stroke={blue} strokeWidth="1.5"/>
-      <rect x="57.5" y="5"    width="5"  height="22" rx="0.5" fill={blue}/>
-      <rect x="51"   y="9"    width="18" height="5"  rx="0.5" fill={blue}/>
-      <rect x="53.5" y="15.5" width="13" height="4"  rx="0.5" fill={blue}/>
-      <text x="60" y="42" textAnchor="middle" fontFamily="'Arial Black', Arial, sans-serif" fontWeight="900" fontSize="13" fill={blue} letterSpacing="2">ANAC</text>
-      <text x="60" y="50" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="400" fontSize="4.8" fill={blue} letterSpacing="0.3">AUTORIDADE NACIONAL DA AVIAÇÃO CIVIL</text>
-    </svg>
-  );
-}
 
 export default function LoginPage({ onLogin }) {
   const [selected, setSelected] = useState(null);
@@ -58,7 +32,7 @@ export default function LoginPage({ onLogin }) {
             <span style={{ color: c.primaryLt, fontWeight: 900 }}>LICENSE</span>
           </div>
           <h1 style={s.headline}>O futuro da conformidade aeronáutica</h1>
-          <p style={s.sub}>Blockchain · IA · Conformidade EASA</p>
+          <p style={s.sub}>Blockchain simulada · IA · Regras de validade EASA</p>
 
           <div style={s.badges}>
             {BADGES.map(({ icon, label, color }) => (
@@ -66,14 +40,6 @@ export default function LoginPage({ onLogin }) {
                 {icon} {label}
               </span>
             ))}
-          </div>
-
-          <div style={s.logoRow}>
-            <span style={s.logoLabel}>Parceiros de referência</span>
-            <div style={s.logos}>
-              <TapLogo />
-              <AnacLogo />
-            </div>
           </div>
         </div>
 
@@ -136,7 +102,7 @@ export default function LoginPage({ onLogin }) {
               Explorar sem selecionar perfil
             </button>
 
-            <p style={s.footer}>Demo académico · ISEC Lisboa · Dados simulados</p>
+            <p style={s.footer}>Projeto académico · ISEC Lisboa · 2025/2026 · Dados simulados</p>
           </div>
         </div>
 
@@ -198,15 +164,6 @@ const s = {
     padding: '5px 11px', borderRadius: 20,
     display: 'flex', alignItems: 'center', gap: 5,
   },
-  logoRow: { marginTop: 'auto' },
-  logoLabel: {
-    display: 'block',
-    fontSize: 10, color: c.textDim,
-    textTransform: 'uppercase', letterSpacing: '1px',
-    marginBottom: 10,
-  },
-  logos: { display: 'flex', alignItems: 'center', gap: 24 },
-
   panelTitle: { fontSize: 18, fontWeight: 800, color: c.text, marginBottom: 4 },
   panelSub:   { fontSize: 12, color: c.textMuted, marginBottom: 24 },
 

@@ -1,0 +1,52 @@
+{
+ "id": "P001",
+ "nome": "Miguel Ferreira",
+ "cargo": "First Officer — Atlântica Air",
+ "carteira_ethereum": "0x00000000000000000000000000000000Ae1c0001",
+ "documentos": [
+  {
+   "tipo": "ATPL",
+   "descricao": "Licença ATPL — ANAC Portugal",
+   "hash": "0xf5fa1228922f7b4e3e13181d7054cf56785891b7025e0361906b8964ec62eb73",
+   "tx_blockchain": "0xa3d2e891b4c7f305162a9c184d7e3b56f0c9e2a1b3d4e5f6a7b8c9d0e1f2a3b4",
+   "emitido_em": "2023-03-15",
+   "validade": "2026-03-15",
+   "dias_restantes": -242,
+   "status": "expired",
+   "entidade_emissora": "ANAC — Autoridade Nacional de Aviação Civil"
+  },
+  {
+   "tipo": "MEDICAL_CLASS1",
+   "descricao": "Certificado Médico Classe 1",
+   "hash": "0xca26ae93ee7df6764af6689223428eeb13101bf5a4b8b7cc4ab945460b235f99",
+   "tx_blockchain": "0xb4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
+   "emitido_em": "2024-11-20",
+   "validade": "2026-05-17",
+   "dias_restantes": -179,
+   "status": "expired",
+   "entidade_emissora": "Clínica de Medicina Aeronáutica Lisboa"
+  },
+  {
+   "tipo": "ICAO_ENGLISH",
+   "descricao": "Proficiência Linguística ICAO — Nível 5",
+   "hash": "0x9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8",
+   "tx_blockchain": "0xc5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+   "emitido_em": "2022-06-10",
+   "validade": "2025-06-10",
+   "dias_restantes": -520,
+   "status": "expired",
+   "entidade_emissora": "Centro de Testes ICAO — Lisboa"
+  },
+  {
+   "tipo": "TYPE_RATING",
+   "descricao": "Type Rating Airbus A320",
+   "hash": "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+   "tx_blockchain": "0xd6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7",
+   "emitido_em": "2024-01-08",
+   "validade": "2026-01-08",
+   "dias_restantes": -308,
+   "status": "expired",
+   "entidade_emissora": "Airbus Training Centre — Toulouse"
+  }
+ ]
+}

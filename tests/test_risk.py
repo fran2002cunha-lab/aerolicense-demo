@@ -2,6 +2,7 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
 from risk import compute_pilot_score
+from database import DEMO_PILOTS_RAW
 
 def test_perfect_score_no_issues():
     docs = [{"hash": "0xabc", "expires_at": "2030-01-01", "description": "ATPL"}]
@@ -73,7 +74,7 @@ def test_risk_endpoint(client):
     assert res.status_code == 200
     data = res.json()
     assert "pilots" in data
-    assert len(data["pilots"]) == 3
+    assert len(data["pilots"]) == len(DEMO_PILOTS_RAW)
     for p in data["pilots"]:
         assert "pilot_id" in p
         assert "pilot_name" in p

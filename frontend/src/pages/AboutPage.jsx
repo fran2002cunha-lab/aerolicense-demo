@@ -8,7 +8,7 @@ const REFS = [
   },
   {
     num: 2,
-    text: 'Simoncini, A. (2020). Aircraft Pilots Workload Analysis. Aerospace, 7(9), 137.',
+    text: 'Alaimo, A., Esposito, A., Orlando, C., & Simoncini, A. (2020). Aircraft Pilots Workload Analysis. Aerospace, 7(9), 137.',
     doi: '10.3390/aerospace7090137',
   },
   {

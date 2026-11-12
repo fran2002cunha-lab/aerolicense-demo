@@ -1,0 +1,52 @@
+{
+ "id": "P005",
+ "nome": "Carlos Rodrigues",
+ "cargo": "First Officer — Ilhéu Airlines",
+ "carteira_ethereum": "0x3Ab5661c9F510573d0cA33E6B5172C6371bfF6A8",
+ "documentos": [
+  {
+   "tipo": "ATPL",
+   "descricao": "Licença ATPL — ANAC Portugal",
+   "hash": "0xff6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
+   "tx_blockchain": "0xc7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8",
+   "emitido_em": "2024-08-10",
+   "validade": "2030-08-10",
+   "dias_restantes": 1367,
+   "status": "valid",
+   "entidade_emissora": "ANAC — Autoridade Nacional de Aviação Civil"
+  },
+  {
+   "tipo": "MEDICAL_CLASS1",
+   "descricao": "Certificado Médico Classe 1",
+   "hash": "0x117b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b",
+   "tx_blockchain": "0xd8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9",
+   "emitido_em": "2024-09-22",
+   "validade": "2026-09-22",
+   "dias_restantes": -51,
+   "status": "expired",
+   "entidade_emissora": "Hospital das Forças Armadas — Lisboa"
+  },
+  {
+   "tipo": "TYPE_RATING",
+   "descricao": "Type Rating ATR 72-600",
+   "hash": "0x228c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c",
+   "tx_blockchain": "0xe9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0",
+   "emitido_em": "2024-06-15",
+   "validade": "2026-06-15",
+   "dias_restantes": -150,
+   "status": "expired",
+   "entidade_emissora": "ATR Training Centre — Toulouse"
+  },
+  {
+   "tipo": "ICAO_ENGLISH",
+   "descricao": "Proficiência Linguística ICAO — Nível 4",
+   "hash": "0x339d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d",
+   "tx_blockchain": "0xf0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1",
+   "emitido_em": "2021-03-18",
+   "validade": "2025-03-18",
+   "dias_restantes": -604,
+   "status": "expired",
+   "entidade_emissora": "Centro de Testes ICAO — Lisboa"
+  }
+ ]
+}

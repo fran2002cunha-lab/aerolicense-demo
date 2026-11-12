@@ -1,0 +1,41 @@
+{
+ "id": "P006",
+ "nome": "Inês Tavares",
+ "cargo": "Cabin Crew — Atlântica Air",
+ "carteira_ethereum": "0x4Be6772d0C621684e1dB44F7C6283D7482ceC7B9",
+ "documentos": [
+  {
+   "tipo": "OTHER",
+   "descricao": "Licença de Tripulante de Cabine — ANAC",
+   "hash": "0x44ae1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0f",
+   "tx_blockchain": "0xa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+   "emitido_em": "2025-01-15",
+   "validade": "2028-01-15",
+   "dias_restantes": 429,
+   "status": "valid",
+   "entidade_emissora": "ANAC — Autoridade Nacional de Aviação Civil"
+  },
+  {
+   "tipo": "MEDICAL_CLASS1",
+   "descricao": "Certificado Médico Cabin Crew",
+   "hash": "0x55bf2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f",
+   "tx_blockchain": "0xb2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+   "emitido_em": "2025-03-01",
+   "validade": "2026-09-01",
+   "dias_restantes": -72,
+   "status": "expired",
+   "entidade_emissora": "Clínica de Medicina Aeronáutica Lisboa"
+  },
+  {
+   "tipo": "CRM_TRAINING",
+   "descricao": "Crew Resource Management — Initial",
+   "hash": "0x66c03b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a",
+   "tx_blockchain": "0xc3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
+   "emitido_em": "2025-02-10",
+   "validade": "2027-02-10",
+   "dias_restantes": 90,
+   "status": "valid",
+   "entidade_emissora": "Atlântica Air Training Center"
+  }
+ ]
+}

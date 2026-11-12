@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { c, statusColor, statusLabel, shadow } from '../theme';
-
-const isDev = process.env.NODE_ENV === 'development';
-const DEV_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-const apiUrl = (path) => isDev ? `${DEV_URL}${path}` : `/api/proxy?p=${encodeURIComponent(path)}`;
+import { api, backendUrl, IS_DEMO } from '../api';
 
 const DOC_TYPE_LABELS = {
   ATPL: 'Licença ATPL', MEDICAL_CLASS1: 'Médico Classe 1', ICAO_ENGLISH: 'Proficiência ICAO',
@@ -54,9 +51,14 @@ export default function DocumentCard({ document }) {
   async function verifyOnBlockchain() {
     setVerifying(true); setVerification(null); setVerifyError(null);
     try {
-      const res  = await fetch(apiUrl(`/documents/verify/${document.hash}`));
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail);
+      let data;
+      if (IS_DEMO) {
+        data = await api.verifyDocument(document.hash);
+      } else {
+        const res = await fetch(backendUrl(`/documents/verify/${document.hash}`));
+        data = await res.json();
+        if (!res.ok) throw new Error(data.detail);
+      }
       setVerification(data);
       setProofOpen(true);
     } catch (err) { setVerifyError(err.message); }
@@ -67,7 +69,7 @@ export default function DocumentCard({ document }) {
     if (qrUrl) { setShowQr(true); return; }
     setQrLoading(true);
     try {
-      const res = await fetch(apiUrl(`/documents/qr/${document.hash}`));
+      const res = await fetch(backendUrl(`/documents/qr/${document.hash}`));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setQrUrl(URL.createObjectURL(await res.blob()));
       setShowQr(true);
@@ -161,6 +163,7 @@ export default function DocumentCard({ document }) {
               {verifying ? 'A verificar…' : 'Verificar Blockchain'}
             </span>
           </button>
+          {!IS_DEMO && (
           <button
             onClick={loadQr}
             disabled={qrLoading}
@@ -169,6 +172,7 @@ export default function DocumentCard({ document }) {
           >
             <QrIcon />
           </button>
+          )}
         </div>
 
         {/* ── Integrity Proof Panel ── */}
@@ -219,7 +223,11 @@ export default function DocumentCard({ document }) {
 
             <div style={s.proofFooter}>
               <LockIcon />
-              <span>Verificação imutável · Registado na Ethereum · Sem acesso ao ficheiro original</span>
+              <span>
+                {IS_DEMO
+                  ? 'Modo demo: verificado contra os registos fictícios locais (sem blockchain ativa) · Sem acesso ao ficheiro original'
+                  : 'Verificado contra o contrato configurado no backend (simulado sem CONTRACT_ADDRESS) · Sem acesso ao ficheiro original'}
+              </span>
             </div>
           </div>
         )}

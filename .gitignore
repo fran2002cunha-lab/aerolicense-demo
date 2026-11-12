@@ -1,15 +1,29 @@
+# Python
 backend/venv/
-backend/aerolicense.db
-backend/.env
-smart_contract/node_modules/
-smart_contract/artifacts/
-smart_contract/cache/
-frontend/node_modules/
-frontend/build/
-.DS_Store
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# Secrets — never commit
+**/.env*
+!**/.env.example
+
+# Local data / editor files
+*.db
+*.code-workspace
+.DS_Store
+Untitled-*
+.superpowers/
+.vercel
+
+# Build output / deps
+frontend/node_modules/
+frontend/build/
 smart_contract/node_modules/
 smart_contract/artifacts/
 smart_contract/cache/
-.vercel
+
+# Local-only artefacts (not part of the published repo)
+/vercel.json
+docs/superpowers/
+docs/aerolicense-documentacao-completa.md

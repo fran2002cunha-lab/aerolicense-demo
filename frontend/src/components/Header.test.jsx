@@ -10,7 +10,7 @@ test('renders role badge for gestor', () => {
 test('renders role badge for regulador', () => {
   render(<Header activeRole="regulador" />);
   expect(screen.getByTestId('role-badge')).toBeInTheDocument();
-  expect(screen.getByTestId('role-badge')).toHaveTextContent('Regulador ANAC');
+  expect(screen.getByTestId('role-badge')).toHaveTextContent('Regulador (demo)');
 });
 
 test('does not render role badge when activeRole is null', () => {

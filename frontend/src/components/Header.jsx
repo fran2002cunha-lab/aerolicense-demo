@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { api } from '../api';
+import { api, IS_DEMO } from '../api';
 import { c, gradientPrimary } from '../theme';
 
 const ROLE_CONFIG = {
   gestor:    { label: 'Gestor',         Icon: BriefcaseIcon },
   piloto:    { label: 'Piloto',         Icon: PlaneIcon },
-  regulador: { label: 'Regulador ANAC', Icon: ShieldBadgeIcon },
+  regulador: { label: 'Regulador (demo)', Icon: ShieldBadgeIcon },
   visitante: { label: 'Visitante',      Icon: BriefcaseIcon },
   operador:  { label: 'Operador',       Icon: BriefcaseIcon },
-  inspector: { label: 'Inspector ANAC', Icon: ShieldBadgeIcon },
+  inspector: { label: 'Inspetor (demo)', Icon: ShieldBadgeIcon },
 };
 
 function PlaneIcon() {
@@ -100,9 +100,11 @@ export default function Header({ activeRole, onMenuToggle, menuOpen }) {
           boxShadow: online ? `0 0 8px ${c.green}` : 'none',
         }} aria-hidden="true" />
         <span style={s.statusText}>
-          {online === null ? 'A ligar...' : online
-            ? `API online · ${mode || 'demo'}`
-            : 'API offline'}
+          {IS_DEMO
+            ? 'Demo estática · sem backend'
+            : online === null ? 'A ligar...' : online
+              ? `API online · ${mode || 'demo'}`
+              : 'API offline'}
         </span>
       </div>
 

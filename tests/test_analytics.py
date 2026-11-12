@@ -1,11 +1,15 @@
 # tests/test_analytics.py
+from database import DEMO_PILOTS_RAW
+
+N_PILOTS = len(DEMO_PILOTS_RAW)
+N_DOCS = sum(len(p["documents"]) for p in DEMO_PILOTS_RAW)
 
 def test_analytics_summary(client):
     res = client.get("/analytics/summary")
     assert res.status_code == 200
     data = res.json()
-    assert data["total_pilots"] == 3
-    assert data["total_documents"] == 9
+    assert data["total_pilots"] == N_PILOTS
+    assert data["total_documents"] == N_DOCS
     assert "compliance_rate" in data
     assert isinstance(data["compliance_rate"], float)
 
@@ -24,7 +28,7 @@ def test_analytics_distribution_covers_doc_types(client):
     assert len(data) > 0
     assert all("type" in d and "count" in d for d in data)
     total = sum(d["count"] for d in data)
-    assert total == 9
+    assert total == N_DOCS
 
 def test_analytics_anomalies_returns_list(client):
     res = client.get("/analytics/anomalies")

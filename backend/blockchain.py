@@ -6,8 +6,11 @@ e demonstra o conceito de hash + imutabilidade.
 """
 
 import hashlib
-import json
+import logging
+
 from web3 import Web3
+
+logger = logging.getLogger(__name__)
 
 # ── Conceito 1: Hashing ────────────────────────────────────────────────────
 def hash_document(file_bytes: bytes) -> str:
@@ -31,18 +34,18 @@ def demonstrate_hashing():
     hash_original  = hash_document(doc_original)
     hash_falsified = hash_document(doc_falsified)
 
-    print("=" * 60)
-    print("DEMONSTRAÇÃO: Por que blockchain protege documentos")
-    print("=" * 60)
-    print(f"\nDocumento ORIGINAL:\n  {doc_original.decode()}")
-    print(f"Hash SHA-256:\n  {hash_original}")
-    print(f"\nDocumento FALSIFICADO (só 1 ano a mais):\n  {doc_falsified.decode()}")
-    print(f"Hash SHA-256:\n  {hash_falsified}")
-    print(f"\nHashes são iguais? {hash_original == hash_falsified}")
-    print("\n→ A blockchain guarda o hash original.")
-    print("→ Qualquer alteração ao documento produz um hash completamente diferente.")
-    print("→ A falsificação é detetada imediatamente na verificação.")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("DEMONSTRAÇÃO: Por que blockchain protege documentos")
+    logger.info("=" * 60)
+    logger.info("Documento ORIGINAL:\n  %s", doc_original.decode())
+    logger.info("Hash SHA-256:\n  %s", hash_original)
+    logger.info("Documento FALSIFICADO (só 1 ano a mais):\n  %s", doc_falsified.decode())
+    logger.info("Hash SHA-256:\n  %s", hash_falsified)
+    logger.info("Hashes são iguais? %s", hash_original == hash_falsified)
+    logger.info("→ A blockchain guarda o hash original.")
+    logger.info("→ Qualquer alteração ao documento produz um hash completamente diferente.")
+    logger.info("→ A falsificação é detetada na verificação.")
+    logger.info("=" * 60)
 
 
 # ── Conceito 2: Ligação à blockchain ──────────────────────────────────────
@@ -51,7 +54,7 @@ def connect_to_blockchain(url: str = "http://127.0.0.1:8545") -> Web3:
     w3 = Web3(Web3.HTTPProvider(url))
     if not w3.is_connected():
         raise ConnectionError(f"Não foi possível ligar a {url}")
-    print(f"Ligado à blockchain | Bloco atual: {w3.eth.block_number}")
+    logger.info("Ligado à blockchain | Bloco atual: %s", w3.eth.block_number)
     return w3
 
 
@@ -95,9 +98,10 @@ def get_transaction_details(w3: Web3, tx_hash: str) -> dict:
 
 # ── Ponto de entrada para demonstração ────────────────────────────────────
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     demonstrate_hashing()
 
-    print("\n--- Criar carteira de piloto ---")
+    logger.info("--- Criar carteira de piloto ---")
     wallet = create_pilot_wallet()
-    print(f"Endereço: {wallet['address']}")
-    print(f"Chave privada: {wallet['private_key'][:20]}...  (truncada por segurança)")
+    # A chave privada nunca vai para o log, nem truncada.
+    logger.info("Endereço: %s", wallet["address"])

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { c, shadow } from '../theme';
+import { api, backendUrl, sha256File, IS_DEMO } from '../api';
 
-const isDev = process.env.NODE_ENV === 'development';
-const DEV_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-const apiUrl = (path) => isDev ? `${DEV_URL}${path}` : `/api/proxy?p=${encodeURIComponent(path)}`;
+export const DEMO_LOCAL_NOTE = 'Modo demo: o ficheiro é processado só no teu browser, nada é enviado.';
+export const WRITE_AUTH_NOTE =
+  'O registo exige a chave AEROLICENSE_API_KEY no cabeçalho X-API-Key, e o frontend não inclui chaves. ' +
+  'Em desenvolvimento, usa o Swagger UI do backend (/docs) para testar este endpoint.';
 
 const DOC_TYPES = [
   { value: "ATPL",           label: "Licença ATPL",                   medical: false },
@@ -42,13 +44,27 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
   const [expiresAt,   setExpires]  = useState("");
   const [loading,     setLoading]  = useState(false);
   const [result,      setResult]   = useState(null);
+  const [demoResult,  setDemoRes]  = useState(null);
   const [error,       setError]    = useState(null);
   const [dragOver,    setDragOver] = useState(false);
 
   const isMedical = DOC_TYPES.find(d => d.value === docType)?.medical;
 
+  async function handleDemoSubmit() {
+    if (!file) return;
+    setLoading(true); setDemoRes(null); setError(null);
+    try {
+      /* SHA-256 calculado localmente — o ficheiro não sai do browser. */
+      const hash  = await sha256File(file);
+      const check = await api.verifyDocument(hash);
+      setDemoRes({ hash, check });
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
+    if (IS_DEMO) { handleDemoSubmit(); return; }
     if (!file || !description || !expiresAt) return;
     setLoading(true); setResult(null); setError(null);
 
@@ -60,7 +76,8 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
     });
 
     try {
-      const res  = await fetch(apiUrl(`/documents/upload?${params}`), { method: "POST", body: form });
+      const res  = await fetch(backendUrl(`/documents/upload?${params}`), { method: "POST", body: form });
+      if (res.status === 401 || res.status === 503) throw new Error(WRITE_AUTH_NOTE);
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail);
       setResult(data);
@@ -84,31 +101,37 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
         <div>
           <h2 style={s.title}>Registar Novo Documento</h2>
           <p style={s.subtitle}>
-            O ficheiro nunca é armazenado — apenas o hash SHA-256 é gravado na blockchain Ethereum.
-            Qualquer alteração torna o hash inválido e a falsificação é imediatamente detetada.
+            O ficheiro não é armazenado: só o hash SHA-256 é registado (num contrato Ethereum local/testnet,
+            se configurado; caso contrário, numa blockchain simulada). Qualquer alteração ao ficheiro muda o hash.
           </p>
         </div>
       </div>
 
-      {/* RGPD + security notice */}
+      {IS_DEMO && (
+        <div role="note" style={s.demoNote}>
+          <LockIcon /> <span>{DEMO_LOCAL_NOTE}</span>
+        </div>
+      )}
+
+      {/* O que o código faz de facto com o ficheiro */}
       <div style={s.rgpdBox}>
         <div style={s.rgpdRow}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: c.green }}>
-            <LockIcon /> <strong>Encriptação AES-256</strong>
+            <LockIcon /> <strong>Hash SHA-256</strong>
           </span>
           <span style={{ color: c.border }}>·</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: c.primaryLt }}>
-            <ShieldCheckIcon /> RGPD Conforme · Residência UE
+          <span style={{ color: c.textMuted }}>
+            {IS_DEMO ? 'Calculado no browser' : 'Calculado no servidor; o ficheiro não é guardado'}
           </span>
           <span style={{ color: c.border }}>·</span>
-          <span style={{ color: c.textMuted }}>Zero-knowledge: ficheiro permanece local</span>
+          <span style={{ color: c.textMuted }}>Dados fictícios</span>
         </div>
         {isMedical && (
           <div style={s.medicalWarning}>
             <LockIcon />
             <span>
-              <strong>Dados de Saúde — Categoria Especial (Art. 9 RGPD).</strong>{' '}
-              Requer base legal explícita. O hash do certificado médico é tratado com proteção reforçada.
+              <strong>Dados de saúde são categoria especial (Art. 9 RGPD).</strong>{' '}
+              Um sistema real precisaria de base legal e de uma AIPD; este projeto académico não as tem.
             </span>
           </div>
         )}
@@ -126,10 +149,11 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
           </select>
         </Field>
 
+        {!IS_DEMO && (<>
         <Field label="Descrição">
           <input
             type="text"
-            placeholder="ex: ATPL — TAP Air Portugal, emitido ANAC"
+            placeholder="ex: ATPL — Atlântica Air"
             value={description}
             onChange={e => setDesc(e.target.value)}
             style={s.input}
@@ -146,6 +170,7 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
             required
           />
         </Field>
+        </>)}
 
         <Field label="Ficheiro (PDF / JPG / PNG)">
           <div
@@ -191,9 +216,9 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
           style={{ ...s.submitBtn, opacity: loading || !file ? 0.5 : 1,
             cursor: loading || !file ? 'not-allowed' : 'pointer' }}
         >
-          {loading
-            ? 'A registar na blockchain…'
-            : 'Registar na Blockchain'}
+          {IS_DEMO
+            ? (loading ? 'A calcular SHA-256…' : 'Calcular hash e verificar (local)')
+            : (loading ? 'A registar na blockchain…' : 'Registar na Blockchain')}
         </button>
       </form>
 
@@ -202,7 +227,9 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
         <div style={s.successBox}>
           <div style={s.successHeader}>
             <ShieldCheckIcon />
-            Documento registado com sucesso na Ethereum
+            {result.blockchain_mode === 'real'
+              ? 'Documento registado no contrato Ethereum'
+              : 'Hash calculado (blockchain simulada, nada foi gravado on-chain)'}
           </div>
           <div style={s.resultGrid}>
             <ResultRow label="Hash SHA-256"       value={result.hash} mono />
@@ -214,8 +241,39 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
             />
           </div>
           <p style={s.successNote}>
-            Hash gravado permanentemente na Ethereum. Qualquer entidade pode verificar
-            a autenticidade sem aceder ao ficheiro original.
+            {result.blockchain_mode === 'real'
+              ? 'Hash gravado no contrato. Quem tiver o ficheiro pode recalcular o hash e compará-lo.'
+              : 'Sem CONTRACT_ADDRESS o backend simula o tx_hash; nenhuma transação foi enviada.'}
+          </p>
+        </div>
+      )}
+
+      {demoResult && (
+        <div style={demoResult.check.is_authentic ? s.successBox : s.neutralBox}>
+          <div style={demoResult.check.is_authentic ? s.successHeader : s.neutralHeader}>
+            <ShieldCheckIcon />
+            {demoResult.check.is_authentic
+              ? 'Hash encontrado nos registos de demonstração'
+              : 'Hash não registado nos dados de demonstração'}
+          </div>
+          <div style={s.resultGrid}>
+            <ResultRow label="Hash SHA-256 (calculado no browser)" value={demoResult.hash} mono />
+            {demoResult.check.is_authentic && (
+              <>
+                <ResultRow label="Documento" value={demoResult.check.doc_descricao} />
+                <ResultRow label="Titular" value={`${demoResult.check.pilot_nome} (${demoResult.check.pilot_id})`} />
+                <ResultRow
+                  label="Estado"
+                  value={demoResult.check.is_expired ? 'Expirado' : 'Dentro da validade'}
+                  color={demoResult.check.is_expired ? c.red : c.green}
+                />
+              </>
+            )}
+          </div>
+          <p style={s.successNote}>
+            {demoResult.check.is_authentic
+              ? 'O hash coincide com um documento dos dados fictícios desta demo.'
+              : 'Qualquer alteração ao ficheiro muda o hash. Na versão completa (com backend), este hash seria gravado na Ethereum; nesta demo estática nada é registado.'}
           </p>
         </div>
       )}
@@ -320,6 +378,21 @@ const s = {
   successNote: {
     fontSize: 11, color: c.textMuted, margin: 0,
     padding: '10px 16px', borderTop: `1px solid ${c.green}20`, lineHeight: 1.5,
+  },
+  demoNote: {
+    display: 'flex', alignItems: 'center', gap: 7,
+    background: `${c.primary}12`, border: `1px solid ${c.primary}35`,
+    borderRadius: 10, padding: '10px 14px', marginBottom: 16,
+    fontSize: 12, color: c.primaryLt, lineHeight: 1.45,
+  },
+  neutralBox: {
+    marginTop: 20, background: c.bgElevated,
+    border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden',
+  },
+  neutralHeader: {
+    display: 'flex', alignItems: 'center', gap: 8,
+    padding: '12px 16px', borderBottom: `1px solid ${c.border}`,
+    fontSize: 13, fontWeight: 700, color: c.textMuted,
   },
   errorBox: {
     marginTop: 16, background: c.redBg, border: `1px solid ${c.red}35`,
