@@ -5,10 +5,10 @@ import { c, gradientPrimary } from '../theme';
 const ROLE_CONFIG = {
   gestor:    { label: 'Gestor',         Icon: BriefcaseIcon },
   piloto:    { label: 'Piloto',         Icon: PlaneIcon },
-  regulador: { label: 'Regulador ANAC', Icon: ShieldBadgeIcon },
+  regulador: { label: 'Regulador (demo)', Icon: ShieldBadgeIcon },
   visitante: { label: 'Visitante',      Icon: BriefcaseIcon },
   operador:  { label: 'Operador',       Icon: BriefcaseIcon },
-  inspector: { label: 'Inspector ANAC', Icon: ShieldBadgeIcon },
+  inspector: { label: 'Inspetor (demo)', Icon: ShieldBadgeIcon },
 };
 
 function PlaneIcon() {

@@ -1,7 +1,7 @@
 {
  "id": "P008",
  "nome": "Mariana Pinto",
- "cargo": "First Officer — Vueling",
+ "cargo": "First Officer — Douro Air",
  "carteira_ethereum": "0x6Df8994f2C843806f3fD66E9E8405F9604efD9E1",
  "documentos": [
   {
@@ -46,7 +46,7 @@
    "validade": "2027-03-05",
    "dias_restantes": 113,
    "status": "valid",
-   "entidade_emissora": "Vueling Training Academy — Barcelona"
+   "entidade_emissora": "Douro Air Training Academy — Barcelona"
   }
  ]
 }

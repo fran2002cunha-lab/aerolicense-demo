@@ -3,7 +3,7 @@
   {
    "pilot_id": "P001",
    "pilot_name": "Miguel Ferreira",
-   "pilot_role": "First Officer — TAP Air Portugal",
+   "pilot_role": "First Officer — Atlântica Air",
    "score": 0,
    "level": "critical",
    "penalties": [
@@ -16,7 +16,7 @@
   {
    "pilot_id": "P004",
    "pilot_name": "Sofia Andrade",
-   "pilot_role": "Captain — Wizz Air",
+   "pilot_role": "Captain — Serra Aviation",
    "score": 10,
    "level": "critical",
    "penalties": [
@@ -29,7 +29,7 @@
   {
    "pilot_id": "P005",
    "pilot_name": "Carlos Rodrigues",
-   "pilot_role": "First Officer — Azores Airlines",
+   "pilot_role": "First Officer — Ilhéu Airlines",
    "score": 10,
    "level": "critical",
    "penalties": [
@@ -42,7 +42,7 @@
   {
    "pilot_id": "P007",
    "pilot_name": "Ricardo Santos",
-   "pilot_role": "Captain — Lufthansa",
+   "pilot_role": "Captain — Brisa Aero",
    "score": 26,
    "level": "critical",
    "penalties": [
@@ -56,7 +56,7 @@
   {
    "pilot_id": "P002",
    "pilot_name": "Ana Costa",
-   "pilot_role": "Cabin Crew Senior — Ryanair",
+   "pilot_role": "Cabin Crew Senior — Lusoavia",
    "score": 50,
    "level": "attention",
    "penalties": [
@@ -67,7 +67,7 @@
   {
    "pilot_id": "P003",
    "pilot_name": "João Matos",
-   "pilot_role": "Captain — easyJet",
+   "pilot_role": "Captain — Tejo Airways",
    "score": 50,
    "level": "attention",
    "penalties": [
@@ -78,7 +78,7 @@
   {
    "pilot_id": "P008",
    "pilot_name": "Mariana Pinto",
-   "pilot_role": "First Officer — Vueling",
+   "pilot_role": "First Officer — Douro Air",
    "score": 50,
    "level": "attention",
    "penalties": [
@@ -89,7 +89,7 @@
   {
    "pilot_id": "P006",
    "pilot_name": "Inês Tavares",
-   "pilot_role": "Cabin Crew — TAP Air Portugal",
+   "pilot_role": "Cabin Crew — Atlântica Air",
    "score": 60,
    "level": "attention",
    "penalties": [

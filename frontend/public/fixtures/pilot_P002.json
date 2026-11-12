@@ -1,7 +1,7 @@
 {
  "id": "P002",
  "nome": "Ana Costa",
- "cargo": "Cabin Crew Senior — Ryanair",
+ "cargo": "Cabin Crew Senior — Lusoavia",
  "carteira_ethereum": "0x00000000000000000000000000000000Ae1c0002",
  "documentos": [
   {
@@ -35,7 +35,7 @@
    "validade": "2026-07-20",
    "dias_restantes": -115,
    "status": "expired",
-   "entidade_emissora": "Ryanair Training Academy — Dublin"
+   "entidade_emissora": "Lusoavia Training Academy — Porto"
   }
  ]
 }

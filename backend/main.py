@@ -29,12 +29,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Header, Query, Request
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.orm import Session
 from web3 import Web3
 import database
 from database import init_db, get_db, seed_demo_data, Pilot, Document
 from risk import compute_pilot_score
+from anomaly import detect_anomalies
+import chat as chat_module
 
 logger = logging.getLogger(__name__)
 
@@ -223,15 +225,28 @@ class VerifyResponse(BaseModel):
     expires_at: Optional[datetime]
     message: str
 
+# Limites do histórico do /chat (custo e tamanho do prompt enviado ao LLM)
+CHAT_HISTORY_MAX_ITEMS = 20
+CHAT_HISTORY_MAX_ITEM_CHARS = 1000
+CHAT_HISTORY_MAX_TOTAL_CHARS = 8000
+
 class ChatMessage(BaseModel):
     # Só user/assistant: um cliente não pode injetar mensagens "system" ou "tool"
     model_config = ConfigDict(extra="forbid")
     role: Literal["user", "assistant"]
-    content: str = Field(..., max_length=4000)
+    content: str = Field(..., max_length=CHAT_HISTORY_MAX_ITEM_CHARS)
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=500)
-    history: list[ChatMessage] = Field(default_factory=list, max_length=50)
+    history: list[ChatMessage] = Field(default_factory=list, max_length=CHAT_HISTORY_MAX_ITEMS)
+
+    @field_validator("history")
+    @classmethod
+    def _cap_total_history(cls, history: list[ChatMessage]) -> list[ChatMessage]:
+        total = sum(len(m.content) for m in history)
+        if total > CHAT_HISTORY_MAX_TOTAL_CHARS:
+            raise ValueError(f"history too long ({total} > {CHAT_HISTORY_MAX_TOTAL_CHARS} characters)")
+        return history
 
 # ── Helper: calcular SHA-256 ───────────────────────────────────────────────
 def sha256_file(data: bytes) -> bytes:
@@ -668,11 +683,6 @@ def analytics_anomalies(db: Session = Depends(get_db)):
     Detecção de anomalias com ML (scikit-learn IsolationForest).
     Analisa padrões de emissão, validade e emissor para identificar documentos suspeitos.
     """
-    import sys as _sys
-    import os as _os
-    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
-    from anomaly import detect_anomalies
-
     docs = db.query(Document).all()
     doc_dicts = [
         {
@@ -697,10 +707,6 @@ def analytics_risk_scores(db: Session = Depends(get_db)):
     Score de risco 0-100 por piloto, combinando documentos expirados,
     a expirar e anomalias ML do IsolationForest.
     """
-    import sys as _sys, os as _os
-    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
-    from anomaly import detect_anomalies
-
     pilots = db.query(Pilot).all()
     all_docs = db.query(Document).all()
 
@@ -735,11 +741,6 @@ def analytics_risk_scores(db: Session = Depends(get_db)):
 
 def build_db_tools(db: Session) -> dict:
     """Map each chat tool name to a callable bound to this DB session."""
-    import sys as _sys, os as _os
-    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
-    from anomaly import detect_anomalies
-    from risk import compute_pilot_score
-
     today = date.today()
 
     def _get_pilots_summary():
@@ -844,14 +845,10 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     Responde em português a perguntas sobre conformidade documental de pilotos.
     Funciona em modo demo (sem OPENAI_API_KEY) com respostas pré-definidas.
     """
-    import sys as _sys, os as _os
-    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
-    from chat import run_chat
-
     history = [m.model_dump() for m in req.history]
     try:
-        response_text = run_chat(req.message, build_db_tools(db), history)
+        response_text = chat_module.run_chat(req.message, build_db_tools(db), history)
     except Exception:
         logger.exception("Chat failed")
         raise HTTPException(502, "O assistente está indisponível de momento.")
-    return {"response": response_text}
+    return {"response": response_text, "model": chat_module.llm_model()}

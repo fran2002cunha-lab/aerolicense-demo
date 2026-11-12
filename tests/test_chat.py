@@ -45,9 +45,27 @@ def test_chat_non_object_history_item_rejected(client):
     assert res.status_code == 422
 
 def test_chat_history_too_long_rejected(client):
-    history = [{"role": "user", "content": "x"}] * 51
+    history = [{"role": "user", "content": "x"}] * 21
     res = client.post("/chat", json={"message": "Olá", "history": history})
     assert res.status_code == 422
+
+def test_chat_history_at_item_limit_accepted(client):
+    history = [{"role": "user", "content": "x"}] * 20
+    res = client.post("/chat", json={"message": "Olá", "history": history})
+    assert res.status_code == 200
+
+def test_chat_history_item_too_long_rejected(client):
+    history = [{"role": "user", "content": "x" * 1001}]
+    res = client.post("/chat", json={"message": "Olá", "history": history})
+    assert res.status_code == 422
+
+def test_chat_history_total_chars_capped(client):
+    # 9 x 1000 = 9000 characters: each item is within limits, the total is not.
+    history = [{"role": "user", "content": "x" * 1000}] * 9
+    res = client.post("/chat", json={"message": "Olá", "history": history})
+    assert res.status_code == 422
+    ok = [{"role": "user", "content": "x" * 1000}] * 8
+    assert client.post("/chat", json={"message": "Olá", "history": ok}).status_code == 200
 
 def test_run_chat_filters_disallowed_roles():
     from chat import _build_messages, SYSTEM_PROMPT

@@ -226,7 +226,7 @@ export default function DocumentCard({ document }) {
               <span>
                 {IS_DEMO
                   ? 'Modo demo: verificado contra os registos fictícios locais (sem blockchain ativa) · Sem acesso ao ficheiro original'
-                  : 'Verificação imutável · Registado na Ethereum · Sem acesso ao ficheiro original'}
+                  : 'Verificado contra o contrato configurado no backend (simulado sem CONTRACT_ADDRESS) · Sem acesso ao ficheiro original'}
               </span>
             </div>
           </div>

@@ -1,7 +1,7 @@
 {
  "id": "P003",
  "nome": "João Matos",
- "cargo": "Captain — easyJet",
+ "cargo": "Captain — Tejo Airways",
  "carteira_ethereum": "0x1Db3439a7D398351b8bE11C439e05C5B3259aeD4",
  "documentos": [
   {
@@ -35,7 +35,7 @@
    "validade": "2026-08-10",
    "dias_restantes": -94,
    "status": "expired",
-   "entidade_emissora": "easyJet Training Academy"
+   "entidade_emissora": "Tejo Airways Training Academy"
   }
  ]
 }

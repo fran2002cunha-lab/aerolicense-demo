@@ -56,10 +56,10 @@ export default function BlockchainDemo() {
 
       <div style={s.stepsGrid}>
         {[
-          { n: '01', title: 'Upload do Ficheiro',    desc: 'Piloto carrega o documento (PDF/JPG). O ficheiro fica apenas no browser.',        color: c.primaryLt },
+          { n: '01', title: 'Upload do Ficheiro',    desc: 'Piloto carrega o documento (PDF/JPG/PNG). O ficheiro não é guardado.',            color: c.primaryLt },
           { n: '02', title: 'Hash SHA-256',           desc: 'O backend calcula o hash SHA-256 do conteúdo binário do ficheiro.',               color: c.green     },
           { n: '03', title: 'Registo Ethereum',       desc: 'O hash (bytes32) é enviado para o smart contract AeroLicenseRegistry.sol.',       color: c.amber     },
-          { n: '04', title: 'Verificação Instantânea',desc: 'Qualquer entidade (ANAC, companhia) pode verificar o hash sem aceder ao ficheiro.',color: c.purple    },
+          { n: '04', title: 'Verificação Instantânea',desc: 'Quem tiver o ficheiro pode recalcular o hash e compará-lo com o registo.',        color: c.purple    },
         ].map(({ n, title, desc, color }) => (
           <div key={n} style={{ ...s.stepCard, borderTop: `3px solid ${color}` }}>
             <div style={{ fontSize: 28, fontWeight: 900, color, opacity: .25, lineHeight: 1 }}>{n}</div>
@@ -114,7 +114,7 @@ export default function BlockchainDemo() {
       </div>
 
       {/* ── Section 3: EPL Integration (Future) ── */}
-      <SectionLabel label="3 — Arquitetura EPL / ICAO (Preparada)" badge="Futuro" />
+      <SectionLabel label="3 — Integração EPL / ICAO (proposta)" badge="Futuro" />
 
       <div style={s.eplCard}>
         <div style={s.eplHeader}>
@@ -123,18 +123,18 @@ export default function BlockchainDemo() {
             <div>
               <div style={s.eplTitle}>Fluxo de Verificação com Standard ICAO EPL</div>
               <div style={s.eplSubtitle}>
-                Electronic Personnel Licence — projeto piloto EASA + ICAO + SITA
+                Electronic Personnel Licence (ICAO) — cenário hipotético, não implementado
               </div>
             </div>
           </div>
-          <div style={s.futureBadge}>Arquitetura Pronta</div>
+          <div style={s.futureBadge}>Não implementado</div>
         </div>
 
         <div style={s.eplNote}>
           A EASA não dispõe atualmente de API pública para validação de licenças.
-          O AeroLicense está arquiteturalmente preparado para o momento em que o standard EPL avançar.
-          Atualmente opera com assinatura própria — que prova <strong>integridade</strong> do documento,
-          mas não autoridade de emissão.
+          Esta secção descreve como uma integração poderia funcionar se o standard EPL avançar; nada disto está implementado.
+          Hoje o registo é feito pela própria aplicação, o que prova a <strong>integridade</strong> do documento,
+          mas não a autoridade de emissão.
         </div>
 
         {/* Flow diagram */}
@@ -149,7 +149,7 @@ export default function BlockchainDemo() {
           <FlowStep
             num="2"
             title="AeroLicense"
-            desc="Gera QR com hash SHA-256 + assinatura digital"
+            desc="Gera QR com link de verificação do hash SHA-256"
             color={c.green}
           />
           <FlowArrow />
@@ -173,7 +173,7 @@ export default function BlockchainDemo() {
           {[
             { label: 'EASA Part-FCL', desc: 'Licenças de piloto' },
             { label: 'EASA Part-MED', desc: 'Certificados médicos' },
-            { label: 'ICAO Doc 9379', desc: 'Machine Readable Travel Documents' },
+            { label: 'ICAO Doc 9379', desc: 'Manual de licenciamento de pessoal' },
             { label: 'ICAO EPL', desc: 'Electronic Personnel Licence (piloto)' },
           ].map(({ label, desc }) => (
             <div key={label} style={s.standardChip}>

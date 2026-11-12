@@ -3,7 +3,7 @@
   {
    "id": "P001",
    "nome": "Miguel Ferreira",
-   "cargo": "First Officer — TAP Air Portugal",
+   "cargo": "First Officer — Atlântica Air",
    "carteira_ethereum": "0x00000000000000000000000000000000Ae1c0001",
    "total_documentos": 4,
    "validos": 0,
@@ -14,7 +14,7 @@
   {
    "id": "P002",
    "nome": "Ana Costa",
-   "cargo": "Cabin Crew Senior — Ryanair",
+   "cargo": "Cabin Crew Senior — Lusoavia",
    "carteira_ethereum": "0x00000000000000000000000000000000Ae1c0002",
    "total_documentos": 3,
    "validos": 1,
@@ -25,7 +25,7 @@
   {
    "id": "P003",
    "nome": "João Matos",
-   "cargo": "Captain — easyJet",
+   "cargo": "Captain — Tejo Airways",
    "carteira_ethereum": "0x1Db3439a7D398351b8bE11C439e05C5B3259aeD4",
    "total_documentos": 3,
    "validos": 1,
@@ -36,7 +36,7 @@
   {
    "id": "P004",
    "nome": "Sofia Andrade",
-   "cargo": "Captain — Wizz Air",
+   "cargo": "Captain — Serra Aviation",
    "carteira_ethereum": "0x2Fc4550b8E409462c9bF22D5A4061B4260aeE5F7",
    "total_documentos": 5,
    "validos": 2,
@@ -47,7 +47,7 @@
   {
    "id": "P005",
    "nome": "Carlos Rodrigues",
-   "cargo": "First Officer — Azores Airlines",
+   "cargo": "First Officer — Ilhéu Airlines",
    "carteira_ethereum": "0x3Ab5661c9F510573d0cA33E6B5172C6371bfF6A8",
    "total_documentos": 4,
    "validos": 1,
@@ -58,7 +58,7 @@
   {
    "id": "P006",
    "nome": "Inês Tavares",
-   "cargo": "Cabin Crew — TAP Air Portugal",
+   "cargo": "Cabin Crew — Atlântica Air",
    "carteira_ethereum": "0x4Be6772d0C621684e1dB44F7C6283D7482ceC7B9",
    "total_documentos": 3,
    "validos": 2,
@@ -69,7 +69,7 @@
   {
    "id": "P007",
    "nome": "Ricardo Santos",
-   "cargo": "Captain — Lufthansa",
+   "cargo": "Captain — Brisa Aero",
    "carteira_ethereum": "0x5Cf7883e1B732795f2eC55D8D7394E8593dbB8C0",
    "total_documentos": 5,
    "validos": 1,
@@ -80,7 +80,7 @@
   {
    "id": "P008",
    "nome": "Mariana Pinto",
-   "cargo": "First Officer — Vueling",
+   "cargo": "First Officer — Douro Air",
    "carteira_ethereum": "0x6Df8994f2C843806f3fD66E9E8405F9604efD9E1",
    "total_documentos": 4,
    "validos": 2,

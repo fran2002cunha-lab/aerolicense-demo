@@ -250,4 +250,5 @@ def _demo_response(user_message: str) -> str:
         return "Demo: O score de risco combina documentos expirados (-25 pts), a expirar (-10 pts) e anomalias ML (-15 pts). Vê Analytics para os detalhes. (Define OPENAI_API_KEY em backend/.env para IA real.)"
     if any(w in msg for w in ["anomalia", "anomal", "suspeito"]):
         return "Demo: O modelo IsolationForest analisa 4 features por documento para detetar padrões suspeitos. Vê Analytics secção de anomalias. (Define OPENAI_API_KEY em backend/.env para IA real.)"
-    return "Demo: Sou o assistente AeroLicense. Define OPENAI_API_KEY no ficheiro backend/.env para ativar respostas com IA real (GPT-4o-mini)."
+    return ("Demo: Sou o assistente AeroLicense. Define OPENAI_API_KEY no ficheiro backend/.env "
+            f"para ativar respostas com IA real ({llm_model()}).")

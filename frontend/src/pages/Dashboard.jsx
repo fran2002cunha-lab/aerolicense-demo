@@ -99,7 +99,6 @@ const TECH_PILLS = [
   { label: 'Ethereum',  color: c.purple    },
   { label: 'SHA-256',   color: c.primaryLt },
   { label: 'FastAPI',   color: c.green     },
-  { label: 'ANAC',      color: c.amber     },
   { label: 'Web3.py',   color: c.primaryLt },
 ];
 
@@ -135,7 +134,7 @@ function HeroBanner() {
           </span>
         </div>
         <div style={{ fontSize: 10, color: c.textDim, paddingLeft: 38 }}>
-          Projeto académico · ISEC Lisboa · 2025
+          Projeto académico · ISEC Lisboa · 2025/2026
         </div>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-end' }}>
@@ -240,12 +239,8 @@ function BlockchainWidget({ totalDocs }) {
           <div style={{ fontSize: 9, color: c.textMuted, marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Registados</div>
         </div>
         <div style={{ flex: 1, textAlign: 'center', background: c.bgElevated, borderRadius: 8, padding: '10px 6px' }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: c.green, lineHeight: 1 }}>100%</div>
-          <div style={{ fontSize: 9, color: c.textMuted, marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Imutáveis</div>
-        </div>
-        <div style={{ flex: 1, textAlign: 'center', background: c.bgElevated, borderRadius: 8, padding: '10px 6px' }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: c.amber, lineHeight: 1 }}>0</div>
-          <div style={{ fontSize: 9, color: c.textMuted, marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Falsif.</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: c.green, lineHeight: 1 }}>SHA-256</div>
+          <div style={{ fontSize: 9, color: c.textMuted, marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Hash</div>
         </div>
       </div>
     </div>
@@ -391,7 +386,7 @@ export default function Dashboard() {
           fontSize: 12, color: c.purpleLt,
         }}>
           <span>🛡️</span>
-          <span><strong>Vista Inspector ANAC</strong> — Foco em conformidade regulatória e alertas críticos.
+          <span><strong>Vista Inspetor (demo)</strong> — Foco em conformidade regulatória e alertas críticos.
             {criticalCount > 0 && <span style={{ color: c.red, fontWeight: 700 }}> {criticalCount} documento(s) expirado(s) requerem acção imediata.</span>}
           </span>
         </div>
@@ -445,7 +440,7 @@ export default function Dashboard() {
             icon={IconShield}
             color={c.green}
             bg={c.greenBg}
-            subtitle="Em conformidade EASA"
+            subtitle="Em conformidade (regras de validade)"
           />
           <KpiCard
             label="Expirados"
@@ -588,7 +583,7 @@ function PilotCard({ pilot: p, badge, risk, onClick }) {
           )}
           <div
             style={sk.pilotWallet}
-            title="Identificador on-chain do piloto — endereço Ethereum usado para registo imutável de credenciais na blockchain. Verificável publicamente."
+            title="Endereço Ethereum fictício associado ao piloto (dados de demonstração)."
           >
             <span style={{ color: c.textDim, marginRight: 4 }}>{p.id}</span>
             {p.carteira_ethereum.slice(0, 6)}…{p.carteira_ethereum.slice(-4)}

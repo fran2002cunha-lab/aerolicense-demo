@@ -3,7 +3,7 @@
  "alertas": [
   {
    "piloto": "Carlos Rodrigues",
-   "cargo": "First Officer — Azores Airlines",
+   "cargo": "First Officer — Ilhéu Airlines",
    "documento": "Proficiência Linguística ICAO — Nível 4",
    "tipo": "ICAO_ENGLISH",
    "dias_restantes": -604,
@@ -13,7 +13,7 @@
   },
   {
    "piloto": "Miguel Ferreira",
-   "cargo": "First Officer — TAP Air Portugal",
+   "cargo": "First Officer — Atlântica Air",
    "documento": "Proficiência Linguística ICAO — Nível 5",
    "tipo": "ICAO_ENGLISH",
    "dias_restantes": -520,
@@ -23,7 +23,7 @@
   },
   {
    "piloto": "Ricardo Santos",
-   "cargo": "Captain — Lufthansa",
+   "cargo": "Captain — Brisa Aero",
    "documento": "Type Rating Airbus A350-900",
    "tipo": "TYPE_RATING",
    "dias_restantes": -482,
@@ -33,7 +33,7 @@
   },
   {
    "piloto": "Sofia Andrade",
-   "cargo": "Captain — Wizz Air",
+   "cargo": "Captain — Serra Aviation",
    "documento": "Licença ATPL — ANAC Portugal",
    "tipo": "ATPL",
    "dias_restantes": -480,
@@ -43,7 +43,7 @@
   },
   {
    "piloto": "Ricardo Santos",
-   "cargo": "Captain — Lufthansa",
+   "cargo": "Captain — Brisa Aero",
    "documento": "Certificado Médico Classe 1",
    "tipo": "MEDICAL_CLASS1",
    "dias_restantes": -403,
@@ -53,7 +53,7 @@
   },
   {
    "piloto": "Sofia Andrade",
-   "cargo": "Captain — Wizz Air",
+   "cargo": "Captain — Serra Aviation",
    "documento": "Type Rating Airbus A321neo",
    "tipo": "TYPE_RATING",
    "dias_restantes": -365,
@@ -63,7 +63,7 @@
   },
   {
    "piloto": "Mariana Pinto",
-   "cargo": "First Officer — Vueling",
+   "cargo": "First Officer — Douro Air",
    "documento": "Type Rating Airbus A320ceo",
    "tipo": "TYPE_RATING",
    "dias_restantes": -327,
@@ -73,7 +73,7 @@
   },
   {
    "piloto": "Miguel Ferreira",
-   "cargo": "First Officer — TAP Air Portugal",
+   "cargo": "First Officer — Atlântica Air",
    "documento": "Type Rating Airbus A320",
    "tipo": "TYPE_RATING",
    "dias_restantes": -308,
@@ -83,7 +83,7 @@
   },
   {
    "piloto": "Mariana Pinto",
-   "cargo": "First Officer — Vueling",
+   "cargo": "First Officer — Douro Air",
    "documento": "Certificado Médico Classe 1",
    "tipo": "MEDICAL_CLASS1",
    "dias_restantes": -308,
@@ -93,7 +93,7 @@
   },
   {
    "piloto": "Sofia Andrade",
-   "cargo": "Captain — Wizz Air",
+   "cargo": "Captain — Serra Aviation",
    "documento": "Certificado Médico Classe 1",
    "tipo": "MEDICAL_CLASS1",
    "dias_restantes": -271,
@@ -103,7 +103,7 @@
   },
   {
    "piloto": "Miguel Ferreira",
-   "cargo": "First Officer — TAP Air Portugal",
+   "cargo": "First Officer — Atlântica Air",
    "documento": "Licença ATPL — ANAC Portugal",
    "tipo": "ATPL",
    "dias_restantes": -242,
@@ -113,7 +113,7 @@
   },
   {
    "piloto": "João Matos",
-   "cargo": "Captain — easyJet",
+   "cargo": "Captain — Tejo Airways",
    "documento": "Type Rating Boeing 737 MAX",
    "tipo": "TYPE_RATING",
    "dias_restantes": -235,
@@ -123,7 +123,7 @@
   },
   {
    "piloto": "Miguel Ferreira",
-   "cargo": "First Officer — TAP Air Portugal",
+   "cargo": "First Officer — Atlântica Air",
    "documento": "Certificado Médico Classe 1",
    "tipo": "MEDICAL_CLASS1",
    "dias_restantes": -179,
@@ -133,7 +133,7 @@
   },
   {
    "piloto": "Ana Costa",
-   "cargo": "Cabin Crew Senior — Ryanair",
+   "cargo": "Cabin Crew Senior — Lusoavia",
    "documento": "Certificado Médico Cabin Crew",
    "tipo": "MEDICAL_CLASS1",
    "dias_restantes": -163,
@@ -143,7 +143,7 @@
   },
   {
    "piloto": "Carlos Rodrigues",
-   "cargo": "First Officer — Azores Airlines",
+   "cargo": "First Officer — Ilhéu Airlines",
    "documento": "Type Rating ATR 72-600",
    "tipo": "TYPE_RATING",
    "dias_restantes": -150,
@@ -153,7 +153,7 @@
   },
   {
    "piloto": "Ana Costa",
-   "cargo": "Cabin Crew Senior — Ryanair",
+   "cargo": "Cabin Crew Senior — Lusoavia",
    "documento": "Crew Resource Management — Cabin Crew",
    "tipo": "CRM_TRAINING",
    "dias_restantes": -115,
@@ -163,7 +163,7 @@
   },
   {
    "piloto": "João Matos",
-   "cargo": "Captain — easyJet",
+   "cargo": "Captain — Tejo Airways",
    "documento": "Crew Resource Management — Recurrent",
    "tipo": "CRM_TRAINING",
    "dias_restantes": -94,
@@ -173,7 +173,7 @@
   },
   {
    "piloto": "Inês Tavares",
-   "cargo": "Cabin Crew — TAP Air Portugal",
+   "cargo": "Cabin Crew — Atlântica Air",
    "documento": "Certificado Médico Cabin Crew",
    "tipo": "MEDICAL_CLASS1",
    "dias_restantes": -72,
@@ -183,7 +183,7 @@
   },
   {
    "piloto": "Carlos Rodrigues",
-   "cargo": "First Officer — Azores Airlines",
+   "cargo": "First Officer — Ilhéu Airlines",
    "documento": "Certificado Médico Classe 1",
    "tipo": "MEDICAL_CLASS1",
    "dias_restantes": -51,
@@ -193,7 +193,7 @@
   },
   {
    "piloto": "Ricardo Santos",
-   "cargo": "Captain — Lufthansa",
+   "cargo": "Captain — Brisa Aero",
    "documento": "Proficiência Linguística ICAO — Nível 6",
    "tipo": "ICAO_ENGLISH",
    "dias_restantes": 10,
@@ -203,7 +203,7 @@
   },
   {
    "piloto": "Ricardo Santos",
-   "cargo": "Captain — Lufthansa",
+   "cargo": "Captain — Brisa Aero",
    "documento": "Crew Resource Management — Recurrent",
    "tipo": "CRM_TRAINING",
    "dias_restantes": 28,

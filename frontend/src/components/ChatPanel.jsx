@@ -83,8 +83,9 @@ export function DemoChatPanel({ initiallyOpen = false }) {
 
           <div style={s.messages}>
             <div style={s.botMsg}>
-              Olá! Nesta demo estática não há backend, por isso mostro respostas que foram
-              gravadas do modelo real. Escolhe uma das perguntas abaixo.
+              {rec === null
+                ? 'Olá! Nesta demo estática não há backend nem chave de API, por isso o assistente não responde aqui. O ciclo completo de tool calling está no código no GitHub.'
+                : 'Olá! Nesta demo estática não há backend, por isso mostro respostas que foram gravadas do modelo real. Escolhe uma das perguntas abaixo.'}
             </div>
             {rec === undefined && <div style={s.botMsg}><span style={s.typing}>● ● ●</span></div>}
             {rec === null && (
@@ -149,6 +150,7 @@ function LiveChatPanel() {
   ]);
   const [input,    setInput]    = useState('');
   const [loading,  setLoading]  = useState(false);
+  const [model,    setModel]    = useState(null); // reportado pelo backend em cada resposta
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -163,12 +165,14 @@ function LiveChatPanel() {
     setMessages(newMessages);
     setLoading(true);
     try {
-      // Só as últimas 20 mensagens (o backend rejeita > 50)
-      const history = newMessages.slice(0, -1).slice(-20).map(m => ({
+      // O backend aceita no máximo 20 mensagens, 1000 caracteres cada e 8000 no total
+      let history = newMessages.slice(0, -1).slice(-20).map(m => ({
         role: m.role === 'user' ? 'user' : 'assistant',
-        content: m.text,
+        content: String(m.text).slice(0, 1000),
       }));
+      while (history.reduce((n, m) => n + m.content.length, 0) > 8000) history = history.slice(1);
       const data = await api.chat(msg, history);
+      if (data.model) setModel(String(data.model));
       setMessages(prev => [...prev, { role: 'assistant', text: data.response }]);
     } catch (err) {
       const errMsg = err.message?.includes('Timeout')
@@ -194,7 +198,7 @@ function LiveChatPanel() {
         <div style={s.panel}>
           <div style={s.header}>
             <span style={{ fontWeight: 'bold', fontSize: 14 }}>🤖 Assistente AeroLicense</span>
-            <span style={{ fontSize: 11, color: '#AABBCC' }}>GPT-4o-mini · Português</span>
+            <span style={{ fontSize: 11, color: '#AABBCC' }}>{model ? `${model} · ` : ''}Português</span>
           </div>
 
           <div style={s.messages}>

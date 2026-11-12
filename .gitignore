@@ -22,3 +22,8 @@ frontend/build/
 smart_contract/node_modules/
 smart_contract/artifacts/
 smart_contract/cache/
+
+# Local-only artefacts (not part of the published repo)
+/vercel.json
+docs/superpowers/
+docs/aerolicense-documentacao-completa.md

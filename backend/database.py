@@ -51,10 +51,12 @@ def get_db():
         db.close()
 
 # ── Seed data ──────────────────────────────────────────────────────────────
+# Pessoas e companhias aéreas fictícias. Os emissores (ANAC, EASA, ...) são só
+# contexto regulatório: o projeto não tem qualquer ligação a estas entidades.
 DEMO_PILOTS_RAW = [
     {
         "id": "P001", "name": "Miguel Ferreira",
-        "role": "First Officer — TAP Air Portugal",
+        "role": "First Officer — Atlântica Air",
         "ethereum_address": "0x00000000000000000000000000000000Ae1c0001",
         "documents": [
             {"doc_type": "ATPL",           "description": "Licença ATPL — ANAC Portugal",
@@ -81,7 +83,7 @@ DEMO_PILOTS_RAW = [
     },
     {
         "id": "P002", "name": "Ana Costa",
-        "role": "Cabin Crew Senior — Ryanair",
+        "role": "Cabin Crew Senior — Lusoavia",
         "ethereum_address": "0x00000000000000000000000000000000Ae1c0002",
         "documents": [
             {"doc_type": "OTHER",          "description": "Licença de Tripulante de Cabine — EASA CC",
@@ -98,12 +100,12 @@ DEMO_PILOTS_RAW = [
              "hash": "0x6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c",
              "tx_blockchain": "0xa9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b1",
              "issued_at": "2024-07-01", "expires_at": "2026-07-20",
-             "issuer": "Ryanair Training Academy — Dublin"},
+             "issuer": "Lusoavia Training Academy — Porto"},
         ],
     },
     {
         "id": "P003", "name": "João Matos",
-        "role": "Captain — easyJet",
+        "role": "Captain — Tejo Airways",
         "ethereum_address": "0x1Db3439a7D398351b8bE11C439e05C5B3259aeD4",
         "documents": [
             {"doc_type": "ATPL",        "description": "Licença ATPL — CAA United Kingdom",
@@ -120,13 +122,13 @@ DEMO_PILOTS_RAW = [
              "hash": "0x1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
              "tx_blockchain": "0xc1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2",
              "issued_at": "2024-08-10", "expires_at": "2026-08-10",
-             "issuer": "easyJet Training Academy"},
+             "issuer": "Tejo Airways Training Academy"},
         ],
     },
     # ── Novos pilotos ────────────────────────────────────────────────────────
     {
         "id": "P004", "name": "Sofia Andrade",
-        "role": "Captain — Wizz Air",
+        "role": "Captain — Serra Aviation",
         "ethereum_address": "0x2Fc4550b8E409462c9bF22D5A4061B4260aeE5F7",
         "documents": [
             {"doc_type": "ATPL",           "description": "Licença ATPL — ANAC Portugal",
@@ -153,12 +155,12 @@ DEMO_PILOTS_RAW = [
              "hash": "0xee5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
              "tx_blockchain": "0xb6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7",
              "issued_at": "2024-04-01", "expires_at": "2027-04-01",
-             "issuer": "Wizz Air Training Academy — Budapest"},
+             "issuer": "Serra Aviation Training Academy — Covilhã"},
         ],
     },
     {
         "id": "P005", "name": "Carlos Rodrigues",
-        "role": "First Officer — Azores Airlines",
+        "role": "First Officer — Ilhéu Airlines",
         "ethereum_address": "0x3Ab5661c9F510573d0cA33E6B5172C6371bfF6A8",
         "documents": [
             {"doc_type": "ATPL",           "description": "Licença ATPL — ANAC Portugal",
@@ -185,7 +187,7 @@ DEMO_PILOTS_RAW = [
     },
     {
         "id": "P006", "name": "Inês Tavares",
-        "role": "Cabin Crew — TAP Air Portugal",
+        "role": "Cabin Crew — Atlântica Air",
         "ethereum_address": "0x4Be6772d0C621684e1dB44F7C6283D7482ceC7B9",
         "documents": [
             {"doc_type": "OTHER",          "description": "Licença de Tripulante de Cabine — ANAC",
@@ -202,12 +204,12 @@ DEMO_PILOTS_RAW = [
              "hash": "0x66c03b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a",
              "tx_blockchain": "0xc3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
              "issued_at": "2025-02-10", "expires_at": "2027-02-10",
-             "issuer": "TAP Air Portugal Training Center"},
+             "issuer": "Atlântica Air Training Center"},
         ],
     },
     {
         "id": "P007", "name": "Ricardo Santos",
-        "role": "Captain — Lufthansa",
+        "role": "Captain — Brisa Aero",
         "ethereum_address": "0x5Cf7883e1B732795f2eC55D8D7394E8593dbB8C0",
         "documents": [
             {"doc_type": "ATPL",           "description": "Licença ATPL — Luftfahrt-Bundesamt",
@@ -234,12 +236,12 @@ DEMO_PILOTS_RAW = [
              "hash": "0xbb158a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f",
              "tx_blockchain": "0xb8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9",
              "issued_at": "2024-12-10", "expires_at": "2026-12-10",
-             "issuer": "Lufthansa Aviation Training — München"},
+             "issuer": "Brisa Aero Training — München"},
         ],
     },
     {
         "id": "P008", "name": "Mariana Pinto",
-        "role": "First Officer — Vueling",
+        "role": "First Officer — Douro Air",
         "ethereum_address": "0x6Df8994f2C843806f3fD66E9E8405F9604efD9E1",
         "documents": [
             {"doc_type": "ATPL",           "description": "Licença ATPL — AESA Espanha",
@@ -261,14 +263,14 @@ DEMO_PILOTS_RAW = [
              "hash": "0xff59ce3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d",
              "tx_blockchain": "0xf2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3",
              "issued_at": "2024-11-05", "expires_at": "2027-03-05",
-             "issuer": "Vueling Training Academy — Barcelona"},
+             "issuer": "Douro Air Training Academy — Barcelona"},
         ],
     },
 ]
 
 def seed_demo_data(db):
     # Versão do seed — incrementar para forçar reset dos dados demo
-    SEED_VERSION = "3"
+    SEED_VERSION = "4"
     from sqlalchemy import text
 
     # Ensure meta table exists (safe across SQLite + PostgreSQL)

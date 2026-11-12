@@ -1,5 +1,5 @@
 # tests/test_security.py
-"""Security hardening: auth, signer allowlist, uploads, error leaks, CORS, params, rate limit, OCR."""
+"""Security hardening: auth, signer allowlist, uploads, error leaks, CORS, params, rate limit."""
 import io
 import os
 import subprocess
@@ -197,16 +197,3 @@ def test_chat_rate_limited(client):
 
 def test_chat_message_too_long_rejected(client):
     assert client.post("/chat", json={"message": "x" * 501}).status_code == 422
-
-
-# ── h. OCR does not echo exceptions ────────────────────────────────────────
-def test_ocr_errors_not_echoed(monkeypatch):
-    import openai
-    import ocr
-
-    def boom(*a, **k):
-        raise RuntimeError("secret-ocr-error sk-123")
-    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
-    monkeypatch.setattr(openai, "OpenAI", boom)
-    result = ocr.extract_from_image(PNG, "x.png")
-    assert "secret-ocr-error" not in str(result)

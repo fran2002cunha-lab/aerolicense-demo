@@ -7,7 +7,7 @@ A compliance dashboard for aviation licences and medical certificates, with a to
 
 **Live demo:** https://aerolicense.vercel.app
 
-> **This is a static demo.** It has fictional data and no backend. The assistant's answers were recorded once from a real model, and uploaded files are hashed in your browser only. The UI is in Portuguese (European).
+> **This is a static demo.** It has fictional data and no backend. The assistant panel replays answers recorded from a real model when a recordings file is present (see below); uploaded files are hashed in your browser only. The UI is in Portuguese (European).
 
 | Dashboard | AI assistant |
 |---|---|
@@ -39,7 +39,7 @@ flowchart LR
     CHAT -->|OpenAI-compatible API| LLM[LLM<br/>LLM_BASE_URL / LLM_MODEL]
     CHAT -->|5 validated tools| DB
     API -->|SHA-256 hash only| ETH[Ethereum contract<br/>local / testnet only]
-    STATIC[Static demo on Vercel<br/>JSON fixtures + recorded answers] -.-> U
+    STATIC[Static demo on Vercel<br/>JSON fixtures (+ optional recorded answers)] -.-> U
 ```
 
 ## The AI part
@@ -85,6 +85,8 @@ uvicorn main:app --reload --env-file .env
 
 API at http://localhost:8000, Swagger UI at http://localhost:8000/docs. Without `OPENAI_API_KEY` the chat returns canned demo answers; without `CONTRACT_ADDRESS` blockchain writes are simulated; without `AEROLICENSE_API_KEY` write endpoints are disabled. Run without `--env-file .env` to use all the defaults.
 
+The write endpoints (`POST /documents/upload`, `POST /documents/hash`) need `AEROLICENSE_API_KEY` set on the server and the same value in the `X-API-Key` header. The frontend never ships a key, so in local development the upload form gets a 401 (no key sent) or a 503 (no key configured) and says so. To exercise these endpoints, open the Swagger UI at http://localhost:8000/docs, choose the endpoint, click **Try it out**, put your key in its `x-api-key` header field and send the request from there.
+
 **Frontend**
 
 ```bash
@@ -116,14 +118,14 @@ backend/venv/bin/python backend/evals/run_evals.py --mock
 
 ## Tests & CI
 
-- **112 backend tests** (pytest, `tests/`): API and database, chat loop and tool validation, analytics, LLM recording and evals with a mocked client.
-- **21 frontend tests** (Jest + React Testing Library).
+- **114 backend tests** (pytest, `tests/`): API and database, chat loop and tool validation, analytics, LLM recording and evals with a mocked client.
+- **23 frontend tests** (Jest + React Testing Library).
 - **GitHub Actions** (`.github/workflows/ci.yml`): installs the backend, runs pytest, runs the tool-selection eval in mock mode with `--fail-under 1.0`, and builds the frontend. CI uses no secrets and calls no external services.
 
 ## Design decisions & trade-offs
 
 - **Only hashes go on-chain.** The file and its personal data stay off-chain; the contract stores a `bytes32` SHA-256 hash. Anyone holding the file can recompute the hash and compare it, and changing one character changes the hash. Even so, a hash on a public chain is permanent (see limitations).
-- **Static demo instead of a hosted backend.** A public endpoint with an LLM key behind it costs money and invites abuse. The static build shows the real UI with fixtures and answers recorded from a real model, and the full assistant is in the code.
+- **Static demo instead of a hosted backend.** A public endpoint with an LLM key behind it costs money and invites abuse. The static build shows the real UI with fixtures (and, optionally, answers recorded from a real model); the full assistant is in the code.
 - **SQLite by default.** Zero setup for reviewers, and tests run on an in-memory SQLite DB. `DATABASE_URL` switches to Postgres through SQLAlchemy without code changes.
 - **Readable anomaly reasons.** An IsolationForest score alone means little to an operator, so each flag comes with reasons such as "issued on a weekend" or "rare issuer".
 

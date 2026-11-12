@@ -7,7 +7,7 @@ export default function DemoBanner() {
   if (!IS_DEMO) return null;
   return (
     <div role="note" style={s.bar}>
-      Demo estática — dados fictícios; as respostas do assistente foram gravadas do modelo real.
+      Demo estática — dados fictícios, sem backend.
       {' '}Código completo no{' '}
       <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" style={s.link}>GitHub</a>.
     </div>

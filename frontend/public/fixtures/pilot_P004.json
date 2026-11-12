@@ -1,7 +1,7 @@
 {
  "id": "P004",
  "nome": "Sofia Andrade",
- "cargo": "Captain — Wizz Air",
+ "cargo": "Captain — Serra Aviation",
  "carteira_ethereum": "0x2Fc4550b8E409462c9bF22D5A4061B4260aeE5F7",
  "documentos": [
   {
@@ -57,7 +57,7 @@
    "validade": "2027-04-01",
    "dias_restantes": 140,
    "status": "valid",
-   "entidade_emissora": "Wizz Air Training Academy — Budapest"
+   "entidade_emissora": "Serra Aviation Training Academy — Covilhã"
   }
  ]
 }

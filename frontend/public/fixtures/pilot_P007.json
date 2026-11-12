@@ -1,7 +1,7 @@
 {
  "id": "P007",
  "nome": "Ricardo Santos",
- "cargo": "Captain — Lufthansa",
+ "cargo": "Captain — Brisa Aero",
  "carteira_ethereum": "0x5Cf7883e1B732795f2eC55D8D7394E8593dbB8C0",
  "documentos": [
   {
@@ -57,7 +57,7 @@
    "validade": "2026-12-10",
    "dias_restantes": 28,
    "status": "expiring_soon",
-   "entidade_emissora": "Lufthansa Aviation Training — München"
+   "entidade_emissora": "Brisa Aero Training — München"
   }
  ]
 }

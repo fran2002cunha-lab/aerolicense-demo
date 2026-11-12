@@ -3,6 +3,9 @@ import { c, shadow } from '../theme';
 import { api, backendUrl, sha256File, IS_DEMO } from '../api';
 
 export const DEMO_LOCAL_NOTE = 'Modo demo: o ficheiro é processado só no teu browser, nada é enviado.';
+export const WRITE_AUTH_NOTE =
+  'O registo exige a chave AEROLICENSE_API_KEY no cabeçalho X-API-Key, e o frontend não inclui chaves. ' +
+  'Em desenvolvimento, usa o Swagger UI do backend (/docs) para testar este endpoint.';
 
 const DOC_TYPES = [
   { value: "ATPL",           label: "Licença ATPL",                   medical: false },
@@ -74,6 +77,7 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
 
     try {
       const res  = await fetch(backendUrl(`/documents/upload?${params}`), { method: "POST", body: form });
+      if (res.status === 401 || res.status === 503) throw new Error(WRITE_AUTH_NOTE);
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail);
       setResult(data);
@@ -97,8 +101,8 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
         <div>
           <h2 style={s.title}>Registar Novo Documento</h2>
           <p style={s.subtitle}>
-            O ficheiro nunca é armazenado — apenas o hash SHA-256 é gravado na blockchain Ethereum.
-            Qualquer alteração torna o hash inválido e a falsificação é imediatamente detetada.
+            O ficheiro não é armazenado: só o hash SHA-256 é registado (num contrato Ethereum local/testnet,
+            se configurado; caso contrário, numa blockchain simulada). Qualquer alteração ao ficheiro muda o hash.
           </p>
         </div>
       </div>
@@ -109,25 +113,25 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
         </div>
       )}
 
-      {/* RGPD + security notice */}
+      {/* O que o código faz de facto com o ficheiro */}
       <div style={s.rgpdBox}>
         <div style={s.rgpdRow}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: c.green }}>
-            <LockIcon /> <strong>Encriptação AES-256</strong>
+            <LockIcon /> <strong>Hash SHA-256</strong>
           </span>
           <span style={{ color: c.border }}>·</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: c.primaryLt }}>
-            <ShieldCheckIcon /> RGPD Conforme · Residência UE
+          <span style={{ color: c.textMuted }}>
+            {IS_DEMO ? 'Calculado no browser' : 'Calculado no servidor; o ficheiro não é guardado'}
           </span>
           <span style={{ color: c.border }}>·</span>
-          <span style={{ color: c.textMuted }}>Zero-knowledge: ficheiro permanece local</span>
+          <span style={{ color: c.textMuted }}>Dados fictícios</span>
         </div>
         {isMedical && (
           <div style={s.medicalWarning}>
             <LockIcon />
             <span>
-              <strong>Dados de Saúde — Categoria Especial (Art. 9 RGPD).</strong>{' '}
-              Requer base legal explícita. O hash do certificado médico é tratado com proteção reforçada.
+              <strong>Dados de saúde são categoria especial (Art. 9 RGPD).</strong>{' '}
+              Um sistema real precisaria de base legal e de uma AIPD; este projeto académico não as tem.
             </span>
           </div>
         )}
@@ -149,7 +153,7 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
         <Field label="Descrição">
           <input
             type="text"
-            placeholder="ex: ATPL — TAP Air Portugal, emitido ANAC"
+            placeholder="ex: ATPL — Atlântica Air"
             value={description}
             onChange={e => setDesc(e.target.value)}
             style={s.input}
@@ -223,7 +227,9 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
         <div style={s.successBox}>
           <div style={s.successHeader}>
             <ShieldCheckIcon />
-            Documento registado com sucesso na Ethereum
+            {result.blockchain_mode === 'real'
+              ? 'Documento registado no contrato Ethereum'
+              : 'Hash calculado (blockchain simulada, nada foi gravado on-chain)'}
           </div>
           <div style={s.resultGrid}>
             <ResultRow label="Hash SHA-256"       value={result.hash} mono />
@@ -235,8 +241,9 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
             />
           </div>
           <p style={s.successNote}>
-            Hash gravado permanentemente na Ethereum. Qualquer entidade pode verificar
-            a autenticidade sem aceder ao ficheiro original.
+            {result.blockchain_mode === 'real'
+              ? 'Hash gravado no contrato. Quem tiver o ficheiro pode recalcular o hash e compará-lo.'
+              : 'Sem CONTRACT_ADDRESS o backend simula o tx_hash; nenhuma transação foi enviada.'}
           </p>
         </div>
       )}
