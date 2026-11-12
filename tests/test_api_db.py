@@ -111,7 +111,7 @@ def test_upload_document_demo_mode(client):
     response = client.post(
         "/documents/upload",
         params={
-            "pilot_address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+            "pilot_address": "0x00000000000000000000000000000000Ae1c0001",
             "doc_type": "ATPL",
             "description": "Test ATPL License",
             "expires_at": future_date,
@@ -133,7 +133,7 @@ def test_upload_invalid_doc_type(client):
     response = client.post(
         "/documents/upload",
         params={
-            "pilot_address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+            "pilot_address": "0x00000000000000000000000000000000Ae1c0001",
             "doc_type": "INVALID_TYPE",
             "description": "Test",
             "expires_at": future_date,

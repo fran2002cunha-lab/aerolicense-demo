@@ -643,8 +643,8 @@ export default function UploadPage() {
 
   // Map demo pilot IDs to Ethereum addresses
   const ADDRESSES = {
-    P001: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-    P002: '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
+    P001: '0x00000000000000000000000000000000Ae1c0001',
+    P002: '0x00000000000000000000000000000000Ae1c0002',
     P003: '0x1Db3439a7D398351b8bE11C439e05C5B3259aeD4',
   };
 
@@ -961,7 +961,7 @@ DEMO_PILOTS_RAW = [
     {
         "id": "P001", "name": "Miguel Ferreira",
         "role": "First Officer — TAP Air Portugal",
-        "ethereum_address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+        "ethereum_address": "0x00000000000000000000000000000000Ae1c0001",
         "documents": [
             {"doc_type": "ATPL",           "description": "Licença ATPL — ANAC Portugal",
              "hash": "0xf5fa1228922f7b4e3e13181d7054cf56785891b7025e0361906b8964ec62eb73",
@@ -988,7 +988,7 @@ DEMO_PILOTS_RAW = [
     {
         "id": "P002", "name": "Ana Costa",
         "role": "Cabin Crew Senior — Ryanair",
-        "ethereum_address": "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
+        "ethereum_address": "0x00000000000000000000000000000000Ae1c0002",
         "documents": [
             {"doc_type": "ATPL",           "description": "Licença de Tripulante de Cabine — EASA",
              "hash": "0x3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9d0c1b2a3f4",
