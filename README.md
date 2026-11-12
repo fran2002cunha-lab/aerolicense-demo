@@ -9,9 +9,7 @@ A compliance dashboard for aviation licences and medical certificates, with a to
 
 > **This is a static demo.** It has fictional data and no backend. The assistant panel replays answers recorded from a real model when a recordings file is present (see below); uploaded files are hashed in your browser only. The UI is in Portuguese (European).
 
-| Dashboard | AI assistant |
-|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Assistant](docs/screenshots/assistant.png) |
+![AeroLicense dashboard (static demo)](docs/screenshots/dashboard.png)
 
 ## The problem
 
