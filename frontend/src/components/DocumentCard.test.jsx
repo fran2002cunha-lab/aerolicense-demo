@@ -35,3 +35,23 @@ test('QR modal is an accessible dialog that takes focus and closes on Escape', a
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(opener).toHaveFocus();
 });
+
+test('Tab and Shift+Tab stay inside the QR dialog', async () => {
+  render(<DocumentCard document={DOC} />);
+  fireEvent.click(screen.getByRole('button', { name: /QR Code/ }));
+  const dialog = await screen.findByRole('dialog');
+  const close = screen.getByRole('button', { name: 'Fechar' });
+  expect(dialog).toHaveFocus();
+  // Tab from the dialog itself moves to its only control; Tab again wraps to it.
+  fireEvent.keyDown(window, { key: 'Tab' });
+  expect(close).toHaveFocus();
+  fireEvent.keyDown(window, { key: 'Tab' });
+  expect(close).toHaveFocus();
+  fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
+  expect(close).toHaveFocus();
+  // Focus that escaped the dialog is pulled back in.
+  screen.getByRole('button', { name: /QR Code/ }).focus();
+  fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
+  expect(close).toHaveFocus();
+  expect(dialog).toContainElement(close);
+});

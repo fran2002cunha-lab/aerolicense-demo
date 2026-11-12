@@ -1,8 +1,11 @@
+import logging
 import os
 from datetime import date, timedelta
 
 from sqlalchemy import Column, ForeignKey, Integer, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
+
+logger = logging.getLogger(__name__)
 
 
 class Base(DeclarativeBase):
@@ -439,12 +442,62 @@ def resolve_dates(raw: dict, today: date) -> dict:
     }
 
 
-def seed_demo_data(db, today: date | None = None):
+_TRUTHY = {"1", "true", "yes", "on"}
+_FALSY = {"0", "false", "no", "off", ""}
+
+
+def demo_seed_enabled(url: str) -> bool:
     """
-    (Re)seed the demo data when the seed version or the seed date changed.
-    Reseeding daily keeps the relative dates true on long-running instances.
+    Whether demo seeding may run against the database at `url`.
+
+    AEROLICENSE_DEMO_SEED=1/0 decides explicitly. When it is unset, seeding is
+    on only for SQLite; any other database (e.g. a real Postgres) defaults to
+    off, so a production database is never touched by accident.
+    """
+    raw = os.getenv("AEROLICENSE_DEMO_SEED")
+    if raw is not None:
+        value = raw.strip().lower()
+        if value in _TRUTHY:
+            return True
+        if value in _FALSY:
+            return False
+        logger.warning("AEROLICENSE_DEMO_SEED=%r not understood; treating as off", raw)
+        return False
+    return str(url).startswith("sqlite")
+
+
+def _read_stamp(db):
+    from sqlalchemy import text
+
+    row = db.execute(text("SELECT value FROM meta WHERE key='seed_version'")).fetchone()
+    return row[0] if row else None
+
+
+def seed_demo_data(db, today: date | None = None, url: str | None = None) -> bool:
+    """
+    Seed the demo data. Called once at startup (main.lifespan); it reseeds when
+    the seed version or the seed date in the stamp changed. Date drift on
+    long-running instances is handled by this date-relative seeding at boot,
+    not by a background job.
+
+    Safety:
+      * runs only if demo_seed_enabled(url) (AEROLICENSE_DEMO_SEED; defaults
+        to on for SQLite only). `url` defaults to the session's engine URL;
+      * refuses to wipe (logs a warning, changes nothing) if any pilot id is
+        not a demo pilot, or if the tables have rows but no seed stamp;
+      * the check and the reseed run in one transaction that first takes a
+        write lock on the meta row (upsert), then re-reads the stamp, so two
+        workers booting together seed at most once.
+
+    Returns True if it (re)seeded.
     """
     from sqlalchemy import text
+
+    if url is None:
+        url = str(db.get_bind().url)
+    if not demo_seed_enabled(url):
+        logger.info("Demo seed disabled for this database (set AEROLICENSE_DEMO_SEED=1 to enable)")
+        return False
 
     today = today or date.today()
     stamp = f"{SEED_VERSION}:{today.isoformat()}"
@@ -453,40 +506,67 @@ def seed_demo_data(db, today: date | None = None):
     db.execute(text("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"))
     db.commit()
 
+    # Fast path without taking a write lock.
+    if _read_stamp(db) == stamp:
+        db.rollback()
+        return False
+
     try:
-        row = db.execute(text("SELECT value FROM meta WHERE key='seed_version'")).fetchone()
-        current = row[0] if row else None
+        # Take the lock: an upsert on the same key blocks a concurrent worker
+        # (row lock on Postgres, database write lock on SQLite) until commit.
+        db.execute(
+            text(
+                "INSERT INTO meta (key, value) VALUES ('seed_lock', :v) "
+                "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
+            ),
+            {"v": stamp},
+        )
+        current = _read_stamp(db)
+        if current == stamp:
+            db.rollback()
+            return False  # another worker seeded while we waited
+
+        demo_ids = {raw["id"] for raw in DEMO_PILOTS_RAW}
+        existing_ids = {row[0] for row in db.query(Pilot.id).all()}
+        foreign = existing_ids - demo_ids
+        if foreign:
+            logger.warning(
+                "Demo seed refused: %d pilot(s) are not demo pilots (%s); nothing changed",
+                len(foreign),
+                ", ".join(sorted(foreign)[:5]),
+            )
+            db.rollback()
+            return False
+        has_rows = bool(existing_ids) or db.query(Document.id).first() is not None
+        if has_rows and current is None:
+            logger.warning("Demo seed refused: tables have rows but no seed stamp; nothing changed")
+            db.rollback()
+            return False
+
+        db.query(Document).delete()
+        db.query(Pilot).delete()
+        for raw in DEMO_PILOTS_RAW:
+            db.add(
+                Pilot(
+                    id=raw["id"],
+                    name=raw["name"],
+                    role=raw["role"],
+                    ethereum_address=raw["ethereum_address"],
+                )
+            )
+            for doc in raw["documents"]:
+                db.add(Document(pilot_id=raw["id"], **resolve_dates(doc, today)))
+
+        # Store the seed stamp (syntax valid on SQLite and PostgreSQL)
+        db.execute(
+            text(
+                "INSERT INTO meta (key, value) VALUES ('seed_version', :v) "
+                "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
+            ),
+            {"v": stamp},
+        )
+        db.commit()
+        return True
     except Exception:
         db.rollback()
-        current = None
-
-    if current == stamp:
-        return  # data already up to date
-
-    # Full reset and reseed
-    db.query(Document).delete()
-    db.query(Pilot).delete()
-    db.execute(text("DELETE FROM meta"))
-    db.commit()
-
-    for raw in DEMO_PILOTS_RAW:
-        db.add(
-            Pilot(
-                id=raw["id"],
-                name=raw["name"],
-                role=raw["role"],
-                ethereum_address=raw["ethereum_address"],
-            )
-        )
-        for doc in raw["documents"]:
-            db.add(Document(pilot_id=raw["id"], **resolve_dates(doc, today)))
-
-    # Store the seed stamp (syntax valid on SQLite and PostgreSQL)
-    db.execute(
-        text(
-            "INSERT INTO meta (key, value) VALUES ('seed_version', :v) "
-            "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
-        ),
-        {"v": stamp},
-    )
-    db.commit()
+        raise

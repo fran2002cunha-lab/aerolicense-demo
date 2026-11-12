@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   backend:
-    name: Backend tests (pytest, ruff, mock evals)
+    name: Backend tests (pytest)
     runs-on: ubuntu-latest
     # No secrets: OPENAI_API_KEY is unset, so chat uses the demo fallback and
     # the LLM/eval tests use a mocked client. Nothing calls external services.

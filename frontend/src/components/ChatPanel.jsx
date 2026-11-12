@@ -109,7 +109,7 @@ export function DemoChatPanel({ initiallyOpen = false }) {
                 {'\n\n'}Como funciona: o modelo recebe a pergunta e só pode ler dados através de
                 5 ferramentas (pilotos, expirações, detalhe de piloto, scores de risco, anomalias ML).
                 O backend valida os argumentos, executa a ferramenta e devolve o resultado ao modelo,
-                num ciclo de no máximo 5 rondas, até haver resposta.
+                num ciclo de no máximo 5 rondas de ferramentas e uma resposta final.
                 {'\n\n'}
                 <a href={README_AI_URL} target="_blank" rel="noopener noreferrer" style={s.link}>
                   Ver o código e a secção «The AI part» do README no GitHub →

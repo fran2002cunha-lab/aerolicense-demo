@@ -305,6 +305,27 @@ def test_documents_content_length_rejected_before_parsing(client, monkeypatch):
     assert res.status_code == 413
 
 
+def test_documents_write_without_content_length_gets_411(client, monkeypatch):
+    """A chunked write (no Content-Length) is refused before the body is read."""
+
+    async def never(*a, **k):
+        raise AssertionError("upload handler must not run")
+
+    monkeypatch.setattr(deps, "read_upload", never)
+
+    def chunks():
+        yield b"x" * 10
+
+    res = client.post(
+        "/documents/hash",
+        content=chunks(),
+        headers={**API_HEADERS, "Content-Type": "multipart/form-data; boundary=x"},
+    )
+    assert res.status_code == 411
+    # Reads do not need a Content-Length.
+    assert client.get("/documents/expiring").status_code != 411
+
+
 def test_documents_guard_checks_api_key_before_parsing(client, monkeypatch):
     async def never(*a, **k):
         raise AssertionError("upload handler must not run")

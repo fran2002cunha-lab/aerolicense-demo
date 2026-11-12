@@ -15,8 +15,9 @@ const BADGES = [
 ];
 
 export const PITCH_EN =
-  'Aviation licence compliance tracker — expiry alerts, risk scoring, ML anomaly flags, ' +
-  'tamper-evident document hashes and a tool-calling AI assistant. Student project · fictional data.';
+  'Aviation licence compliance tracker — expiry alerts, risk scoring, rule + ML anomaly flags, ' +
+  'SHA-256 document fingerprints (blockchain anchoring simulated) and a tool-calling AI assistant ' +
+  '(in the code; not live in this static demo). Student project · fictional data.';
 
 /* Perfil usado pelo atalho direto para a demo de deteção de falsificação. */
 export const FORGERY_DEMO_ROLE = 'regulador';

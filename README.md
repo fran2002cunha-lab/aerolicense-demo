@@ -7,7 +7,7 @@ A compliance dashboard for aviation licences and medical certificates, with a to
 
 **Live demo:** https://aerolicense.vercel.app
 
-> **This is a static demo.** It has fictional data and no backend. The assistant panel replays answers recorded from a real model when a recordings file is present (see below); uploaded files are hashed in your browser only. The UI is in Portuguese (European).
+> **This is a static demo.** It has fictional data and no backend. The assistant panel would replay answers recorded from a real model if a recordings file were present (optional, see below); the current live demo has none, so the panel explains the tool loop instead; uploaded files are hashed in your browser only. The UI is in Portuguese (European).
 
 ![AeroLicense dashboard (static demo)](docs/screenshots/dashboard.png)
 
@@ -52,8 +52,8 @@ The assistant lives in `backend/chat.py` and is exposed by `POST /chat`.
 - **Observability**: each `/chat` request gets a `trace_id` (returned in the response) and each round logs one JSON line with model, latency, token counts, tool names and ok/error, never message content.
 - **Prompt-injection mitigation**: the request schema only accepts history entries with role `user` or `assistant`, and `chat.py` drops anything else, so a client cannot inject `system` or `tool` messages. The only system message is the server's own prompt. Message length and history size are capped, and `/chat` is rate limited (10 requests per minute per IP).
 - **Provider-agnostic**: `LLM_BASE_URL` and `LLM_MODEL` point the client at any OpenAI-compatible provider (default model `gpt-4o-mini`).
-- **Evals** (`backend/evals/`): 11 questions, each with the tool it should call and, where it matters, argument constraints. The eval reports **tool-selection accuracy** and **argument accuracy**. `--mock` swaps the model for a deterministic keyword router, so CI tests the harness and the tool plumbing without a key or network; with a real key it measures model quality. `run_safety_evals.py` adds faithfulness, count correctness, out-of-scope refusal, unknown pilot, direct and indirect prompt injection, and multi-tool cases; its `--mock` mode is a plumbing test only. See [backend/evals/README.md](backend/evals/README.md).
-- **Recorded demo answers**: `backend/scripts/record_demo_chat.py` runs a fixed list of questions through the real `run_chat` loop against a seeded temporary DB and writes `frontend/public/fixtures/chat_recordings.json` (questions, tool calls and answers only; no prompt, IDs or keys). The static demo replays those recordings. The repo ships `chat_recordings.example.json` to show the format.
+- **Evals** (`backend/evals/`): 11 questions, each with the tool it should call and, where it matters, argument constraints. The eval reports **tool-selection accuracy** and **argument accuracy**. `--mock` swaps the model for a deterministic keyword router, so CI tests the harness and the tool plumbing without a key or network; with a real key it measures model quality. `run_safety_evals.py` adds a heuristic faithfulness check (numbers and names), count correctness, out-of-scope refusal, unknown pilot, direct and indirect prompt injection, and multi-tool cases; its `--mock` mode is a plumbing test only. The faithfulness check only reads count and day-count claims ("5 pilotos", "12 dias") and Firstname Lastname names, ignores dates, scores and percentages, and can miss a wrong number that equals another value in the tool outputs; the full list of limits is in [backend/evals/README.md](backend/evals/README.md).
+- **Recorded demo answers**: `backend/scripts/record_demo_chat.py` runs a fixed list of questions through the real `run_chat` loop against a seeded temporary DB and writes `frontend/public/fixtures/chat_recordings.json` (questions, tool calls and answers only; no prompt, IDs or keys). Recordings are optional: when that file is present, the static demo replays them. The current live demo ships none, so its assistant panel shows an explanation of the tool loop instead. The repo ships `chat_recordings.example.json` to show the format.
 
 ## Security
 
@@ -61,6 +61,7 @@ The hardening came from an audit I ran on my own repo:
 
 - `X-API-Key` required on write endpoints (`/documents/upload`, `/documents/hash`); if `AEROLICENSE_API_KEY` is unset they return 503 (fail closed).
 - Uploads capped at 5 MB and checked by magic bytes (PDF, PNG, JPEG); the client's Content-Type is not trusted.
+- Write requests (`POST` to the write endpoints) without a `Content-Length` header (for example chunked uploads) are rejected with 411 Length Required before the body is read, so the size cap cannot be bypassed.
 - Generic error messages to clients; details go to the server log.
 - CORS from an explicit allowlist (`CORS_ORIGINS`), never `*`.
 - Rate-limited `/chat` (in memory, per process; production would use Redis or a gateway).
@@ -120,8 +121,8 @@ make fixtures   # regenerate frontend/public/fixtures from the API
 
 ## Tests & CI
 
-- **Backend tests** (pytest, `tests/`): API and database, document status boundaries, anomaly detection, chat loop, guardrails and tool validation, analytics, security, fixtures export, LLM recording and evals with a mocked client.
-- **23 frontend tests** (Jest + React Testing Library).
+- **204 backend tests** (pytest, `tests/`): API and database, document status boundaries, anomaly detection, chat loop, guardrails and tool validation, analytics, security, fixtures export, LLM recording and evals with a mocked client.
+- **40 frontend tests** (Jest + React Testing Library).
 - **GitHub Actions** (`.github/workflows/ci.yml`): installs the backend with `requirements-dev.txt`, runs `ruff check` and `ruff format --check`, runs pytest, runs the tool-selection and safety evals in mock mode with `--fail-under 1.0`, and builds the frontend. CI uses no secrets and calls no external services.
 
 ## Design decisions & trade-offs
@@ -129,6 +130,7 @@ make fixtures   # regenerate frontend/public/fixtures from the API
 - **Only hashes go on-chain.** The file and its personal data stay off-chain; the contract stores a `bytes32` SHA-256 hash. Anyone holding the file can recompute the hash and compare it, and changing one character changes the hash. Even so, a hash on a public chain is permanent (see limitations).
 - **Static demo instead of a hosted backend.** A public endpoint with an LLM key behind it costs money and invites abuse. The static build shows the real UI with fixtures (and, optionally, answers recorded from a real model); the full assistant is in the code.
 - **SQLite by default.** Zero setup for reviewers, and tests run on an in-memory SQLite DB. `DATABASE_URL` switches to Postgres through SQLAlchemy without code changes.
+- **Demo seed is opt-in outside SQLite.** At startup the backend seeds the fictional pilots with dates relative to the boot day (so the demo never decays). `AEROLICENSE_DEMO_SEED=1/0` turns this on or off; when unset it is on only for a SQLite `DATABASE_URL`, so a real Postgres is never seeded by default. Even when enabled, the seed refuses to wipe anything (it logs a warning) if the tables hold a pilot that is not a demo pilot, or hold rows without a seed stamp, and it runs in one locked transaction so two workers booting together seed once.
 - **Readable anomaly reasons.** An IsolationForest score alone means little to an operator, so each flag comes with reasons such as "unknown issuer" or "validity above the maximum for this document type".
 
 ## Limitations & why this isn't a product

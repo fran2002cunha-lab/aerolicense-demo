@@ -36,11 +36,35 @@ def test_icao_level6_excluded():
     assert not any(has_no_expiry(a) for a in found)
 
 
-def test_fewer_than_min_docs_returns_nothing():
+def test_fewer_than_min_docs_skips_ml_but_rules_still_flag():
     docs = _seed_docs(date(2026, 11, 12))
     non_l6 = [d for d in docs if not has_no_expiry(d)]
-    assert detect_anomalies(non_l6[: MIN_DOCS - 1]) == []
+    regular = [d for d in non_l6 if not rule_reasons(d)]
+    assert detect_anomalies(regular[: MIN_DOCS - 1]) == []
     assert detect_anomalies([]) == []
+    # A small sample with a rule violation is still flagged, by the rules only.
+    small = [*regular[:5], _doc(issuer="Clínica Fantasma")]
+    assert len(small) < MIN_DOCS
+    found = detect_anomalies(small)
+    assert len(found) == 1
+    assert found[0]["sources"] == ["rules"]
+    assert found[0]["anomaly_score"] is None
+    assert any("desconhecida" in r for r in found[0]["reasons"])
+
+
+@pytest.mark.skipif(not anomaly.ML_AVAILABLE, reason="scikit-learn not installed")
+def test_threshold_margin_on_seed():
+    """
+    Documents the calibration of ANOMALY_SCORE_THRESHOLD (-0.65): the two planted
+    documents score about -0.73 and -0.69, the next document about -0.605. The
+    margin on both sides must stay clear, or the threshold needs re-calibrating.
+    """
+    docs = [d for d in _seed_docs(date(2026, 11, 12)) if not has_no_expiry(d)]
+    scores = sorted(s for s, _ in anomaly._ml_scores(docs))
+    t = anomaly.ANOMALY_SCORE_THRESHOLD
+    assert scores[0] < scores[1] < t < scores[2]
+    assert t - scores[1] >= 0.03  # planted documents: comfortably below
+    assert scores[2] - t >= 0.03  # next document (about -0.605): comfortably above
 
 
 def _doc(issuer="ANAC — Autoridade Nacional de Aviação Civil", doc_type="MEDICAL_CLASS1", days=365):

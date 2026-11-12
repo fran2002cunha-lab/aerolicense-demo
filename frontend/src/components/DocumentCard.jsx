@@ -9,6 +9,8 @@ const DOC_TYPE_LABELS = {
 
 const MEDICAL_TYPES = new Set(['MEDICAL_CLASS1']);
 
+const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 /* Os nomes das autoridades são reais, mas os documentos são inventados. */
 export const FICTIONAL_MARK = '(dados fictícios)';
 
@@ -53,12 +55,28 @@ export default function DocumentCard({ document }) {
 
   useEffect(() => () => { if (qrUrl) URL.revokeObjectURL(qrUrl); }, [qrUrl]);
 
-  /* Modal do QR: foco no diálogo, Esc fecha, foco volta ao botão de origem. */
+  /* Modal do QR: foco no diálogo, Esc fecha, Tab/Shift+Tab ficam dentro do
+     diálogo, e o foco volta ao botão de origem ao fechar. */
   useEffect(() => {
     if (!showQr) return undefined;
     const previous = window.document.activeElement;
     modalRef.current?.focus();
-    const onKey = e => { if (e.key === 'Escape') setShowQr(false); };
+    const onKey = e => {
+      if (e.key === 'Escape') { setShowQr(false); return; }
+      if (e.key !== 'Tab' || !modalRef.current) return;
+      const focusable = Array.from(modalRef.current.querySelectorAll(FOCUSABLE))
+        .filter(el => !el.disabled);
+      if (!focusable.length) { e.preventDefault(); modalRef.current.focus(); return; }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = window.document.activeElement;
+      const inside = modalRef.current.contains(active);
+      if (e.shiftKey && (!inside || active === first || active === modalRef.current)) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (!inside || active === last || active === modalRef.current)) {
+        e.preventDefault(); first.focus();
+      }
+    };
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('keydown', onKey);

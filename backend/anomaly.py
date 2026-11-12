@@ -21,8 +21,9 @@ Two layers, merged per document:
    contamination="auto" means there is no quota of anomalies: a document is
    flagged only when its score_samples value is below ANOMALY_SCORE_THRESHOLD.
 
-Documents with no expiry (ICAO Level 6) are excluded. With fewer than MIN_DOCS
-documents nothing is returned: the statistics are meaningless on tiny samples.
+Documents with no expiry (ICAO Level 6) are excluded. The rules always run.
+With fewer than MIN_DOCS documents the IsolationForest layer is skipped (its
+statistics are meaningless on tiny samples), so only rule flags are returned.
 Every anomaly carries the reasons it was flagged.
 """
 
@@ -44,7 +45,10 @@ MIN_DOCS = 20
 # With contamination="auto" sklearn's own cut-off is -0.5, which flags a large
 # share of a small, regular dataset. -0.65 keeps only clear outliers: on the demo
 # seed the two planted documents score about -0.73 and -0.69 and the next one
-# about -0.61. It is a demo calibration and must be re-validated on real data.
+# about -0.605 (the features are date-invariant, so these scores do not drift).
+# That leaves a margin of ~0.045 above the threshold, pinned by
+# test_threshold_margin_on_seed. It is a demo calibration and must be
+# re-validated on real data.
 ANOMALY_SCORE_THRESHOLD = -0.65
 
 # Simplified, approximate maximum validity per document type, in days. Real
@@ -169,13 +173,14 @@ def detect_anomalies(documents: list) -> list:
     documents: dicts with issued_at, expires_at, issuer, doc_type, description, hash, ...
     Returns the anomalous documents, each with "anomaly_score" (IsolationForest
     score_samples, lower = more anomalous; None without scikit-learn), "reasons" and "sources"
-    ("rules" and/or "ml"). Empty if there are fewer than MIN_DOCS documents.
+    ("rules" and/or "ml"). The rules always run; with fewer than MIN_DOCS
+    documents the ML layer is skipped (anomaly_score is None).
     """
     docs = [doc for doc in documents if not has_no_expiry(doc)]
-    if len(docs) < MIN_DOCS:
+    if not docs:
         return []
 
-    ml = _ml_scores(docs)
+    ml = _ml_scores(docs) if len(docs) >= MIN_DOCS else None
     anomalies = []
     for i, doc in enumerate(docs):
         reasons = rule_reasons(doc)

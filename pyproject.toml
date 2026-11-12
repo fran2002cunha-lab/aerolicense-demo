@@ -14,7 +14,7 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["anomaly", "chat", "chat_tools", "compliance", "config", "database", "deps", "main",
-                     "notifications", "risk", "routers", "schemas", "services", "evals", "scripts",
+                     "risk", "routers", "schemas", "services", "evals", "scripts",
                      "tests", "backend"]
 
 [tool.ruff.lint.per-file-ignores]

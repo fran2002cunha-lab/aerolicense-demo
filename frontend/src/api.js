@@ -64,7 +64,15 @@ export function shiftDaysSince(exportedAt, today = new Date()) {
   return Math.round((to - from) / DAY_MS);
 }
 
-function shiftDateString(str, days) {
+/* Diferença em meses de calendário entre exported_at e `today` (data local):
+   2026-11-12 → 2026-11-28 = 0; 2026-11-28 → 2026-12-01 = 1. */
+export function shiftMonthsSince(exportedAt, today = new Date()) {
+  const m = DATE_RE.exec(String(exportedAt || '').slice(0, 10));
+  if (!m) return 0;
+  return (today.getFullYear() - +m[1]) * 12 + (today.getMonth() + 1 - +m[2]);
+}
+
+function shiftDateString(str, days, months) {
   let m = DATE_RE.exec(str);
   if (m) {
     const iso = new Date(utcDay(+m[1], +m[2], +m[3] + days)).toISOString().slice(0, 10);
@@ -72,46 +80,56 @@ function shiftDateString(str, days) {
   }
   m = MONTH_RE.exec(str);
   if (m) {
-    /* Buckets mensais (analytics_monthly): desloca pelo nº de meses mais próximo. */
-    const months = Math.round(days / 30.44);
+    /* Buckets mensais (analytics_monthly): desloca pela diferença em meses de calendário. */
     const d = new Date(Date.UTC(+m[1], +m[2] - 1 + months, 1));
     return d.toISOString().slice(0, 7);
   }
   return str;
 }
 
-/* Devolve uma cópia de `value` com todas as datas ISO deslocadas `days` dias. */
-export function shiftFixtureDates(value, days) {
-  if (!days) return value;
-  if (typeof value === 'string') return shiftDateString(value, days);
-  if (Array.isArray(value)) return value.map(v => shiftFixtureDates(v, days));
+/* Devolve uma cópia de `value` com as datas ISO deslocadas `days` dias e os
+   buckets mensais (YYYY-MM) deslocados `months` meses. */
+export function shiftFixtureDates(value, days, months = 0) {
+  if (!days && !months) return value;
+  if (typeof value === 'string') return shiftDateString(value, days, months);
+  if (Array.isArray(value)) return value.map(v => shiftFixtureDates(v, days, months));
   if (value && typeof value === 'object') {
     const out = {};
     for (const [k, v] of Object.entries(value)) {
-      out[k] = NO_SHIFT_KEYS.has(k) ? v : shiftFixtureDates(v, days);
+      out[k] = NO_SHIFT_KEYS.has(k) ? v : shiftFixtureDates(v, days, months);
     }
     return out;
   }
   return value;
 }
 
-/* status.json é lido uma única vez; sem exported_at não há deslocamento. */
+/* status.json é lido uma única vez; sem exported_at não há deslocamento.
+   Se o pedido falhar, a promessa em cache é descartada para tentar de novo. */
 let _statusPromise = null;
 function demoStatus() {
-  if (!_statusPromise) _statusPromise = fetchFixture('status');
+  if (!_statusPromise) {
+    _statusPromise = fetchFixture('status').catch(err => {
+      _statusPromise = null;
+      throw err;
+    });
+  }
   return _statusPromise;
 }
-async function demoShiftDays() {
+async function demoShift() {
   try {
     const status = await demoStatus();
-    return status && status.exported_at ? shiftDaysSince(status.exported_at) : 0;
-  } catch { return 0; }
+    if (!status || !status.exported_at) return { days: 0, months: 0 };
+    return {
+      days: shiftDaysSince(status.exported_at),
+      months: shiftMonthsSince(status.exported_at),
+    };
+  } catch { return { days: 0, months: 0 }; }
 }
 
 async function demoRequest(name) {
   if (name === 'status') return demoStatus();
-  const [data, days] = await Promise.all([fetchFixture(name), demoShiftDays()]);
-  return shiftFixtureDates(data, days);
+  const [data, { days, months }] = await Promise.all([fetchFixture(name), demoShift()]);
+  return shiftFixtureDates(data, days, months);
 }
 
 /* ── Cache simples em sessionStorage ── */

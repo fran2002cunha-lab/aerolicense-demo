@@ -26,6 +26,7 @@ def _test_env(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("LLM_BASE_URL", raising=False)
     monkeypatch.delenv("LLM_MODEL", raising=False)
+    monkeypatch.delenv("AEROLICENSE_DEMO_SEED", raising=False)
     deps._chat_hits.clear()
     yield
     deps._chat_hits.clear()
