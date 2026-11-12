@@ -1,0 +1,15 @@
+{
+ "conceito": "SHA-256 — Impressão Digital de Documentos",
+ "documento_original": {
+  "conteudo": "ATPL License - Miguel Ferreira - Valid until 2026-03-15 - ANAC PT",
+  "sha256": "0x98ce7bc6a88c64d575fe4e0f9c5efc11a8bc176d1fcd8ec00c93ba2719095e49"
+ },
+ "documento_falsificado": {
+  "conteudo": "ATPL License - Miguel Ferreira - Valid until 2028-03-15 - ANAC PT",
+  "alteracao": "Apenas '2026' foi mudado para '2028'",
+  "sha256": "0x276d5d3d5a233fe380b09715cdd67608559c979cea553abed1895efb236a1e8a"
+ },
+ "hashes_iguais": false,
+ "falsificacao_detetada": true,
+ "conclusao": "A blockchain guarda o hash original. Qualquer alteração ao documento — mesmo 1 caracter — produz um hash completamente diferente e a falsificação é detetada."
+}

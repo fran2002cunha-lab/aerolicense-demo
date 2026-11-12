@@ -1,0 +1,26 @@
+[
+ {
+  "type": "ATPL",
+  "count": 6
+ },
+ {
+  "type": "MEDICAL_CLASS1",
+  "count": 7
+ },
+ {
+  "type": "ICAO_ENGLISH",
+  "count": 4
+ },
+ {
+  "type": "TYPE_RATING",
+  "count": 6
+ },
+ {
+  "type": "OTHER",
+  "count": 2
+ },
+ {
+  "type": "CRM_TRAINING",
+  "count": 6
+ }
+]

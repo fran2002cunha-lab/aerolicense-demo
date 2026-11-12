@@ -1,0 +1,101 @@
+{
+ "pilots": [
+  {
+   "pilot_id": "P001",
+   "pilot_name": "Miguel Ferreira",
+   "pilot_role": "First Officer — TAP Air Portugal",
+   "score": 0,
+   "level": "critical",
+   "penalties": [
+    "Documento expirado: Licença ATPL — ANAC Portugal (-25 pts)",
+    "Documento expirado: Certificado Médico Classe 1 (-25 pts)",
+    "Documento expirado: Proficiência Linguística ICAO — Nível 5 (-25 pts)",
+    "Documento expirado: Type Rating Airbus A320 (-25 pts)"
+   ]
+  },
+  {
+   "pilot_id": "P004",
+   "pilot_name": "Sofia Andrade",
+   "pilot_role": "Captain — Wizz Air",
+   "score": 10,
+   "level": "critical",
+   "penalties": [
+    "Documento expirado: Licença ATPL — ANAC Portugal (-25 pts)",
+    "Documento expirado: Certificado Médico Classe 1 (-25 pts)",
+    "Documento expirado: Type Rating Airbus A321neo (-25 pts)",
+    "Anomalia ML detectada nos documentos (-15 pts)"
+   ]
+  },
+  {
+   "pilot_id": "P005",
+   "pilot_name": "Carlos Rodrigues",
+   "pilot_role": "First Officer — Azores Airlines",
+   "score": 10,
+   "level": "critical",
+   "penalties": [
+    "Documento expirado: Certificado Médico Classe 1 (-25 pts)",
+    "Documento expirado: Type Rating ATR 72-600 (-25 pts)",
+    "Documento expirado: Proficiência Linguística ICAO — Nível 4 (-25 pts)",
+    "Anomalia ML detectada nos documentos (-15 pts)"
+   ]
+  },
+  {
+   "pilot_id": "P007",
+   "pilot_name": "Ricardo Santos",
+   "pilot_role": "Captain — Lufthansa",
+   "score": 26,
+   "level": "critical",
+   "penalties": [
+    "Documento expirado: Certificado Médico Classe 1 (-25 pts)",
+    "Documento expirado: Type Rating Airbus A350-900 (-25 pts)",
+    "A expirar em 10 dias: Proficiência Linguística ICAO — Nível 6 (-7 pts)",
+    "A expirar em 28 dias: Crew Resource Management — Recurrent (-2 pts)",
+    "Anomalia ML detectada nos documentos (-15 pts)"
+   ]
+  },
+  {
+   "pilot_id": "P002",
+   "pilot_name": "Ana Costa",
+   "pilot_role": "Cabin Crew Senior — Ryanair",
+   "score": 50,
+   "level": "attention",
+   "penalties": [
+    "Documento expirado: Certificado Médico Cabin Crew (-25 pts)",
+    "Documento expirado: Crew Resource Management — Cabin Crew (-25 pts)"
+   ]
+  },
+  {
+   "pilot_id": "P003",
+   "pilot_name": "João Matos",
+   "pilot_role": "Captain — easyJet",
+   "score": 50,
+   "level": "attention",
+   "penalties": [
+    "Documento expirado: Type Rating Boeing 737 MAX (-25 pts)",
+    "Documento expirado: Crew Resource Management — Recurrent (-25 pts)"
+   ]
+  },
+  {
+   "pilot_id": "P008",
+   "pilot_name": "Mariana Pinto",
+   "pilot_role": "First Officer — Vueling",
+   "score": 50,
+   "level": "attention",
+   "penalties": [
+    "Documento expirado: Certificado Médico Classe 1 (-25 pts)",
+    "Documento expirado: Type Rating Airbus A320ceo (-25 pts)"
+   ]
+  },
+  {
+   "pilot_id": "P006",
+   "pilot_name": "Inês Tavares",
+   "pilot_role": "Cabin Crew — TAP Air Portugal",
+   "score": 60,
+   "level": "attention",
+   "penalties": [
+    "Documento expirado: Certificado Médico Cabin Crew (-25 pts)",
+    "Anomalia ML detectada nos documentos (-15 pts)"
+   ]
+  }
+ ]
+}
