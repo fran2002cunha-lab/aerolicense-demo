@@ -9,8 +9,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from database import Base, get_db, seed_demo_data, Pilot, Document
+from database import Base, get_db, seed_demo_data, Pilot, Document, DEMO_PILOTS_RAW
 from main import app
+from tests.conftest import API_HEADERS
 
 @pytest.fixture
 def client():
@@ -35,17 +36,18 @@ def client():
         yield c
     app.dependency_overrides.clear()
 
-def test_demo_pilotos_returns_three(client):
+def test_demo_pilotos_returns_all_seeded(client):
     res = client.get("/demo/pilotos")
     assert res.status_code == 200
-    assert res.json()["total"] == 3
+    assert res.json()["total"] == len(DEMO_PILOTS_RAW)
 
 def test_demo_piloto_detalhe(client):
     res = client.get("/demo/pilotos/P001")
     assert res.status_code == 200
     data = res.json()
     assert data["nome"] == "Miguel Ferreira"
-    assert len(data["documentos"]) == 4
+    p001 = next(p for p in DEMO_PILOTS_RAW if p["id"] == "P001")
+    assert len(data["documentos"]) == len(p001["documents"])
 
 def test_demo_piloto_not_found(client):
     res = client.get("/demo/pilotos/P999")
@@ -59,9 +61,10 @@ def test_demo_alertas_contains_expiring(client):
 
 
 def test_hash_endpoint(client):
-    content = b"Test aviation document content"
+    content = b"%PDF-1.4 Test aviation document content"
     response = client.post(
         "/documents/hash",
+        headers=API_HEADERS,
         files={"file": ("test.pdf", content, "application/pdf")},
     )
     assert response.status_code == 200
@@ -107,9 +110,10 @@ def test_upload_document_demo_mode(client):
     import io
     from datetime import datetime, timedelta
     future_date = (datetime.now(timezone.utc) + timedelta(days=365)).isoformat()
-    content = b"ATPL License content for hashing"
+    content = b"%PDF-1.4 ATPL License content for hashing"
     response = client.post(
         "/documents/upload",
+        headers=API_HEADERS,
         params={
             "pilot_address": "0x00000000000000000000000000000000Ae1c0001",
             "doc_type": "ATPL",
@@ -138,6 +142,7 @@ def test_upload_invalid_doc_type(client):
             "description": "Test",
             "expires_at": future_date,
         },
+        headers=API_HEADERS,
         files={"file": ("test.pdf", io.BytesIO(b"content"), "application/pdf")},
     )
     assert response.status_code == 400

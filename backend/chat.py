@@ -156,10 +156,39 @@ def _build_messages(user_message: str, history: list | None) -> list[dict]:
     return messages
 
 
-def run_chat(user_message: str, db_tools_fn: dict, history: list | None = None) -> str:
+DEFAULT_LLM_MODEL = "gpt-4o-mini"
+
+
+def llm_model() -> str:
+    """Model name from LLM_MODEL (any OpenAI-compatible model id)."""
+    return os.getenv("LLM_MODEL") or DEFAULT_LLM_MODEL
+
+
+def _make_client(api_key: str):
+    """
+    OpenAI client. LLM_BASE_URL (optional) points it at any OpenAI-compatible
+    provider, e.g. Groq or Gemini's OpenAI endpoint. Tests replace this function.
+    """
+    from openai import OpenAI
+    base_url = os.getenv("LLM_BASE_URL") or None
+    return OpenAI(api_key=api_key, base_url=base_url)
+
+
+def _trace_args(raw_args: str | None):
+    """Arguments as the model sent them: parsed JSON if possible, else the raw string."""
+    try:
+        return json.loads(raw_args or "{}")
+    except json.JSONDecodeError:
+        return raw_args
+
+
+def run_chat(user_message: str, db_tools_fn: dict, history: list | None = None,
+             trace: list | None = None) -> str:
     """
     user_message: string from the user
     db_tools_fn: dict mapping tool_name -> callable(args) -> data
+    trace: optional list; if given, each tool call the model makes is appended
+           as {"name": str, "arguments": obj} (used by the recorder and evals)
 
     Returns: assistant's response string in Portuguese
     """
@@ -167,14 +196,13 @@ def run_chat(user_message: str, db_tools_fn: dict, history: list | None = None) 
     if not api_key:
         return _demo_response(user_message)
 
-    from openai import OpenAI
-    client = OpenAI(api_key=api_key)
+    client = _make_client(api_key)
 
     messages = _build_messages(user_message, history)
 
     for _ in range(5):  # max 5 tool-call rounds to prevent infinite loops
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=llm_model(),
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
@@ -198,6 +226,9 @@ def run_chat(user_message: str, db_tools_fn: dict, history: list | None = None) 
         })
 
         for tc in msg.tool_calls:
+            if trace is not None:
+                trace.append({"name": tc.function.name,
+                              "arguments": _trace_args(tc.function.arguments)})
             result = _execute_tool(tc.function.name, tc.function.arguments, db_tools_fn)
             messages.append({
                 "role":         "tool",

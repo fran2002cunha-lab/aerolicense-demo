@@ -9,6 +9,10 @@ Extrai automaticamente dados de licenças e certificados:
   - Entidade emissora
 
 Usa pytesseract (Tesseract OCR) + regex para parsing.
+
+NOTE: this module is currently not imported by main.py (no OCR endpoint is
+exposed). It is kept as a standalone utility; if it is wired into the API,
+reuse main.read_upload() for the size/magic-byte checks and require_api_key.
 """
 
 import re
@@ -18,6 +22,9 @@ from typing import Optional
 import os
 import base64
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 try:
     import pytesseract
@@ -158,8 +165,9 @@ def _ai_ocr(image_bytes: bytes, filename: str, file_hash: str) -> dict | None:
             "fields_found":   sum(1 for v in data.values() if v),
             "ai_model":       "gpt-4o-mini",
         }
-    except Exception as e:
-        return {"_ai_error": str(e)}
+    except Exception:
+        logger.exception("AI OCR failed")
+        return {"_ai_error": "AI OCR failed"}
 
 def extract_from_image(image_bytes: bytes, filename: str = "") -> dict:
     """
@@ -193,13 +201,14 @@ def extract_from_image(image_bytes: bytes, filename: str = "") -> dict:
                 "ocr_available":  True,
                 "fields_found":   found,
             }
-        except Exception as e:
-            return {**_demo_fallback(filename, file_hash), "error": str(e)}
+        except Exception:
+            logger.exception("Tesseract OCR failed")
+            return {**_demo_fallback(filename, file_hash), "error": "OCR falhou; resultado de demonstração."}
 
     # 3. Demo fallback
     result = _demo_fallback(filename, file_hash)
     if ai_result and "_ai_error" in ai_result:
-        result["ai_error"] = ai_result["_ai_error"]
+        result["ai_error"] = "OCR com IA indisponível."
     return result
 
 def _demo_fallback(filename: str, file_hash: str) -> dict:

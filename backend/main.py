@@ -11,14 +11,19 @@ Fluxo principal:
 
 import hashlib
 import io
+import logging
 import os
 import re
+import secrets
+import threading
+import time
+from collections import defaultdict, deque
 from datetime import datetime, timedelta, date, timezone
 from typing import Literal, Optional
 
 import qrcode
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Header, Query, Request
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
@@ -27,6 +32,8 @@ from web3 import Web3
 import database
 from database import init_db, get_db, seed_demo_data, Pilot, Document
 from risk import compute_pilot_score
+
+logger = logging.getLogger(__name__)
 
 # ── App ────────────────────────────────────────────────────────────────────
 @asynccontextmanager
@@ -46,11 +53,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS: explicit allowlist from CORS_ORIGINS (comma-separated), never "*".
+def parse_cors_origins(raw: str) -> list[str]:
+    return [o.strip() for o in raw.split(",") if o.strip() and o.strip() != "*"]
+
+CORS_ORIGINS = parse_cors_origins(os.getenv("CORS_ORIGINS", "http://localhost:3000"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-API-Key"],
 )
 
 # ── Ligação à blockchain (opcional em modo demo) ───────────────────────────
@@ -58,6 +71,25 @@ BLOCKCHAIN_URL   = os.getenv("BLOCKCHAIN_URL", "http://127.0.0.1:8545")
 CONTRACT_ADDRESS = os.getenv("CONTRACT_ADDRESS", "")
 PRIVATE_KEY      = os.getenv("PRIVATE_KEY", "")
 PUBLIC_BASE_URL  = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000")
+
+# The signer only sends transactions on these networks (never mainnet).
+SIGNING_NETWORKS = {"local", "hardhat", "sepolia", "holesky"}
+
+
+def signing_allowed() -> bool:
+    """True only when BLOCKCHAIN_NETWORK is an allowlisted testnet/local network."""
+    return os.getenv("BLOCKCHAIN_NETWORK", "").strip().lower() in SIGNING_NETWORKS
+
+
+def load_signer(private_key: str):
+    """Return a signing account, or None if the key is empty or invalid (no startup crash)."""
+    if not private_key:
+        return None
+    try:
+        return w3.eth.account.from_key(private_key)
+    except Exception:
+        logger.error("PRIVATE_KEY is invalid; blockchain writes disabled")
+        return None
 
 w3 = Web3(Web3.HTTPProvider(BLOCKCHAIN_URL))
 
@@ -156,7 +188,9 @@ if CONTRACT_ADDRESS and CONTRACT_ADDRESS.startswith("0x") and len(CONTRACT_ADDRE
         },
     ]
     contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=CONTRACT_ABI)
-    account  = w3.eth.account.from_key(PRIVATE_KEY)
+    account  = load_signer(PRIVATE_KEY)
+    if account is None:
+        logger.warning("CONTRACT_ADDRESS set but no valid PRIVATE_KEY: read-only blockchain mode")
 
 # Tipos de documento (espelham o enum Solidity)
 DOC_TYPES = {
@@ -202,7 +236,13 @@ def sha256_file(data: bytes) -> bytes:
     return hashlib.sha256(data).digest()
 
 # ── Helper: enviar transação ───────────────────────────────────────────────
+class SigningRefused(RuntimeError):
+    """Raised when signing is requested on a non-allowlisted network."""
+
+
 def send_transaction(fn_call):
+    if not signing_allowed():
+        raise SigningRefused("BLOCKCHAIN_NETWORK is not an allowlisted testnet/local network")
     tx = fn_call.build_transaction({
         "from":     account.address,
         "nonce":    w3.eth.get_transaction_count(account.address),
@@ -212,6 +252,67 @@ def send_transaction(fn_call):
     signed  = w3.eth.account.sign_transaction(tx, PRIVATE_KEY)
     tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
     return w3.eth.wait_for_transaction_receipt(tx_hash)
+
+# ── Auth for write endpoints ───────────────────────────────────────────────
+def require_api_key(x_api_key: Optional[str] = Header(None)):
+    """
+    Write endpoints need X-API-Key == AEROLICENSE_API_KEY.
+    If the env var is unset, write endpoints are disabled entirely (503).
+    """
+    expected = os.getenv("AEROLICENSE_API_KEY", "")
+    if not expected:
+        raise HTTPException(503, "write endpoints disabled")
+    if not x_api_key or not secrets.compare_digest(x_api_key.encode(), expected.encode()):
+        raise HTTPException(401, "Chave de API inválida ou em falta.")
+
+
+# ── Upload validation ──────────────────────────────────────────────────────
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+_UPLOAD_CHUNK    = 64 * 1024
+# Accepted types, identified by magic bytes (the client's Content-Type is not trusted).
+_MAGIC_BYTES = (b"%PDF", b"\x89PNG\r\n\x1a\n", b"\xff\xd8\xff")
+
+
+async def read_upload(file: UploadFile) -> bytes:
+    """Read the upload in chunks, stopping at 5 MB (413), and check magic bytes (415)."""
+    buf = bytearray()
+    while chunk := await file.read(_UPLOAD_CHUNK):
+        buf.extend(chunk)
+        if len(buf) > MAX_UPLOAD_BYTES:
+            raise HTTPException(413, "Ficheiro demasiado grande (máximo 5 MB).")
+    if not bytes(buf).startswith(_MAGIC_BYTES):
+        raise HTTPException(415, "Tipo de ficheiro não suportado. Use PDF, PNG ou JPEG.")
+    return bytes(buf)
+
+
+HASH_RE = re.compile(r'^0x[0-9a-fA-F]{64}$')
+
+
+def check_hash_format(doc_hash: str):
+    if not HASH_RE.match(doc_hash):
+        raise HTTPException(400, "Hash inválido. Formato esperado: 0x seguido de 64 caracteres hexadecimais.")
+
+
+# ── /chat rate limit ───────────────────────────────────────────────────────
+# Simple sliding window per client IP. It is per process and in memory: with
+# several workers/instances each one counts separately, and it resets on restart.
+# Production would use Redis or the API gateway/WAF instead.
+CHAT_RATE_LIMIT  = 10   # requests
+CHAT_RATE_WINDOW = 60   # seconds
+_chat_hits: dict[str, deque] = defaultdict(deque)
+_chat_lock = threading.Lock()
+
+
+def chat_rate_limit(request: Request):
+    ip  = request.client.host if request.client else "unknown"
+    now = time.monotonic()
+    with _chat_lock:
+        hits = _chat_hits[ip]
+        while hits and now - hits[0] > CHAT_RATE_WINDOW:
+            hits.popleft()
+        if len(hits) >= CHAT_RATE_LIMIT:
+            raise HTTPException(429, "Demasiados pedidos. Tenta novamente daqui a um minuto.")
+        hits.append(now)
 
 # ══════════════════════════════════════════════════════════════════════════
 # ENDPOINTS
@@ -223,13 +324,12 @@ def root():
         "app": "AeroLicense API",
         "status": "online",
         "blockchain_connected": w3.is_connected(),
-        "blockchain_url": BLOCKCHAIN_URL,
         "contract_configured": contract is not None,
         "modo": "Smart contract em modo simulação" if contract is None else "Smart contract · Produção",
     }
 
 
-@app.post("/documents/upload", tags=["Documentos"])
+@app.post("/documents/upload", tags=["Documentos"], dependencies=[Depends(require_api_key)])
 async def upload_document(
     pilot_address: str,
     doc_type: str,
@@ -249,12 +349,16 @@ async def upload_document(
         raise HTTPException(400, f"Tipo inválido. Use: {list(DOC_TYPES.keys())}")
 
     # 1. Calcular hash
-    content   = await file.read()
+    content   = await read_upload(file)
     file_hash = sha256_file(content)
     hash_hex  = "0x" + file_hash.hex()
 
     # 2. Registar na blockchain (se configurada) ou modo demo
     if contract and account:
+        if not signing_allowed():
+            logger.error("Refusing to sign: BLOCKCHAIN_NETWORK=%r is not allowlisted",
+                         os.getenv("BLOCKCHAIN_NETWORK"))
+            raise HTTPException(503, "Registo na blockchain indisponível.")
         try:
             fn = contract.functions.registerDocument(
                 pilot_address,
@@ -265,8 +369,9 @@ async def upload_document(
             )
             receipt  = send_transaction(fn)
             tx_hash  = receipt.transactionHash.hex()
-        except Exception as e:
-            raise HTTPException(500, f"Erro blockchain: {str(e)}")
+        except Exception:
+            logger.exception("Blockchain registerDocument failed")
+            raise HTTPException(502, "Erro ao registar o documento na blockchain.")
     else:
         # Modo demo: simula o tx_hash sem blockchain real
         tx_hash = "0x" + hashlib.sha256(f"demo_{hash_hex}".encode()).hexdigest()
@@ -289,13 +394,13 @@ async def upload_document(
     }
 
 
-@app.post("/documents/hash", tags=["Documentos"])
+@app.post("/documents/hash", tags=["Documentos"], dependencies=[Depends(require_api_key)])
 async def calcular_hash(file: UploadFile = File(...)):
     """
     Calcula o SHA-256 de um ficheiro sem o registar na blockchain.
     Útil para demonstração do conceito de hashing.
     """
-    content   = await file.read()
+    content   = await read_upload(file)
     file_hash = sha256_file(content)
     return {
         "filename":   file.filename,
@@ -312,6 +417,7 @@ def verify_document(doc_hash: str):
     Verifica autenticidade de um documento na blockchain.
     Qualquer entidade (ANAC, companhia aérea) pode usar este endpoint.
     """
+    check_hash_format(doc_hash)
     if not contract:
         return VerifyResponse(
             hash         = doc_hash,
@@ -323,8 +429,9 @@ def verify_document(doc_hash: str):
     try:
         hash_bytes                    = bytes.fromhex(doc_hash.replace("0x", ""))
         valid, expired, expires_ts, issued_by = contract.functions.verifyDocument(hash_bytes).call()
-    except Exception as e:
-        raise HTTPException(404, f"Documento não encontrado na blockchain: {str(e)}")
+    except Exception:
+        logger.exception("Blockchain verifyDocument failed")
+        raise HTTPException(404, "Documento não encontrado na blockchain.")
 
     expires_at = datetime.fromtimestamp(expires_ts, tz=timezone.utc) if expires_ts else None
     if not valid:
@@ -339,7 +446,7 @@ def verify_document(doc_hash: str):
 
 
 @app.get("/documents/expiring", tags=["Alertas"])
-def get_expiring_documents(days: int = 30):
+def get_expiring_documents(days: int = Query(30, ge=0, le=3650)):
     """
     Sistema de alertas: documentos que expiram nos próximos N dias.
     Em produção, chamado diariamente por um cron job.
@@ -363,8 +470,7 @@ def get_document_qr(doc_hash: str):
     Gera um QR Code que qualquer entidade pode escanear para verificar
     a autenticidade do documento diretamente na blockchain.
     """
-    if not re.match(r'^0x[0-9a-fA-F]{64}$', doc_hash):
-        raise HTTPException(400, "Hash inválido. Formato esperado: 0x seguido de 64 caracteres hexadecimais.")
+    check_hash_format(doc_hash)
 
     verify_url = f"{PUBLIC_BASE_URL}/documents/verify/{doc_hash}"
     qr = qrcode.QRCode(box_size=10, border=4)
@@ -624,16 +730,10 @@ def analytics_risk_scores(db: Session = Depends(get_db)):
     return {"pilots": results}
 
 
-@app.post("/chat", tags=["Chat IA"])
-def chat(req: ChatRequest, db: Session = Depends(get_db)):
-    """
-    Chatbot NLP com OpenAI function calling.
-    Responde em português a perguntas sobre conformidade documental de pilotos.
-    Funciona em modo demo (sem OPENAI_API_KEY) com respostas pré-definidas.
-    """
+def build_db_tools(db: Session) -> dict:
+    """Map each chat tool name to a callable bound to this DB session."""
     import sys as _sys, os as _os
     _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
-    from chat import run_chat
     from anomaly import detect_anomalies
     from risk import compute_pilot_score
 
@@ -725,7 +825,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
             ],
         }
 
-    db_tools = {
+    return {
         "get_pilots_summary":     _get_pilots_summary,
         "get_expiring_documents": _get_expiring_documents,
         "get_pilot_detail":       _get_pilot_detail,
@@ -733,6 +833,22 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         "get_anomalies":          _get_anomalies,
     }
 
+
+@app.post("/chat", tags=["Chat IA"], dependencies=[Depends(chat_rate_limit)])
+def chat(req: ChatRequest, db: Session = Depends(get_db)):
+    """
+    Chatbot NLP com OpenAI function calling.
+    Responde em português a perguntas sobre conformidade documental de pilotos.
+    Funciona em modo demo (sem OPENAI_API_KEY) com respostas pré-definidas.
+    """
+    import sys as _sys, os as _os
+    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    from chat import run_chat
+
     history = [m.model_dump() for m in req.history]
-    response_text = run_chat(req.message, db_tools, history)
+    try:
+        response_text = run_chat(req.message, build_db_tools(db), history)
+    except Exception:
+        logger.exception("Chat failed")
+        raise HTTPException(502, "O assistente está indisponível de momento.")
     return {"response": response_text}
