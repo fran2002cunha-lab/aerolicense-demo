@@ -1,13 +1,15 @@
 # tests/test_chat_tools.py
-"""Validação dos argumentos das tools do chatbot (_execute_tool)."""
+"""Chat tool argument validation (_execute_tool)."""
+
 from chat import _execute_tool
 
 
 def _tools():
     calls = {}
 
-    def expiring(days: int = 30):
+    def expiring(days: int = 30, include_expired: bool = False):
         calls["expiring"] = days
+        calls["include_expired"] = include_expired
         return [{"dias": days}]
 
     def detail(pilot_id: str):
@@ -102,3 +104,19 @@ def test_tool_exception_is_contained_and_not_leaked():
     result = _execute_tool("get_risk_scores", "{}", tools)
     assert "error" in result
     assert "segredo interno" not in str(result)
+
+
+def test_include_expired_defaults_false_and_is_accepted():
+    calls, tools = _tools()
+    _execute_tool("get_expiring_documents", '{"days": 10}', tools)
+    assert calls["include_expired"] is False
+    _execute_tool("get_expiring_documents", '{"days": 10, "include_expired": true}', tools)
+    assert calls["include_expired"] is True
+
+
+def test_include_expired_in_tool_schema_and_description():
+    from chat import TOOLS
+
+    fn = next(t["function"] for t in TOOLS if t["function"]["name"] == "get_expiring_documents")
+    assert fn["parameters"]["properties"]["include_expired"]["type"] == "boolean"
+    assert "include_expired" in fn["description"]

@@ -1,0 +1,191 @@
+[
+  {
+    "inputs": [
+      {
+        "name": "_pilot",
+        "type": "address"
+      },
+      {
+        "name": "_hash",
+        "type": "bytes32"
+      },
+      {
+        "name": "_docType",
+        "type": "uint8"
+      },
+      {
+        "name": "_desc",
+        "type": "string"
+      },
+      {
+        "name": "_expiresAt",
+        "type": "uint256"
+      }
+    ],
+    "name": "registerDocument",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_oldHash",
+        "type": "bytes32"
+      },
+      {
+        "name": "_newHash",
+        "type": "bytes32"
+      },
+      {
+        "name": "_desc",
+        "type": "string"
+      },
+      {
+        "name": "_newExpiry",
+        "type": "uint256"
+      }
+    ],
+    "name": "renewDocument",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_hash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "verifyDocument",
+    "outputs": [
+      {
+        "name": "valid",
+        "type": "bool"
+      },
+      {
+        "name": "expired",
+        "type": "bool"
+      },
+      {
+        "name": "expiresAt",
+        "type": "uint256"
+      },
+      {
+        "name": "issuedBy",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_hash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "revokeDocument",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_hash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "daysUntilExpiry",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_pilot",
+        "type": "address"
+      }
+    ],
+    "name": "getDocumentsByPilot",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_pilot",
+        "type": "address"
+      },
+      {
+        "name": "_licenseNumber",
+        "type": "string"
+      },
+      {
+        "name": "_licenseType",
+        "type": "uint8"
+      },
+      {
+        "name": "_expiresAt",
+        "type": "uint256"
+      }
+    ],
+    "name": "issueLicense",
+    "outputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_pilot",
+        "type": "address"
+      },
+      {
+        "name": "_did",
+        "type": "string"
+      }
+    ],
+    "name": "registerDID",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_pilot",
+        "type": "address"
+      }
+    ],
+    "name": "resolveDID",
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

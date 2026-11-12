@@ -1,36 +1,45 @@
 """
-AeroLicense — Cálculo de Risco por Piloto
-Score 0-100 que combina: documentos expirados, a expirar, e anomalias ML.
+AeroLicense — per-pilot risk score.
+Score 0-100 combining expired documents, documents about to expire and anomalies.
 """
 
 from datetime import date
 
+from compliance import EXPIRY_WARNING_DAYS, days_left, status_from_days
 
-def compute_pilot_score(pilot_docs: list, anomalous_hashes: set) -> dict:
+EXPIRED_PENALTY = 25
+ANOMALY_PENALTY = 15
+
+
+def compute_pilot_score(pilot_docs: list, anomalous_hashes: set, today: date | None = None) -> dict:
     """
     pilot_docs: list of dicts with keys: hash, expires_at (ISO string), description
-    anomalous_hashes: set of hash strings flagged by IsolationForest
+    anomalous_hashes: hashes returned by anomaly.detect_anomalies. That function
+        has no anomaly quota (contamination="auto" + a score threshold, plus
+        explicit rules), so only documents with concrete reasons cost points.
 
     Returns dict: {score, level, penalties}
     """
-    today = date.today()
+    today = today or date.today()
     score = 100
     penalties = []
 
     for d in pilot_docs:
-        days = (date.fromisoformat(d["expires_at"]) - today).days
-        if days <= 0:
-            score -= 25
-            penalties.append(f"Documento expirado: {d.get('description', d['hash'][:10])} (-25 pts)")
-        elif days <= 30:
-            penalty = max(2, round(10 * (1 - days / 30)))
+        days = days_left(d["expires_at"], today)
+        status = status_from_days(days)
+        label = d.get("description", d["hash"][:10])
+        if status == "expired":
+            score -= EXPIRED_PENALTY
+            penalties.append(f"Documento expirado: {label} (-{EXPIRED_PENALTY} pts)")
+        elif status == "expiring":
+            penalty = max(2, round(10 * (1 - days / EXPIRY_WARNING_DAYS)))
             score -= penalty
-            penalties.append(f"A expirar em {days} dias: {d.get('description', d['hash'][:10])} (-{penalty} pts)")
+            penalties.append(f"A expirar em {days} dias: {label} (-{penalty} pts)")
 
     pilot_hashes = {d["hash"] for d in pilot_docs}
-    if pilot_hashes & anomalous_hashes:
-        score -= 15
-        penalties.append("Anomalia ML detectada nos documentos (-15 pts)")
+    if pilot_hashes & set(anomalous_hashes):
+        score -= ANOMALY_PENALTY
+        penalties.append(f"Anomalia detectada nos documentos (-{ANOMALY_PENALTY} pts)")
 
     score = max(0, score)
 

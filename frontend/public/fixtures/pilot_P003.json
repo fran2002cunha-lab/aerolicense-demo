@@ -9,9 +9,9 @@
    "descricao": "Licença ATPL — CAA United Kingdom",
    "hash": "0x7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d",
    "tx_blockchain": "0xa9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
-   "emitido_em": "2021-09-14",
-   "validade": "2027-09-14",
-   "dias_restantes": 306,
+   "emitido_em": "2025-06-04",
+   "validade": "2030-06-04",
+   "dias_restantes": 1300,
    "status": "valid",
    "entidade_emissora": "CAA — Civil Aviation Authority UK"
   },
@@ -20,10 +20,10 @@
    "descricao": "Type Rating Boeing 737 MAX",
    "hash": "0x9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f",
    "tx_blockchain": "0xb0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1",
-   "emitido_em": "2024-03-22",
-   "validade": "2026-03-22",
-   "dias_restantes": -235,
-   "status": "expired",
+   "emitido_em": "2025-12-07",
+   "validade": "2026-12-07",
+   "dias_restantes": 25,
+   "status": "expiring_soon",
    "entidade_emissora": "Boeing Training — Seattle"
   },
   {
@@ -31,10 +31,10 @@
    "descricao": "Crew Resource Management — Recurrent",
    "hash": "0x1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
    "tx_blockchain": "0xc1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2",
-   "emitido_em": "2024-08-10",
-   "validade": "2026-08-10",
-   "dias_restantes": -94,
-   "status": "expired",
+   "emitido_em": "2025-07-20",
+   "validade": "2027-07-20",
+   "dias_restantes": 250,
+   "status": "valid",
    "entidade_emissora": "Tejo Airways Training Academy"
   }
  ]

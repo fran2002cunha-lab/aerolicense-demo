@@ -19,15 +19,24 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: backend/requirements.txt
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt pytest httpx
+          pip install -r backend/requirements-dev.txt
+      - name: Lint (ruff)
+        run: |
+          ruff check backend tests
+          ruff format --check backend tests
       - name: Run tests
         run: python -m pytest -q
       - name: Chat tool-selection eval (mock client)
         run: python backend/evals/run_evals.py --mock --fail-under 1.0
+      # Plumbing test only: a scripted client, not a measure of model safety.
+      - name: Safety/faithfulness eval harness (mock client)
+        run: python backend/evals/run_safety_evals.py --mock --fail-under 1.0
 
   frontend:
     name: Frontend build

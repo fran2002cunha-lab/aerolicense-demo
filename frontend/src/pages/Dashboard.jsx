@@ -104,7 +104,7 @@ const TECH_PILLS = [
 
 function HeroBanner() {
   return (
-    <div style={{
+    <div className="hero-banner" style={{
       background: c.bgCard,
       border: `1px solid ${c.border}`,
       borderLeft: `3px solid ${c.primary}`,
@@ -116,8 +116,8 @@ function HeroBanner() {
       justifyContent: 'space-between',
       gap: 16,
     }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+        <div className="hero-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 28, height: 28, borderRadius: 8, flexShrink: 0,
             background: gradientPrimary,
@@ -133,11 +133,11 @@ function HeroBanner() {
             Verificação Blockchain de Licenças de Aviação
           </span>
         </div>
-        <div style={{ fontSize: 10, color: c.textDim, paddingLeft: 38 }}>
+        <div className="hero-sub" style={{ fontSize: 11, color: c.textSub, paddingLeft: 38 }}>
           Projeto académico · ISEC Lisboa · 2025/2026
         </div>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-end' }}>
+      <div className="hero-pills" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-end' }}>
         {TECH_PILLS.map(({ label, color }) => (
           <span key={label} style={{
             display: 'flex', alignItems: 'center', gap: 5,
@@ -209,7 +209,7 @@ function UpcomingExpirations({ alerts, onViewAll }) {
 }
 
 /* ─── Blockchain Status Widget ─── */
-function BlockchainWidget({ totalDocs }) {
+function BlockchainWidget({ totalDocs, onOpenDemo }) {
   const verified = totalDocs ?? 0;
   return (
     <div style={{
@@ -243,6 +243,11 @@ function BlockchainWidget({ totalDocs }) {
           <div style={{ fontSize: 9, color: c.textMuted, marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Hash</div>
         </div>
       </div>
+      {onOpenDemo && (
+        <button type="button" onClick={onOpenDemo} style={{ ...sk.panelLink, marginTop: 12 }}>
+          Ver demo de deteção de falsificação →
+        </button>
+      )}
     </div>
   );
 }
@@ -400,16 +405,17 @@ export default function Dashboard() {
             {pilots.length} profissionais · {summary?.total_documents ?? '—'} documentos geridos
           </p>
         </div>
-        <div style={sk.searchWrap}>
+        <div style={sk.searchWrap} className="dashboard-search">
           <span style={sk.searchIcon}><IconSearch /></span>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Pesquisar piloto ou função..."
+            aria-label="Pesquisar piloto ou função"
             style={sk.searchInput}
           />
           {search && (
-            <button onClick={() => setSearch('')} style={sk.clearBtn}>✕</button>
+            <button onClick={() => setSearch('')} style={sk.clearBtn} aria-label="Limpar pesquisa">✕</button>
           )}
         </div>
       </div>
@@ -425,7 +431,7 @@ export default function Dashboard() {
 
       {/* ── KPI row ── */}
       {summary && (
-        <div style={sk.kpiRow}>
+        <div style={sk.kpiRow} className="kpi-row">
           <KpiCard
             label="Total Pilotos"
             value={summary.total_pilots}
@@ -469,7 +475,7 @@ export default function Dashboard() {
       <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
         <UpcomingExpirations alerts={alerts} onViewAll={() => navigate('/alerts')} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1, minWidth: 260 }}>
-          <BlockchainWidget totalDocs={summary?.total_documents} />
+          <BlockchainWidget totalDocs={summary?.total_documents} onOpenDemo={() => navigate('/blockchain')} />
           <ComplianceByType distribution={distribution} alerts={alerts} />
         </div>
       </div>
@@ -561,7 +567,11 @@ function PilotCard({ pilot: p, badge, risk, onClick }) {
 
   return (
     <div
+      role="link"
+      tabIndex={0}
+      aria-label={`Ver documentos de ${p.nome}`}
       onClick={onClick}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -684,7 +694,6 @@ const sk = {
     color: c.text,
     fontSize: 13,
     width: 256,
-    outline: 'none',
     fontFamily: 'Inter, system-ui, sans-serif',
     transition: 'border-color .15s',
   },
@@ -700,6 +709,7 @@ const sk = {
     gap: 16, marginBottom: 24,
   },
   kpiCard: {
+    minWidth: 0,
     background: c.bgCard,
     border: `1px solid ${c.border}`,
     borderRadius: 14,

@@ -40,3 +40,21 @@ test('guest link calls onLogin with visitante', () => {
   fireEvent.click(screen.getByTestId('guest-link'));
   expect(onLogin).toHaveBeenCalledWith('visitante');
 });
+
+test('shows the English pitch line', () => {
+  render(<LoginPage onLogin={() => {}} />);
+  expect(screen.getByTestId('pitch-en')).toHaveTextContent(/Aviation licence compliance tracker/);
+  expect(screen.getByTestId('pitch-en')).toHaveTextContent(/Student project · fictional data\./);
+  expect(screen.getByTestId('pitch-en')).toHaveTextContent(
+    'Aviation licence compliance tracker — expiry alerts, risk scoring, rule + ML anomaly flags, ' +
+    'SHA-256 document fingerprints (blockchain anchoring simulated) and a tool-calling AI assistant ' +
+    '(in the code; not live in this static demo). Student project · fictional data.'
+  );
+});
+
+test('forgery demo link logs in and targets the blockchain page', () => {
+  const onLogin = jest.fn();
+  render(<LoginPage onLogin={onLogin} />);
+  fireEvent.click(screen.getByRole('button', { name: /Ver demo de deteção de falsificação/ }));
+  expect(onLogin).toHaveBeenCalledWith('regulador', '/blockchain');
+});

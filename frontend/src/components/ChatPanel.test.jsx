@@ -32,9 +32,15 @@ test('demo chat renders recorded answer as plain text', async () => {
   expect(screen.getByText(/Resposta gravada do modelo real \(test-model,/)).toBeInTheDocument();
 });
 
-test('demo chat shows unavailable message when recordings are missing', async () => {
+test('demo chat without recordings explains the tool loop and shows the questions disabled', async () => {
   global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 404 });
-  const { DemoChatPanel } = require('./ChatPanel');
+  const { DemoChatPanel, DEMO_QUESTIONS, README_AI_URL } = require('./ChatPanel');
   render(<DemoChatPanel initiallyOpen />);
-  expect(await screen.findByText('Respostas gravadas indisponíveis')).toBeInTheDocument();
+  const note = await screen.findByTestId('chat-no-backend');
+  expect(note).toHaveTextContent(/não tem backend/);
+  expect(note).toHaveTextContent(/ferramentas/);
+  expect(note.style.color).not.toBe('rgb(248, 113, 113)');
+  expect(screen.getByRole('link', { name: /README/ })).toHaveAttribute('href', README_AI_URL);
+  expect(DEMO_QUESTIONS).toHaveLength(6);
+  DEMO_QUESTIONS.forEach(q => expect(screen.getByRole('button', { name: q })).toBeDisabled());
 });

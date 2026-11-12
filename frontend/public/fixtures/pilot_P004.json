@@ -9,10 +9,10 @@
    "descricao": "Licença ATPL — ANAC Portugal",
    "hash": "0xaa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
    "tx_blockchain": "0xd2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3",
-   "emitido_em": "2022-07-20",
-   "validade": "2025-07-20",
-   "dias_restantes": -480,
-   "status": "expired",
+   "emitido_em": "2024-06-19",
+   "validade": "2029-06-19",
+   "dias_restantes": 950,
+   "status": "valid",
    "entidade_emissora": "ANAC — Autoridade Nacional de Aviação Civil"
   },
   {
@@ -20,10 +20,10 @@
    "descricao": "Certificado Médico Classe 1",
    "hash": "0xbb2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
    "tx_blockchain": "0xe3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4",
-   "emitido_em": "2025-02-14",
-   "validade": "2026-02-14",
-   "dias_restantes": -271,
-   "status": "expired",
+   "emitido_em": "2026-03-12",
+   "validade": "2027-03-12",
+   "dias_restantes": 120,
+   "status": "valid",
    "entidade_emissora": "Clínica de Medicina Aeronáutica Lisboa"
   },
   {
@@ -42,10 +42,10 @@
    "descricao": "Type Rating Airbus A321neo",
    "hash": "0xdd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
    "tx_blockchain": "0xa5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6",
-   "emitido_em": "2023-11-12",
-   "validade": "2025-11-12",
-   "dias_restantes": -365,
-   "status": "expired",
+   "emitido_em": "2026-08-29",
+   "validade": "2027-08-29",
+   "dias_restantes": 290,
+   "status": "valid",
    "entidade_emissora": "Airbus Training Centre — Toulouse"
   },
   {
@@ -53,9 +53,9 @@
    "descricao": "Crew Resource Management — Initial",
    "hash": "0xee5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
    "tx_blockchain": "0xb6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7",
-   "emitido_em": "2024-04-01",
-   "validade": "2027-04-01",
-   "dias_restantes": 140,
+   "emitido_em": "2025-04-01",
+   "validade": "2028-03-31",
+   "dias_restantes": 505,
    "status": "valid",
    "entidade_emissora": "Serra Aviation Training Academy — Covilhã"
   }

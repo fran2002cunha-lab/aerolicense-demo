@@ -9,9 +9,9 @@
    "descricao": "Licença ATPL — Luftfahrt-Bundesamt",
    "hash": "0x77d14c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b",
    "tx_blockchain": "0xd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
-   "emitido_em": "2019-05-30",
-   "validade": "2029-05-30",
-   "dias_restantes": 930,
+   "emitido_em": "2020-05-30",
+   "validade": "2030-05-30",
+   "dias_restantes": 1295,
    "status": "valid",
    "entidade_emissora": "LBA — Luftfahrt-Bundesamt Alemanha"
   },
@@ -20,9 +20,9 @@
    "descricao": "Certificado Médico Classe 1",
    "hash": "0x88e25d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c",
    "tx_blockchain": "0xe5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
-   "emitido_em": "2024-10-05",
-   "validade": "2025-10-05",
-   "dias_restantes": -403,
+   "emitido_em": "2025-11-07",
+   "validade": "2026-11-07",
+   "dias_restantes": -5,
    "status": "expired",
    "entidade_emissora": "Flugmedizinisches Zentrum — Frankfurt"
   },
@@ -31,10 +31,10 @@
    "descricao": "Type Rating Airbus A350-900",
    "hash": "0x99f36e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d",
    "tx_blockchain": "0xf6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7",
-   "emitido_em": "2023-07-18",
-   "validade": "2025-07-18",
-   "dias_restantes": -482,
-   "status": "expired",
+   "emitido_em": "2026-04-11",
+   "validade": "2027-04-11",
+   "dias_restantes": 150,
+   "status": "valid",
    "entidade_emissora": "Airbus Training Centre — Toulouse"
   },
   {
@@ -43,9 +43,9 @@
    "hash": "0xaa047f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e",
    "tx_blockchain": "0xa7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8",
    "emitido_em": "2020-11-22",
-   "validade": "2026-11-22",
-   "dias_restantes": 10,
-   "status": "expiring_soon",
+   "validade": "2030-11-01",
+   "dias_restantes": 1450,
+   "status": "valid",
    "entidade_emissora": "Centro de Testes ICAO — Frankfurt"
   },
   {
@@ -53,10 +53,10 @@
    "descricao": "Crew Resource Management — Recurrent",
    "hash": "0xbb158a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f",
    "tx_blockchain": "0xb8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9",
-   "emitido_em": "2024-12-10",
-   "validade": "2026-12-10",
-   "dias_restantes": 28,
-   "status": "expiring_soon",
+   "emitido_em": "2025-12-10",
+   "validade": "2027-12-10",
+   "dias_restantes": 393,
+   "status": "valid",
    "entidade_emissora": "Brisa Aero Training — München"
   }
  ]

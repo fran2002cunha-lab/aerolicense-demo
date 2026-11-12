@@ -24,7 +24,7 @@ import re
 import sys
 import tempfile
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -49,7 +49,7 @@ _URL_RE = re.compile(r"https?://\S+")
 def seeded_db_tools():
     """Yield the chat tools bound to a freshly seeded, temporary SQLite DB."""
     import database
-    from main import build_db_tools
+    from chat_tools import build_db_tools
 
     previous_url = os.environ.get("DATABASE_URL")
     with tempfile.TemporaryDirectory() as tmp:
@@ -87,7 +87,7 @@ def build_payload(model: str, recordings: list[dict], recorded_at: str | None = 
     """Build the fixture in its exact schema (whitelisting fields)."""
     return {
         "model": model,
-        "recorded_at": recorded_at or datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "recorded_at": recorded_at or datetime.now(UTC).isoformat(timespec="seconds"),
         "recordings": [
             {
                 "question": r["question"],
@@ -109,7 +109,9 @@ def serialise(payload: dict, forbidden: list[str] | None = None) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args(argv)
 
@@ -132,7 +134,9 @@ def main(argv: list[str] | None = None) -> int:
             recordings.append(record_question(q, tools))
 
     payload = build_payload(llm_model(), recordings)
-    text = serialise(payload, forbidden=[os.getenv("OPENAI_API_KEY"), os.getenv("LLM_BASE_URL"), SYSTEM_PROMPT])
+    text = serialise(
+        payload, forbidden=[os.getenv("OPENAI_API_KEY"), os.getenv("LLM_BASE_URL"), SYSTEM_PROMPT]
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(text, encoding="utf-8")
     print(f"Wrote {len(recordings)} recordings to {args.output}", file=sys.stderr)

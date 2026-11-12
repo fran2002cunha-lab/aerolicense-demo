@@ -1,0 +1,24 @@
+# Tooling config only (the backend is not packaged).
+[tool.ruff]
+target-version = "py312"
+line-length = 110
+src = ["backend", "."]
+extend-exclude = ["backend/venv", "frontend", "smart_contract", "docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = [
+  "E501",  # long lines: the formatter wraps code; long strings/comments are allowed
+  "B008",  # FastAPI's Depends()/File()/Query() in defaults is the intended pattern
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["anomaly", "chat", "chat_tools", "compliance", "config", "database", "deps", "main",
+                     "risk", "routers", "schemas", "services", "evals", "scripts",
+                     "tests", "backend"]
+
+[tool.ruff.lint.per-file-ignores]
+# Scripts and tests put backend/ on sys.path before importing it.
+"backend/evals/*.py" = ["E402"]
+"backend/scripts/*.py" = ["E402"]
+"tests/*.py" = ["E402"]

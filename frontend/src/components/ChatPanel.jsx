@@ -1,5 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { api, IS_DEMO } from '../api';
+import { GITHUB_URL } from './DemoBanner';
+
+export const README_AI_URL = `${GITHUB_URL}#the-ai-part`;
+
+/* Perguntas usadas por backend/scripts/record_demo_chat.py (mostradas desativadas
+ * quando não há gravações). */
+export const DEMO_QUESTIONS = [
+  'Que documentos expiram nos próximos 30 dias?',
+  'Mostra os scores de risco de todos os pilotos.',
+  'Há documentos com anomalias detetadas?',
+  'Dá-me os detalhes do piloto P003.',
+  'Quantos pilotos estão em conformidade?',
+  'Quem tem documentos já expirados?',
+];
 
 const PLACEHOLDER_ANSWER = '<to be recorded>';
 
@@ -75,22 +89,31 @@ export function DemoChatPanel({ initiallyOpen = false }) {
       </button>
 
       {open && (
-        <div style={{ ...s.panel, height: 560, maxHeight: 'calc(100vh - 120px)' }}>
+        <div className="chat-panel" style={{ ...s.panel, height: 560, maxHeight: 'calc(100vh - 120px)' }}>
           <div style={s.header}>
             <span style={{ fontWeight: 'bold', fontSize: 14 }}>🤖 Assistente AeroLicense</span>
-            <span style={{ fontSize: 11, color: '#AABBCC' }}>Respostas gravadas</span>
+            <span style={{ fontSize: 11, color: '#AABBCC' }}>{rec === null ? 'Sem backend' : 'Respostas gravadas'}</span>
           </div>
 
           <div style={s.messages}>
-            <div style={s.botMsg}>
-              {rec === null
-                ? 'Olá! Nesta demo estática não há backend nem chave de API, por isso o assistente não responde aqui. O ciclo completo de tool calling está no código no GitHub.'
-                : 'Olá! Nesta demo estática não há backend, por isso mostro respostas que foram gravadas do modelo real. Escolhe uma das perguntas abaixo.'}
-            </div>
+            {rec !== null && (
+              <div style={s.botMsg}>
+                Olá! Nesta demo estática não há backend, por isso mostro respostas que foram
+                gravadas do modelo real. Escolhe uma das perguntas abaixo.
+              </div>
+            )}
             {rec === undefined && <div style={s.botMsg}><span style={s.typing}>● ● ●</span></div>}
             {rec === null && (
-              <div role="status" style={{ ...s.botMsg, color: '#F87171' }}>
-                Respostas gravadas indisponíveis
+              <div role="status" data-testid="chat-no-backend" style={{ ...s.botMsg, maxWidth: '100%' }}>
+                <strong>Esta demo estática não tem backend</strong>, por isso o assistente não responde aqui.
+                {'\n\n'}Como funciona: o modelo recebe a pergunta e só pode ler dados através de
+                5 ferramentas (pilotos, expirações, detalhe de piloto, scores de risco, anomalias ML).
+                O backend valida os argumentos, executa a ferramenta e devolve o resultado ao modelo,
+                num ciclo de no máximo 5 rondas de ferramentas e uma resposta final.
+                {'\n\n'}
+                <a href={README_AI_URL} target="_blank" rel="noopener noreferrer" style={s.link}>
+                  Ver o código e a secção «The AI part» do README no GitHub →
+                </a>
               </div>
             )}
             {messages.map((m, i) => m.role === 'user' ? (
@@ -108,6 +131,17 @@ export function DemoChatPanel({ initiallyOpen = false }) {
             ))}
             <div ref={bottomRef} />
           </div>
+
+          {rec === null && (
+            <div style={{ ...s.suggestions, maxHeight: 190, overflowY: 'auto', paddingTop: 8, borderTop: '1px solid #1E3A5F' }}>
+              <span style={s.recLabel}>Perguntas de exemplo (precisam do backend):</span>
+              {DEMO_QUESTIONS.map(q => (
+                <button key={q} type="button" disabled style={{ ...s.suggestion, opacity: 0.5, cursor: 'not-allowed' }}>
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
 
           {rec && (
             <div style={{ ...s.suggestions, maxHeight: 190, overflowY: 'auto', paddingTop: 8, borderTop: '1px solid #1E3A5F' }}>
@@ -190,12 +224,12 @@ function LiveChatPanel() {
 
   return (
     <>
-      <button onClick={() => setOpen(o => !o)} style={s.fab} title="Assistente IA">
+      <button onClick={() => setOpen(o => !o)} style={s.fab} title="Assistente IA" aria-label="Assistente IA">
         {open ? '✕' : '🤖'}
       </button>
 
       {open && (
-        <div style={s.panel}>
+        <div className="chat-panel" style={s.panel}>
           <div style={s.header}>
             <span style={{ fontWeight: 'bold', fontSize: 14 }}>🤖 Assistente AeroLicense</span>
             <span style={{ fontSize: 11, color: '#AABBCC' }}>{model ? `${model} · ` : ''}Português</span>
@@ -231,6 +265,7 @@ function LiveChatPanel() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
               placeholder="Escreve uma pergunta..."
+              aria-label="Pergunta para o assistente"
               style={s.input}
               disabled={loading}
             />
@@ -238,6 +273,7 @@ function LiveChatPanel() {
               onClick={() => send()}
               disabled={loading || !input.trim()}
               style={{ ...s.sendBtn, opacity: loading || !input.trim() ? 0.5 : 1 }}
+              aria-label="Enviar"
             >
               ➤
             </button>
@@ -291,6 +327,7 @@ const s = {
     border: '1px solid #3B2A6B', borderRadius: 999, padding: '3px 9px',
     wordBreak: 'break-all',
   },
+  link: { color: '#60A5FA', fontWeight: 600, textDecoration: 'underline' },
   recLabel: { fontSize: 10, color: '#6B8BAD', fontStyle: 'italic', paddingLeft: 2 },
   typing: { color: '#6B8BAD', letterSpacing: 4, fontSize: 16 },
   suggestions: { padding: '0 12px 8px', display: 'flex', flexDirection: 'column', gap: 4 },
@@ -306,7 +343,7 @@ const s = {
   input: {
     flex: 1, background: '#0B1E35', border: '1px solid #1E3A5F',
     borderRadius: 8, padding: '8px 12px', color: '#E8EFF8',
-    fontSize: 13, outline: 'none', fontFamily: 'Inter, sans-serif',
+    fontSize: 13, fontFamily: 'Inter, sans-serif',
   },
   sendBtn: {
     background: 'linear-gradient(135deg, #1A56DB, #0EA5E9)',

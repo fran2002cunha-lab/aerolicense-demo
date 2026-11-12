@@ -29,28 +29,37 @@ if str(BACKEND_DIR) not in sys.path:
 
 # "tool" may be a tuple when several tools are a reasonable answer.
 CASES = [
-    {"question": "Que documentos expiram nos próximos 30 dias?",
-     "tool": "get_expiring_documents", "args": {"days": 30}},
-    {"question": "Que documentos estão a expirar?",
-     "tool": "get_expiring_documents", "args": {"days": 30}},
-    {"question": "Lista os documentos que expiram nos próximos 90 dias.",
-     "tool": "get_expiring_documents", "args": {"days": 90}},
-    {"question": "Mostra os scores de risco de todos os pilotos.",
-     "tool": "get_risk_scores", "args": {}},
-    {"question": "Qual é o piloto com maior risco?",
-     "tool": "get_risk_scores", "args": {}},
-    {"question": "Há documentos com anomalias detetadas?",
-     "tool": "get_anomalies", "args": {}},
-    {"question": "Existem documentos suspeitos?",
-     "tool": "get_anomalies", "args": {}},
-    {"question": "Dá-me os detalhes do piloto P003.",
-     "tool": "get_pilot_detail", "args": {"pilot_id": "P003"}},
-    {"question": "Que documentos tem o piloto P001?",
-     "tool": "get_pilot_detail", "args": {"pilot_id": "P001"}},
-    {"question": "Quantos pilotos estão em conformidade?",
-     "tool": "get_pilots_summary", "args": {}},
-    {"question": "Quem tem documentos já expirados?",
-     "tool": ("get_pilots_summary", "get_expiring_documents"), "args": {}},
+    {
+        "question": "Que documentos expiram nos próximos 30 dias?",
+        "tool": "get_expiring_documents",
+        "args": {"days": 30},
+    },
+    {"question": "Que documentos estão a expirar?", "tool": "get_expiring_documents", "args": {"days": 30}},
+    {
+        "question": "Lista os documentos que expiram nos próximos 90 dias.",
+        "tool": "get_expiring_documents",
+        "args": {"days": 90},
+    },
+    {"question": "Mostra os scores de risco de todos os pilotos.", "tool": "get_risk_scores", "args": {}},
+    {"question": "Qual é o piloto com maior risco?", "tool": "get_risk_scores", "args": {}},
+    {"question": "Há documentos com anomalias detetadas?", "tool": "get_anomalies", "args": {}},
+    {"question": "Existem documentos suspeitos?", "tool": "get_anomalies", "args": {}},
+    {
+        "question": "Dá-me os detalhes do piloto P003.",
+        "tool": "get_pilot_detail",
+        "args": {"pilot_id": "P003"},
+    },
+    {
+        "question": "Que documentos tem o piloto P001?",
+        "tool": "get_pilot_detail",
+        "args": {"pilot_id": "P001"},
+    },
+    {"question": "Quantos pilotos estão em conformidade?", "tool": "get_pilots_summary", "args": {}},
+    {
+        "question": "Quem tem documentos já expirados?",
+        "tool": ("get_pilots_summary", "get_expiring_documents"),
+        "args": {},
+    },
 ]
 
 
@@ -68,7 +77,7 @@ def _mock_route(question: str) -> tuple[str, dict]:
         if m := re.search(r"(\d+)\s*dias", q):
             return "get_expiring_documents", {"days": int(m.group(1))}
         if "expirados" in q:
-            return "get_expiring_documents", {"days": 0}
+            return "get_expiring_documents", {"days": 0, "include_expired": True}
         return "get_expiring_documents", {}
     return "get_pilots_summary", {}
 
@@ -88,12 +97,15 @@ class MockLLMClient:
         self.requests.append(kwargs)
         messages = kwargs["messages"]
         if messages[-1]["role"] == "tool":
-            msg = SimpleNamespace(content=f"(mock) Resposta com base em: {messages[-1]['content'][:80]}",
-                                  tool_calls=None)
+            msg = SimpleNamespace(
+                content=f"(mock) Resposta com base em: {messages[-1]['content'][:80]}", tool_calls=None
+            )
         else:
             name, args = self.router(messages[-1]["content"])
-            call = SimpleNamespace(id=f"call_mock_{len(self.requests)}",
-                                   function=SimpleNamespace(name=name, arguments=json.dumps(args)))
+            call = SimpleNamespace(
+                id=f"call_mock_{len(self.requests)}",
+                function=SimpleNamespace(name=name, arguments=json.dumps(args)),
+            )
             msg = SimpleNamespace(content=None, tool_calls=[call])
         return SimpleNamespace(choices=[SimpleNamespace(message=msg)])
 
@@ -143,8 +155,13 @@ def score_case(case: dict, tool_calls: list[dict]) -> dict:
             and all(eff.get(k) == v for k, v in case["args"].items())
             for t in matching
         )
-    return {"question": case["question"], "expected": "|".join(expected),
-            "called": [t["name"] for t in tool_calls], "tool_ok": tool_ok, "args_ok": args_ok}
+    return {
+        "question": case["question"],
+        "expected": "|".join(expected),
+        "called": [t["name"] for t in tool_calls],
+        "tool_ok": tool_ok,
+        "args_ok": args_ok,
+    }
 
 
 def run_evals(cases: list[dict], tools: dict) -> dict:
@@ -170,31 +187,40 @@ def format_table(summary: dict) -> str:
     def mark(v):
         return "-" if v is None else ("ok" if v else "FAIL")
 
-    lines = [f"{'#':>2}  {'tool':4}  {'args':4}  {'expected':45}  {'called':30}  question",
-             "-" * 120]
+    lines = [f"{'#':>2}  {'tool':4}  {'args':4}  {'expected':45}  {'called':30}  question", "-" * 120]
     for i, r in enumerate(summary["results"], 1):
-        lines.append(f"{i:>2}  {mark(r['tool_ok']):4}  {mark(r['args_ok']):4}  "
-                     f"{r['expected'][:45]:45}  {','.join(r['called'])[:30]:30}  {r['question']}")
+        lines.append(
+            f"{i:>2}  {mark(r['tool_ok']):4}  {mark(r['args_ok']):4}  "
+            f"{r['expected'][:45]:45}  {','.join(r['called'])[:30]:30}  {r['question']}"
+        )
     lines.append("-" * 120)
     lines.append(f"Tool-selection accuracy: {summary['tool_accuracy']:.0%} ({summary['n_cases']} cases)")
-    lines.append(f"Argument accuracy:       {summary['arg_accuracy']:.0%} ({summary['n_arg_cases']} cases with constraints)")
+    lines.append(
+        f"Argument accuracy:       {summary['arg_accuracy']:.0%} ({summary['n_arg_cases']} cases with constraints)"
+    )
     return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--mock", action="store_true", help="use the deterministic mock client (no API key)")
-    parser.add_argument("--fail-under", type=float, default=0.0,
-                        help="exit 1 if tool-selection accuracy is below this (0-1)")
+    parser.add_argument(
+        "--fail-under", type=float, default=0.0, help="exit 1 if tool-selection accuracy is below this (0-1)"
+    )
     args = parser.parse_args(argv)
 
     if not args.mock and not os.getenv("OPENAI_API_KEY"):
-        print("OPENAI_API_KEY is not set. Use --mock, or set the key (and optionally "
-              "LLM_BASE_URL / LLM_MODEL) to evaluate a real model.", file=sys.stderr)
+        print(
+            "OPENAI_API_KEY is not set. Use --mock, or set the key (and optionally "
+            "LLM_BASE_URL / LLM_MODEL) to evaluate a real model.",
+            file=sys.stderr,
+        )
         return 2
 
-    from scripts.record_demo_chat import seeded_db_tools
     from chat import llm_model
+    from scripts.record_demo_chat import seeded_db_tools
 
     with seeded_db_tools() as tools:
         if args.mock:

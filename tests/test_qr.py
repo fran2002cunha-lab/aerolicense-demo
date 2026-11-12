@@ -6,6 +6,7 @@ def test_qr_returns_png(client):
     assert len(res.content) > 100
     assert res.content[:4] == b"\x89PNG"  # PNG magic bytes
 
+
 def test_qr_any_hash_works(client):
     hash_val = "0x0000000000000000000000000000000000000000000000000000000000000000"
     res = client.get(f"/documents/qr/{hash_val}")
@@ -13,6 +14,7 @@ def test_qr_any_hash_works(client):
     assert res.headers["content-type"] == "image/png"
     assert len(res.content) > 100
     assert res.content[:4] == b"\x89PNG"
+
 
 def test_qr_invalid_hash_rejected(client):
     res = client.get("/documents/qr/invalid-hash")

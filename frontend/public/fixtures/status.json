@@ -1,1 +1,8 @@
-{"app":"AeroLicense API","status":"demo","blockchain_connected":false,"contract_configured":false,"modo":"Static demo — fictional data, no live backend"}
+{
+ "app": "AeroLicense API",
+ "status": "demo",
+ "blockchain_connected": false,
+ "contract_configured": false,
+ "modo": "Static demo — fictional data, no live backend",
+ "exported_at": "2026-11-12"
+}

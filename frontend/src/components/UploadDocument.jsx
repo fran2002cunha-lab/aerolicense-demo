@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { c, shadow } from '../theme';
 import { api, backendUrl, sha256File, IS_DEMO } from '../api';
 
@@ -47,6 +47,8 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
   const [demoResult,  setDemoRes]  = useState(null);
   const [error,       setError]    = useState(null);
   const [dragOver,    setDragOver] = useState(false);
+  const fileInputRef = useRef(null);
+  const openFilePicker = () => fileInputRef.current?.click();
 
   const isMedical = DOC_TYPES.find(d => d.value === docType)?.medical;
 
@@ -179,7 +181,11 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
               borderColor: dragOver ? c.primary : file ? c.green : c.border,
               background:  dragOver ? `${c.primary}08` : file ? `${c.green}08` : c.bgElevated,
             }}
-            onClick={() => document.getElementById("fileInput").click()}
+            role="button"
+            tabIndex={0}
+            aria-label={file ? `Ficheiro selecionado: ${file.name}. Clique para alterar` : 'Selecionar ficheiro PDF, JPG ou PNG'}
+            onClick={openFilePicker}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFilePicker(); } }}
             onDragOver={e => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
@@ -203,7 +209,8 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
               </div>
             )}
             <input
-              id="fileInput" type="file" accept=".pdf,.jpg,.jpeg,.png"
+              id="fileInput" ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png"
+              onClick={e => e.stopPropagation()}
               style={{ display: "none" }}
               onChange={e => setFile(e.target.files[0])}
             />
@@ -345,7 +352,7 @@ const s = {
   input: {
     background: c.bgElevated, border: `1px solid ${c.border}`,
     borderRadius: 9, padding: '10px 14px',
-    color: c.text, fontSize: 14, outline: 'none',
+    color: c.text, fontSize: 14,
     fontFamily: 'Inter, system-ui, sans-serif',
     width: '100%', boxSizing: 'border-box',
   },

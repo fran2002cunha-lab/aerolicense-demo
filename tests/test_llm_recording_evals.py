@@ -1,11 +1,20 @@
 # tests/test_llm_recording_evals.py
 """LLM provider config, run_chat trace, demo-chat recorder and eval harness (all mocked, no network)."""
+
 import json
 
 import chat
-from evals.run_evals import CASES, MockLLMClient, main as evals_main, mock_llm, run_evals, score_case
+from evals.run_evals import CASES, MockLLMClient, mock_llm, run_evals, score_case
+from evals.run_evals import main as evals_main
 from scripts.record_demo_chat import (
-    QUESTIONS, build_payload, main as record_main, record_question, seeded_db_tools, serialise,
+    QUESTIONS,
+    build_payload,
+    record_question,
+    seeded_db_tools,
+    serialise,
+)
+from scripts.record_demo_chat import (
+    main as record_main,
 )
 
 
@@ -70,7 +79,9 @@ def test_recorder_end_to_end_with_mock(tmp_path):
 
 
 def test_record_question_strips_urls():
-    router = lambda q: ("get_pilots_summary", {})
+    def router(q):
+        return ("get_pilots_summary", {})
+
     client = MockLLMClient(router)
     original = client._create
 
@@ -80,6 +91,7 @@ def test_record_question_strips_urls():
         if msg.tool_calls is None:
             msg.content = "Vê https://internal.example/x para detalhes."
         return resp
+
     client.chat.completions.create = with_url
     with mock_llm(client):
         rec = record_question("Quantos pilotos?", {"get_pilots_summary": lambda: []})
@@ -90,17 +102,24 @@ def test_serialise_refuses_secret_leak():
     payload = build_payload("m", [{"question": "q", "tool_calls": [], "answer": "sk-SECRET"}], "2026-01-01")
     try:
         serialise(payload, forbidden=["sk-SECRET"])
-        assert False, "expected ValueError"
+        raise AssertionError("expected ValueError")
     except ValueError:
         pass
 
 
 def test_build_payload_whitelists_fields():
-    rec = {"question": "q", "answer": "a", "extra": 1,
-           "tool_calls": [{"name": "t", "arguments": {}, "id": "call_1"}]}
+    rec = {
+        "question": "q",
+        "answer": "a",
+        "extra": 1,
+        "tool_calls": [{"name": "t", "arguments": {}, "id": "call_1"}],
+    }
     payload = build_payload("m", [rec], "2026-01-01")
-    assert payload == {"model": "m", "recorded_at": "2026-01-01",
-                       "recordings": [{"question": "q", "tool_calls": [{"name": "t", "arguments": {}}], "answer": "a"}]}
+    assert payload == {
+        "model": "m",
+        "recorded_at": "2026-01-01",
+        "recordings": [{"question": "q", "tool_calls": [{"name": "t", "arguments": {}}], "answer": "a"}],
+    }
 
 
 # ── Evals ──────────────────────────────────────────────────────────────────

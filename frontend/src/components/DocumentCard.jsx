@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { c, statusColor, statusLabel, shadow } from '../theme';
 import { api, backendUrl, IS_DEMO } from '../api';
 
@@ -8,6 +8,11 @@ const DOC_TYPE_LABELS = {
 };
 
 const MEDICAL_TYPES = new Set(['MEDICAL_CLASS1']);
+
+const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+/* Os nomes das autoridades são reais, mas os documentos são inventados. */
+export const FICTIONAL_MARK = '(dados fictícios)';
 
 /* ── icon components ── */
 const ChainIcon = () => (
@@ -46,7 +51,38 @@ export default function DocumentCard({ document }) {
   const expiryDate = new Date(document.expires_at).toLocaleDateString('pt-PT');
   const isMedical  = MEDICAL_TYPES.has(document.doc_type);
 
+  const modalRef = useRef(null);
+
   useEffect(() => () => { if (qrUrl) URL.revokeObjectURL(qrUrl); }, [qrUrl]);
+
+  /* Modal do QR: foco no diálogo, Esc fecha, Tab/Shift+Tab ficam dentro do
+     diálogo, e o foco volta ao botão de origem ao fechar. */
+  useEffect(() => {
+    if (!showQr) return undefined;
+    const previous = window.document.activeElement;
+    modalRef.current?.focus();
+    const onKey = e => {
+      if (e.key === 'Escape') { setShowQr(false); return; }
+      if (e.key !== 'Tab' || !modalRef.current) return;
+      const focusable = Array.from(modalRef.current.querySelectorAll(FOCUSABLE))
+        .filter(el => !el.disabled);
+      if (!focusable.length) { e.preventDefault(); modalRef.current.focus(); return; }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = window.document.activeElement;
+      const inside = modalRef.current.contains(active);
+      if (e.shiftKey && (!inside || active === first || active === modalRef.current)) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (!inside || active === last || active === modalRef.current)) {
+        e.preventDefault(); first.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (previous && typeof previous.focus === 'function') previous.focus();
+    };
+  }, [showQr]);
 
   async function verifyOnBlockchain() {
     setVerifying(true); setVerification(null); setVerifyError(null);
@@ -84,14 +120,22 @@ export default function DocumentCard({ document }) {
       {/* QR Modal */}
       {showQr && (
         <div onClick={() => setShowQr(false)} style={modal.overlay}>
-          <div onClick={e => e.stopPropagation()} style={modal.box}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#334', marginBottom: 14 }}>
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`qr-title-${document.hash}`}
+            tabIndex={-1}
+            onClick={e => e.stopPropagation()}
+            style={modal.box}
+          >
+            <div id={`qr-title-${document.hash}`} style={{ fontSize: 13, fontWeight: 600, color: '#334', marginBottom: 14 }}>
               Verificar na Blockchain
             </div>
             <div style={{ fontSize: 11, color: '#667', marginBottom: 14 }}>
               Digitalize para verificar a autenticidade do documento
             </div>
-            {qrUrl && <img src={qrUrl} alt="QR" style={{ width: 200, height: 200, display: 'block', margin: '0 auto' }} />}
+            {qrUrl && <img src={qrUrl} alt={`Código QR para verificar o documento ${document.description || ''} (hash ${document.hash.slice(0, 10)}…)`} style={{ width: 200, height: 200, display: 'block', margin: '0 auto' }} />}
             <div style={{ fontSize: 10, color: '#889', marginTop: 12, textAlign: 'center', fontFamily: 'monospace' }}>
               {document.hash.slice(0,12)}…{document.hash.slice(-8)}
             </div>
@@ -121,7 +165,10 @@ export default function DocumentCard({ document }) {
         </div>
 
         {/* Description */}
-        <div style={s.description}>{document.description}</div>
+        <div style={s.description}>
+          {document.description}{' '}
+          <span style={s.fictional}>{FICTIONAL_MARK}</span>
+        </div>
 
         {/* Expiry row */}
         <div style={s.expiryRow}>
@@ -169,6 +216,7 @@ export default function DocumentCard({ document }) {
             disabled={qrLoading}
             style={{ ...s.btnIcon, ...(qrLoading ? { opacity: .6 } : {}) }}
             title="QR Code de verificação"
+            aria-label="Mostrar QR Code de verificação"
           >
             <QrIcon />
           </button>
@@ -194,6 +242,7 @@ export default function DocumentCard({ document }) {
               </div>
               <button
                 onClick={() => setProofOpen(false)}
+                aria-label="Fechar prova de integridade"
                 style={{ background: 'none', border: 'none', color: c.textMuted, cursor: 'pointer', fontSize: 14 }}
               >✕</button>
             </div>
@@ -344,6 +393,8 @@ const s = {
     fontSize: 12, color: c.red,
   },
 };
+
+s.fictional = { fontSize: 10, fontWeight: 500, color: c.textMuted, whiteSpace: 'nowrap' };
 
 const modal = {
   overlay: {
