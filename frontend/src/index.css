@@ -1,0 +1,71 @@
+/* AeroLicense — global styles & responsive overrides */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Focus visível para navegação por teclado */
+*:focus-visible {
+  outline: 2px solid #60A5FA;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skip to main content (acessibilidade) */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: #1D4ED8;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 6px;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 8px;
+}
+
+/* ── Mobile (< 700px) ── */
+@media (max-width: 699px) {
+  /* Esconder tagline do logo no header */
+  .header-tagline { display: none !important; }
+
+  /* Esconder tech stack badges no header */
+  .header-tech-stack { display: none !important; }
+
+  /* Esconder status pill no header (pouco espaço) */
+  .header-status { display: none !important; }
+
+  /* Cartões de piloto — 1 coluna */
+  .pilot-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Blockchain hash row — empilhar verticalmente */
+  .hash-row {
+    flex-direction: column !important;
+  }
+  .hash-arrow-col { display: none !important; }
+
+  /* Tabela de alertas — ocultar coluna de dias em ecrãs muito pequenos */
+  @media (max-width: 480px) {
+    .alert-days-col { display: none !important; }
+  }
+}
+
+/* ── Melhorar touch targets ── */
+@media (hover: none) and (pointer: coarse) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

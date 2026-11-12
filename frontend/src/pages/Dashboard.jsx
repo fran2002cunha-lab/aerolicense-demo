@@ -355,7 +355,7 @@ export default function Dashboard() {
       api.alerts(), api.analyticsDistribution(),
     ]).then(([pRes, rRes, sRes, aRes, dRes]) => {
       if (pRes.status === 'fulfilled') setPilots(pRes.value.pilotos);
-      else setError(true);
+      else { setError(true); return; }
       if (rRes.status === 'fulfilled') {
         const map = {};
         rRes.value.pilots.forEach(p => { map[p.pilot_id] = p; });

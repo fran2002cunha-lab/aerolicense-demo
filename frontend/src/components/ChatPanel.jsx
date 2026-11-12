@@ -29,7 +29,8 @@ export default function ChatPanel() {
     setMessages(newMessages);
     setLoading(true);
     try {
-      const history = newMessages.slice(0, -1).map(m => ({
+      // Só as últimas 20 mensagens (o backend rejeita > 50)
+      const history = newMessages.slice(0, -1).slice(-20).map(m => ({
         role: m.role === 'user' ? 'user' : 'assistant',
         content: m.text,
       }));

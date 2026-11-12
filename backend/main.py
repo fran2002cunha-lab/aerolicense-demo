@@ -14,14 +14,14 @@ import io
 import os
 import re
 from datetime import datetime, timedelta, date, timezone
-from typing import Optional
+from typing import Literal, Optional
 
 import qrcode
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 from web3 import Web3
 import database
@@ -186,9 +186,15 @@ class VerifyResponse(BaseModel):
     expires_at: Optional[datetime]
     message: str
 
+class ChatMessage(BaseModel):
+    # Só user/assistant: um cliente não pode injetar mensagens "system" ou "tool"
+    model_config = ConfigDict(extra="forbid")
+    role: Literal["user", "assistant"]
+    content: str = Field(..., max_length=4000)
+
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=500)
-    history: list = Field(default_factory=list)
+    history: list[ChatMessage] = Field(default_factory=list, max_length=50)
 
 # ── Helper: calcular SHA-256 ───────────────────────────────────────────────
 def sha256_file(data: bytes) -> bytes:
@@ -727,5 +733,6 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         "get_anomalies":          _get_anomalies,
     }
 
-    response_text = run_chat(req.message, db_tools, req.history)
+    history = [m.model_dump() for m in req.history]
+    response_text = run_chat(req.message, db_tools, history)
     return {"response": response_text}

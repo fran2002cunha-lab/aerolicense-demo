@@ -12,6 +12,7 @@ import BlockchainDemo from './pages/BlockchainDemo';
 import AnalyticsPage from './pages/AnalyticsPage';
 import LoginPage     from './pages/LoginPage';
 import AboutPage     from './pages/AboutPage';
+import WalletPage    from './pages/WalletPage';
 import { onApiStatusChange } from './api';
 import { c } from './theme';
 
@@ -115,6 +116,7 @@ export default function App() {
                 <Route path="/alerts"            element={<AlertsPage />} />
                 <Route path="/blockchain"        element={<BlockchainDemo />} />
                 <Route path="/analytics"         element={<AnalyticsPage />} />
+                <Route path="/wallet"            element={<WalletPage />} />
                 <Route path="/sobre"             element={<AboutPage />} />
               </Routes>
             </ErrorBoundary>
