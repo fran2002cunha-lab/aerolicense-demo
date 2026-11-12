@@ -62,6 +62,46 @@ body {
   }
 }
 
+/* Campos de formulário: anel de foco visível (substitui outline: none) */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #60A5FA;
+  outline-offset: 1px;
+  border-color: #60A5FA;
+}
+
+/* Texto longo (hashes, nomes) nunca alarga a página */
+.demo-banner { overflow-wrap: anywhere; }
+
+/* ── Telemóvel (< 600px): uma coluna ── */
+@media (max-width: 599px) {
+  .login-page  { padding: 12px !important; }
+  .login-left  { padding: 28px 20px !important; border-right: none !important; border-bottom: 1px solid #162D4A; }
+  .login-right { padding: 24px 20px !important; }
+  .login-left, .login-right { flex-basis: 100% !important; min-width: 0; }
+
+  .hero-banner { flex-direction: column !important; align-items: flex-start !important; }
+  .hero-title  { flex-wrap: wrap; }
+  .hero-sub    { padding-left: 0 !important; }
+  .hero-pills  { justify-content: flex-start !important; }
+
+  .kpi-row { grid-template-columns: 1fr !important; }
+  .analytics-kpis { display: grid !important; grid-template-columns: 1fr 1fr; }
+  .analytics-kpis > * { min-width: 0 !important; }
+  .risk-name   { width: 96px !important; }
+  .anomaly-row { flex-wrap: wrap; gap: 8px; }
+
+  .dashboard-search, .dashboard-search input { width: 100% !important; }
+  .dashboard-search { flex: 1 1 100%; }
+
+  .wallet-layout   { flex-direction: column !important; align-items: stretch !important; }
+  .wallet-selector { width: 100% !important; }
+  .wallet-cards    { grid-template-columns: 1fr !important; }
+
+  .chat-panel { right: 8px !important; left: 8px; width: auto !important; }
+}
+
 /* ── Melhorar touch targets ── */
 @media (hover: none) and (pointer: coarse) {
   button, a, [role="button"] {

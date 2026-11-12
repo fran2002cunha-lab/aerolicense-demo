@@ -14,6 +14,13 @@ const BADGES = [
   { icon: '⚡', label: 'Alertas Automáticos',  color: c.purple },
 ];
 
+export const PITCH_EN =
+  'Aviation licence compliance tracker — expiry alerts, risk scoring, ML anomaly flags, ' +
+  'tamper-evident document hashes and a tool-calling AI assistant. Student project · fictional data.';
+
+/* Perfil usado pelo atalho direto para a demo de deteção de falsificação. */
+export const FORGERY_DEMO_ROLE = 'regulador';
+
 export default function LoginPage({ onLogin }) {
   const [selected, setSelected] = useState(null);
 
@@ -22,17 +29,18 @@ export default function LoginPage({ onLogin }) {
   }
 
   return (
-    <div style={s.page}>
+    <div style={s.page} className="login-page">
       <div style={s.split}>
 
         {/* ── Coluna esquerda: proposta de valor ── */}
-        <div style={s.left}>
+        <div style={s.left} className="login-left">
           <div style={s.brand}>
             <span style={{ color: c.text, fontWeight: 900 }}>AERO</span>
             <span style={{ color: c.primaryLt, fontWeight: 900 }}>LICENSE</span>
           </div>
           <h1 style={s.headline}>O futuro da conformidade aeronáutica</h1>
           <p style={s.sub}>Blockchain simulada · IA · Regras de validade EASA</p>
+          <p lang="en" style={s.pitch} data-testid="pitch-en">{PITCH_EN}</p>
 
           <div style={s.badges}>
             {BADGES.map(({ icon, label, color }) => (
@@ -44,7 +52,7 @@ export default function LoginPage({ onLogin }) {
         </div>
 
         {/* ── Coluna direita: acesso ── */}
-        <div style={s.right}>
+        <div style={s.right} className="login-right">
           <div style={s.panel}>
             <div style={s.panelTitle}>Acesso à plataforma</div>
             <div style={s.panelSub}>Escolhe o teu perfil de acesso</div>
@@ -102,6 +110,15 @@ export default function LoginPage({ onLogin }) {
               Explorar sem selecionar perfil
             </button>
 
+            <button
+              type="button"
+              data-testid="forgery-demo-link"
+              onClick={() => onLogin(FORGERY_DEMO_ROLE, '/blockchain')}
+              style={s.forgeryLink}
+            >
+              Ver demo de deteção de falsificação →
+            </button>
+
             <p style={s.footer}>Projeto académico · ISEC Lisboa · 2025/2026 · Dados simulados</p>
           </div>
         </div>
@@ -154,7 +171,10 @@ const s = {
     letterSpacing: '-0.5px',
   },
   sub: {
-    fontSize: 13, color: c.textMuted, margin: '0 0 28px', fontWeight: 500,
+    fontSize: 13, color: c.textMuted, margin: '0 0 12px', fontWeight: 500,
+  },
+  pitch: {
+    fontSize: 12.5, color: c.textSub, margin: '0 0 24px', lineHeight: 1.55,
   },
   badges: {
     display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 36,
@@ -190,8 +210,15 @@ const s = {
     background: 'none', border: 'none',
     color: c.textMuted, fontSize: 12,
     fontFamily: 'Inter, system-ui, sans-serif',
-    cursor: 'pointer', marginBottom: 16,
+    cursor: 'pointer', marginBottom: 8,
     textDecoration: 'underline',
   },
-  footer: { fontSize: 10, color: c.textDim, textAlign: 'center', margin: 0 },
+  forgeryLink: {
+    width: '100%', padding: '9px',
+    background: `${c.primary}14`, border: `1px solid ${c.primary}45`, borderRadius: 8,
+    color: c.primaryLt, fontSize: 12.5, fontWeight: 600,
+    fontFamily: 'Inter, system-ui, sans-serif',
+    cursor: 'pointer', marginBottom: 16,
+  },
+  footer: { fontSize: 11, color: c.textSub, textAlign: 'center', margin: 0 },
 };

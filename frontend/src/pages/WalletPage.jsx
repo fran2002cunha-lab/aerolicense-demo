@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import Spinner from '../components/Spinner';
 import ApiOfflineBanner from '../components/ApiOfflineBanner';
+import { FICTIONAL_MARK } from '../components/DocumentCard';
 import { c, shadow } from '../theme';
 
 /* ── Icons ── */
@@ -68,7 +69,10 @@ function LicenseCard({ doc }) {
       }}>
         <div style={s.cardBandLeft}>
           <div style={s.cardType}>{DOC_LABELS[doc.doc_type] || doc.doc_type}</div>
-          <div style={s.cardIssuer}>{doc.emissor || doc.issuer}</div>
+          <div style={s.cardIssuer}>
+            {doc.emissor || doc.issuer}{' '}
+            <span style={{ opacity: 0.75, whiteSpace: 'nowrap' }}>{FICTIONAL_MARK}</span>
+          </div>
         </div>
         <div style={{ ...s.cardStatus, color: status.color, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}>
           {status.label === 'Válido' && <CheckIcon />}
@@ -154,20 +158,27 @@ export default function WalletPage() {
   useEffect(() => {
     api.pilots()
       .then(data => {
-        setPilots(data.pilotos || []);
+        const list = data.pilotos || [];
+        setPilots(list);
         setLoading(false);
+        /* Pré-seleciona o primeiro piloto para a wallet nunca abrir vazia. */
+        if (list.length) loadPilot(list[0].id);
       })
       .catch(() => { setError(true); setLoading(false); });
   }, []);
 
-  function selectPilot(id) {
-    if (selected === id) { setSelected(null); setPilot(null); return; }
+  function loadPilot(id) {
     setSelected(id);
     setLoadingPilot(true);
     api.pilot(id)
       .then(setPilot)
       .catch(() => setError(true))
       .finally(() => setLoadingPilot(false));
+  }
+
+  function selectPilot(id) {
+    if (selected === id) { setSelected(null); setPilot(null); return; }
+    loadPilot(id);
   }
 
   if (loading) return <Spinner />;
@@ -202,10 +213,10 @@ export default function WalletPage() {
         </div>
       </div>
 
-      <div style={s.layout}>
+      <div style={s.layout} className="wallet-layout">
 
         {/* ── Pilot selector ── */}
-        <div style={s.selectorPanel}>
+        <div style={s.selectorPanel} className="wallet-selector">
           <div style={s.panelLabel}>Pilotos</div>
           <div style={s.pilotList}>
             {pilots.map(p => (
@@ -250,7 +261,7 @@ export default function WalletPage() {
                   </div>
                   <div>
                     <div style={s.identityName}>{pilot.nome}</div>
-                    <div style={s.identityCargo}>{pilot.cargo}</div>
+                    <div style={s.identityCargo}>{pilot.cargo} <span style={{ fontSize: 11, color: c.textMuted }}>{FICTIONAL_MARK}</span></div>
                     <div style={s.identityWallet}>{pilot.carteira_ethereum?.slice(0,18)}…</div>
                   </div>
                 </div>
@@ -272,7 +283,7 @@ export default function WalletPage() {
 
               {/* License cards */}
               <div style={s.panelLabel}>Licenças &amp; Certificados</div>
-              <div style={s.cardsGrid}>
+              <div style={s.cardsGrid} className="wallet-cards">
                 {docs.map((doc, i) => <LicenseCard key={i} doc={doc} />)}
               </div>
             </>

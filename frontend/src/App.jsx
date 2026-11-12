@@ -48,7 +48,9 @@ export default function App() {
     else setSidebarOpen(true);
   }, [isMobile]);
 
-  function handleLogin(role) {
+  function handleLogin(role, path) {
+    /* path opcional: abre diretamente uma página (ex.: demo de falsificação) */
+    if (path) window.location.hash = `#${path}`;
     sessionStorage.setItem('aero_role', role);
     setActiveRole(role);
     setIsLoggedIn(true);
@@ -66,7 +68,7 @@ export default function App() {
   const showSidebar = !isMobile || sidebarOpen;
 
   return (
-    <HashRouter>
+    <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#020B16' }}>
         <Header
           activeRole={activeRole}

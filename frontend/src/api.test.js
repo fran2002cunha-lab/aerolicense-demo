@@ -55,3 +55,67 @@ describe('demo mode', () => {
     expect(miss.is_authentic).toBe(false);
   });
 });
+
+describe('demo date shift', () => {
+  test('shiftDaysSince counts whole days and ignores bad input', () => {
+    const { shiftDaysSince } = require('./api');
+    expect(shiftDaysSince('2026-11-02', new Date(2026, 10, 12, 23, 30))).toBe(10);
+    expect(shiftDaysSince('2026-11-12T08:00:00Z', new Date(2026, 10, 12))).toBe(0);
+    expect(shiftDaysSince(undefined)).toBe(0);
+    expect(shiftDaysSince('ontem')).toBe(0);
+  });
+
+  test('shiftFixtureDates moves ISO dates and months, leaves other values alone', () => {
+    const { shiftFixtureDates } = require('./api');
+    const out = shiftFixtureDates({
+      validade: '2026-03-15', dias_restantes: -242, recorded: '2026-01-31T10:00:00Z',
+      month: '2026-11', conteudo: 'Valid until 2026-03-15', exported_at: '2026-01-01',
+      docs: [{ emitido_em: '2025-12-31' }],
+    }, 10);
+    expect(out).toEqual({
+      validade: '2026-03-25', dias_restantes: -242, recorded: '2026-02-10T10:00:00Z',
+      month: '2026-11', conteudo: 'Valid until 2026-03-15', exported_at: '2026-01-01',
+      docs: [{ emitido_em: '2026-01-10' }],
+    });
+    expect(shiftFixtureDates({ month: '2026-11' }, 61).month).toBe('2027-01');
+  });
+
+  function demoModule() {
+    let mod;
+    process.env.REACT_APP_DEMO = 'true';
+    jest.isolateModules(() => { mod = require('./api'); });
+    delete process.env.REACT_APP_DEMO;
+    return mod;
+  }
+
+  function fixtures(status) {
+    return jest.fn(async (url) => ({
+      ok: true,
+      json: async () => url.endsWith('/status.json') ? status : {
+        id: 'P001', documentos: [{ validade: '2026-03-15', emitido_em: '2023-03-15', dias_restantes: -242 }],
+      },
+    }));
+  }
+
+  test('fixture dates are shifted by today - exported_at and status.json is read once', async () => {
+    const exported = new Date();
+    exported.setDate(exported.getDate() - 30);
+    const iso = `${exported.getFullYear()}-${String(exported.getMonth() + 1).padStart(2, '0')}-${String(exported.getDate()).padStart(2, '0')}`;
+    global.fetch = fixtures({ status: 'demo', exported_at: iso });
+    const { api: demoApi } = demoModule();
+    const p = await demoApi.pilot('P001');
+    expect(p.documentos[0].validade).toBe('2026-04-14');
+    expect(p.documentos[0].emitido_em).toBe('2023-04-14');
+    expect(p.documentos[0].dias_restantes).toBe(-242);
+    await demoApi.pilot('P001');
+    const statusCalls = fetch.mock.calls.filter(([u]) => u.endsWith('/status.json'));
+    expect(statusCalls).toHaveLength(1);
+  });
+
+  test('no exported_at means no shift', async () => {
+    global.fetch = fixtures({ status: 'demo' });
+    const { api: demoApi } = demoModule();
+    const p = await demoApi.pilot('P001');
+    expect(p.documentos[0].validade).toBe('2026-03-15');
+  });
+});

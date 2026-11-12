@@ -22,11 +22,11 @@ const tooltipStyle = {
   itemStyle:    { color: c.primaryLt },
 };
 
-/* ── Live KPI card (from real data) ── */
+/* ── KPI card (dados do backend ou das fixtures de demonstração) ── */
 function LiveKpi({ label, value, color }) {
   return (
     <div style={{ background: c.bgCard, border: `1px solid ${c.border}`, borderRadius: 12,
-      padding: '16px 20px', flex: 1, minWidth: 110, boxShadow: shadow.card }}>
+      padding: '16px 20px', flex: 1, minWidth: 110, boxShadow: shadow.card, boxSizing: 'border-box' }}>
       <div style={{ fontSize: 10, fontWeight: 600, color: c.textMuted,
         textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 800, color: color || c.text, lineHeight: 1 }}>{value ?? '—'}</div>
@@ -76,13 +76,13 @@ export default function AnalyticsPage() {
           Analytics & Inteligência Artificial
         </h1>
         <p style={{ fontSize: 13, color: c.textMuted, margin: 0 }}>
-          Dados em tempo real · IsolationForest ML · Risk scoring automático
+          Dados de demonstração · IsolationForest ML · Risk scoring automático
         </p>
       </div>
 
-      {/* ── Live KPIs (real data) ── */}
+      {/* ── KPIs ── */}
       <SectionLabel label="Dados fictícios — calculados a partir do seed de demonstração" live={!IS_DEMO} />
-      <div style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
+      <div className="analytics-kpis" style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
         <LiveKpi label="Pilotos"    value={summary.total_pilots} />
         <LiveKpi label="Documentos" value={summary.total_documents} />
         <LiveKpi label="Válidos"    value={summary.valid}          color={c.green} />
@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
       {/* ── Charts ── */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
         <div style={{ background: c.bgCard, border: `1px solid ${c.border}`,
-          borderRadius: 12, padding: '20px 24px', flex: 1, minWidth: 280, boxShadow: shadow.card }}>
+          borderRadius: 12, padding: '20px 24px', flex: '1 1 280px', minWidth: 0, boxShadow: shadow.card }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: c.textMuted, marginBottom: 16 }}>
             Expirações por Mês (próximos 12 meses)
           </div>
@@ -103,20 +103,20 @@ export default function AnalyticsPage() {
               <XAxis dataKey="month" stroke={c.border} fontSize={10} tickFormatter={v => v.slice(5)} />
               <YAxis stroke={c.border} fontSize={10} allowDecimals={false} />
               <Tooltip {...tooltipStyle} />
-              <Bar dataKey="count" fill={c.primary} radius={[4,4,0,0]} name="Documentos" />
+              <Bar dataKey="count" fill={c.primary} radius={[4,4,0,0]} name="Documentos" isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div style={{ background: c.bgCard, border: `1px solid ${c.border}`,
-          borderRadius: 12, padding: '20px 24px', flex: 1, minWidth: 280, boxShadow: shadow.card }}>
+          borderRadius: 12, padding: '20px 24px', flex: '1 1 280px', minWidth: 0, boxShadow: shadow.card }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: c.textMuted, marginBottom: 16 }}>
             Distribuição por Tipo de Documento
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={distribution} dataKey="count" nameKey="type" cx="50%" cy="50%"
-                outerRadius={75}
+                outerRadius={75} isAnimationActive={false}
                 label={({ type, percent }) => `${TYPE_SHORT[type] || type} ${(percent*100).toFixed(0)}%`}
                 labelLine={false} fontSize={10}>
                 {distribution.map((entry, i) => (
@@ -148,17 +148,18 @@ export default function AnalyticsPage() {
             width: '100%', maxWidth: 300, padding: '7px 11px',
             fontSize: 12, borderRadius: 7, fontFamily: 'Inter, sans-serif',
             background: c.bgElevated, border: `1px solid ${c.border}`,
-            color: c.text, outline: 'none', marginBottom: 14, display: 'block',
+            color: c.text, marginBottom: 14, display: 'block', boxSizing: 'border-box',
           }}
           aria-label="Pesquisar pilotos por nome"
         />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {filteredRisk.map(p => (
             <div key={p.pilot_id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 140, color: c.text, fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
+              <div className="risk-name" style={{ width: 140, color: c.text, fontSize: 13, fontWeight: 600, flexShrink: 0,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {p.pilot_name}
               </div>
-              <div style={{ flex: 1, background: c.bgElevated, borderRadius: 6, height: 8, overflow: 'hidden' }}>
+              <div style={{ flex: 1, minWidth: 24, background: c.bgElevated, borderRadius: 6, height: 8, overflow: 'hidden' }}>
                 <div style={{ width: `${p.score}%`, height: '100%',
                   background: riskColor[p.level], borderRadius: 6, transition: 'width .6s ease' }} />
               </div>
@@ -202,8 +203,8 @@ export default function AnalyticsPage() {
           anomalies.anomalies.map((a, i) => (
             <div key={i} style={{ background: c.bgElevated, borderLeft: `3px solid ${c.amber}`,
               borderRadius: 8, padding: '12px 16px', marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
+              <div className="anomaly-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ color: c.text, fontWeight: 600, fontSize: 14 }}>{a.description}</div>
                   <div style={{ color: c.primaryLt, fontSize: 12, marginTop: 2 }}>
                     Piloto: {a.pilot_id} · Tipo: {a.doc_type}
@@ -245,7 +246,7 @@ function SectionLabel({ label, live }) {
         <span style={{ fontSize: 9, fontWeight: 700, color: c.green,
           background: c.greenBg, border: `1px solid ${c.green}40`,
           padding: '2px 8px', borderRadius: 20, letterSpacing: '0.4px' }}>
-          AO VIVO
+          BACKEND LOCAL
         </span>
       )}
     </div>

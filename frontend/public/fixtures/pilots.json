@@ -6,9 +6,9 @@
    "cargo": "First Officer — Atlântica Air",
    "carteira_ethereum": "0x00000000000000000000000000000000Ae1c0001",
    "total_documentos": 4,
-   "validos": 0,
-   "a_expirar_em_breve": 0,
-   "expirados": 4,
+   "validos": 2,
+   "a_expirar_em_breve": 1,
+   "expirados": 1,
    "compliance_ok": false
   },
   {
@@ -17,10 +17,10 @@
    "cargo": "Cabin Crew Senior — Lusoavia",
    "carteira_ethereum": "0x00000000000000000000000000000000Ae1c0002",
    "total_documentos": 3,
-   "validos": 1,
-   "a_expirar_em_breve": 0,
-   "expirados": 2,
-   "compliance_ok": false
+   "validos": 2,
+   "a_expirar_em_breve": 1,
+   "expirados": 0,
+   "compliance_ok": true
   },
   {
    "id": "P003",
@@ -28,10 +28,10 @@
    "cargo": "Captain — Tejo Airways",
    "carteira_ethereum": "0x1Db3439a7D398351b8bE11C439e05C5B3259aeD4",
    "total_documentos": 3,
-   "validos": 1,
-   "a_expirar_em_breve": 0,
-   "expirados": 2,
-   "compliance_ok": false
+   "validos": 2,
+   "a_expirar_em_breve": 1,
+   "expirados": 0,
+   "compliance_ok": true
   },
   {
    "id": "P004",
@@ -39,10 +39,10 @@
    "cargo": "Captain — Serra Aviation",
    "carteira_ethereum": "0x2Fc4550b8E409462c9bF22D5A4061B4260aeE5F7",
    "total_documentos": 5,
-   "validos": 2,
+   "validos": 5,
    "a_expirar_em_breve": 0,
-   "expirados": 3,
-   "compliance_ok": false
+   "expirados": 0,
+   "compliance_ok": true
   },
   {
    "id": "P005",
@@ -50,9 +50,9 @@
    "cargo": "First Officer — Ilhéu Airlines",
    "carteira_ethereum": "0x3Ab5661c9F510573d0cA33E6B5172C6371bfF6A8",
    "total_documentos": 4,
-   "validos": 1,
+   "validos": 2,
    "a_expirar_em_breve": 0,
-   "expirados": 3,
+   "expirados": 2,
    "compliance_ok": false
   },
   {
@@ -61,10 +61,10 @@
    "cargo": "Cabin Crew — Atlântica Air",
    "carteira_ethereum": "0x4Be6772d0C621684e1dB44F7C6283D7482ceC7B9",
    "total_documentos": 3,
-   "validos": 2,
+   "validos": 3,
    "a_expirar_em_breve": 0,
-   "expirados": 1,
-   "compliance_ok": false
+   "expirados": 0,
+   "compliance_ok": true
   },
   {
    "id": "P007",
@@ -72,9 +72,9 @@
    "cargo": "Captain — Brisa Aero",
    "carteira_ethereum": "0x5Cf7883e1B732795f2eC55D8D7394E8593dbB8C0",
    "total_documentos": 5,
-   "validos": 1,
-   "a_expirar_em_breve": 2,
-   "expirados": 2,
+   "validos": 4,
+   "a_expirar_em_breve": 0,
+   "expirados": 1,
    "compliance_ok": false
   },
   {
@@ -83,10 +83,10 @@
    "cargo": "First Officer — Douro Air",
    "carteira_ethereum": "0x6Df8994f2C843806f3fD66E9E8405F9604efD9E1",
    "total_documentos": 4,
-   "validos": 2,
-   "a_expirar_em_breve": 0,
-   "expirados": 2,
-   "compliance_ok": false
+   "validos": 3,
+   "a_expirar_em_breve": 1,
+   "expirados": 0,
+   "compliance_ok": true
   }
  ],
  "total": 8

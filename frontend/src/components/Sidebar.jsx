@@ -41,7 +41,24 @@ const links = [
   { to: '/sobre',      Icon: AboutIcon,      label: 'Sobre',      alert: false },
 ];
 
+/* Perfil escolhido no login (sessionStorage aero_role). */
+const ROLE_INFO = {
+  gestor:    { initials: 'GF', name: 'Gestor de Frota', sub: 'Operador (demo)' },
+  piloto:    { initials: 'PI', name: 'Piloto',          sub: 'Tripulante (demo)' },
+  regulador: { initials: 'RG', name: 'Regulador',       sub: 'Autoridade (demo)' },
+  visitante: { initials: 'VI', name: 'Visitante',       sub: 'Sem perfil (demo)' },
+};
+
+export function roleInfo(role) {
+  return ROLE_INFO[role] || ROLE_INFO.visitante;
+}
+
+function storedRole() {
+  try { return sessionStorage.getItem('aero_role'); } catch { return null; }
+}
+
 export default function Sidebar({ onNavigate }) {
+  const who = roleInfo(storedRole());
   return (
     <nav style={s.nav} aria-label="Navegação principal">
       <div style={s.section}>
@@ -71,12 +88,12 @@ export default function Sidebar({ onNavigate }) {
       <div style={s.footer}>
         <div style={s.footerLabel}>Organização</div>
         <div style={s.avatarBox}>
-          <div style={s.avatarCircle}>AD</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={s.avatarName}>Admin</div>
-            <div style={s.avatarRole}>Autoridade (demo)</div>
+          <div style={s.avatarCircle} aria-hidden="true">{who.initials}</div>
+          <div style={{ flex: 1, minWidth: 0 }} data-testid="sidebar-role">
+            <div style={s.avatarName}>{who.name}</div>
+            <div style={s.avatarRole}>{who.sub}</div>
           </div>
-          <div style={s.onlineDot} />
+          <div style={s.onlineDot} aria-hidden="true" />
         </div>
       </div>
     </nav>

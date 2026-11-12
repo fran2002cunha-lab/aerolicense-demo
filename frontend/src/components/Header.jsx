@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, IS_DEMO } from '../api';
 import { c, gradientPrimary } from '../theme';
+import { roleInfo } from './Sidebar';
 
 const ROLE_CONFIG = {
   gestor:    { label: 'Gestor',         Icon: BriefcaseIcon },
@@ -126,13 +127,8 @@ export default function Header({ activeRole, onMenuToggle, menuOpen }) {
           <BellIcon />
           <span style={s.bellDot} aria-hidden="true" />
         </button>
-        <div
-          style={s.avatar}
-          role="button"
-          tabIndex={0}
-          aria-label="Menu do utilizador — Admin"
-        >
-          <span aria-hidden="true">AD</span>
+        <div style={s.avatar} title={roleInfo(activeRole).name}>
+          <span aria-hidden="true">{roleInfo(activeRole).initials}</span>
         </div>
       </div>
     </header>

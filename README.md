@@ -21,7 +21,7 @@ AeroLicense explores how an operator could see compliance at a glance, ask quest
 
 - **Compliance dashboard**: pilots, documents, expiry alerts, compliance by document type (React + recharts).
 - **AI assistant**: answers questions about the data by calling 5 backend tools (OpenAI-compatible function calling).
-- **Anomaly detection**: scikit-learn `IsolationForest` flags unusual documents and explains why in plain language (`backend/anomaly.py`).
+- **Anomaly detection**: simple rules (unknown issuer, validity above a simplified regulatory maximum) plus a scikit-learn `IsolationForest` with `contamination="auto"` and a score threshold, so there is no quota of anomalies; every flag explains why in plain language (`backend/anomaly.py`).
 - **Risk score**: a 0-100 score per pilot that combines expired documents, documents about to expire and anomalies (`backend/risk.py`).
 - **Document integrity**: SHA-256 hash of each file, optionally anchored on Ethereum through a Solidity contract (`smart_contract/contracts/AeroLicenseRegistry.sol`), plus a QR code for verification.
 - **Demo mode by default**: with no environment variables, the API runs on SQLite with a simulated blockchain and canned chat answers.
@@ -44,13 +44,15 @@ flowchart LR
 
 The assistant lives in `backend/chat.py` and is exposed by `POST /chat`.
 
-- **Tools**: `get_pilots_summary`, `get_expiring_documents(days)`, `get_pilot_detail(pilot_id)`, `get_risk_scores`, `get_anomalies`. The model can only read data through these functions; it never sees SQL or the database.
+- **Tools**: `get_pilots_summary`, `get_expiring_documents(days, include_expired=false)`, `get_pilot_detail(pilot_id)`, `get_risk_scores`, `get_anomalies`. The model can only read data through these functions; it never sees SQL or the database.
 - **Argument validation**: arguments come from the model, so they are treated as untrusted input. Each tool has a Pydantic model with `extra="forbid"` (for example `days` between 0 and 3650, `pilot_id` must match `^P\d{3}$`).
 - **Errors go back to the model**: invalid JSON, unknown tools, validation errors and tool exceptions return `{"error": ...}` as the tool result, so the model can correct itself instead of the request crashing.
-- **Loop cap**: at most 5 tool-call rounds per question, then a fixed fallback message.
+- **Loop cap**: at most 5 tool-call rounds per question, then one last call with `tool_choice="none"` so the model answers from the data it already has.
+- **Guardrails**: the system prompt restricts answers to tool data and to the compliance domain, and tells the model to treat tool data (wrapped as `{"data": ...}`) as data, never as instructions. Client: 20 s timeout, 2 retries; completions: `max_tokens=600`, `temperature=0`.
+- **Observability**: each `/chat` request gets a `trace_id` (returned in the response) and each round logs one JSON line with model, latency, token counts, tool names and ok/error, never message content.
 - **Prompt-injection mitigation**: the request schema only accepts history entries with role `user` or `assistant`, and `chat.py` drops anything else, so a client cannot inject `system` or `tool` messages. The only system message is the server's own prompt. Message length and history size are capped, and `/chat` is rate limited (10 requests per minute per IP).
 - **Provider-agnostic**: `LLM_BASE_URL` and `LLM_MODEL` point the client at any OpenAI-compatible provider (default model `gpt-4o-mini`).
-- **Evals** (`backend/evals/`): 11 questions, each with the tool it should call and, where it matters, argument constraints. The eval reports **tool-selection accuracy** and **argument accuracy**. `--mock` swaps the model for a deterministic keyword router, so CI tests the harness and the tool plumbing without a key or network; with a real key it measures model quality. See [backend/evals/README.md](backend/evals/README.md).
+- **Evals** (`backend/evals/`): 11 questions, each with the tool it should call and, where it matters, argument constraints. The eval reports **tool-selection accuracy** and **argument accuracy**. `--mock` swaps the model for a deterministic keyword router, so CI tests the harness and the tool plumbing without a key or network; with a real key it measures model quality. `run_safety_evals.py` adds faithfulness, count correctness, out-of-scope refusal, unknown pilot, direct and indirect prompt injection, and multi-tool cases; its `--mock` mode is a plumbing test only. See [backend/evals/README.md](backend/evals/README.md).
 - **Recorded demo answers**: `backend/scripts/record_demo_chat.py` runs a fixed list of questions through the real `run_chat` loop against a seeded temporary DB and writes `frontend/public/fixtures/chat_recordings.json` (questions, tool calls and answers only; no prompt, IDs or keys). The static demo replays those recordings. The repo ships `chat_recordings.example.json` to show the format.
 
 ## Security
@@ -108,24 +110,26 @@ Put the printed address in `backend/.env` as `CONTRACT_ADDRESS`, with `BLOCKCHAI
 **Tests and evals** (from the repo root)
 
 ```bash
-backend/venv/bin/pip install pytest httpx
-backend/venv/bin/python -m pytest -q
-backend/venv/bin/python backend/evals/run_evals.py --mock
+backend/venv/bin/pip install -r backend/requirements-dev.txt
+make test       # pytest
+make lint       # ruff check + ruff format --check
+make evals      # both eval harnesses in mock mode (plumbing only)
+make fixtures   # regenerate frontend/public/fixtures from the API
 (cd frontend && CI=true npm test)
 ```
 
 ## Tests & CI
 
-- **114 backend tests** (pytest, `tests/`): API and database, chat loop and tool validation, analytics, LLM recording and evals with a mocked client.
+- **Backend tests** (pytest, `tests/`): API and database, document status boundaries, anomaly detection, chat loop, guardrails and tool validation, analytics, security, fixtures export, LLM recording and evals with a mocked client.
 - **23 frontend tests** (Jest + React Testing Library).
-- **GitHub Actions** (`.github/workflows/ci.yml`): installs the backend, runs pytest, runs the tool-selection eval in mock mode with `--fail-under 1.0`, and builds the frontend. CI uses no secrets and calls no external services.
+- **GitHub Actions** (`.github/workflows/ci.yml`): installs the backend with `requirements-dev.txt`, runs `ruff check` and `ruff format --check`, runs pytest, runs the tool-selection and safety evals in mock mode with `--fail-under 1.0`, and builds the frontend. CI uses no secrets and calls no external services.
 
 ## Design decisions & trade-offs
 
 - **Only hashes go on-chain.** The file and its personal data stay off-chain; the contract stores a `bytes32` SHA-256 hash. Anyone holding the file can recompute the hash and compare it, and changing one character changes the hash. Even so, a hash on a public chain is permanent (see limitations).
 - **Static demo instead of a hosted backend.** A public endpoint with an LLM key behind it costs money and invites abuse. The static build shows the real UI with fixtures (and, optionally, answers recorded from a real model); the full assistant is in the code.
 - **SQLite by default.** Zero setup for reviewers, and tests run on an in-memory SQLite DB. `DATABASE_URL` switches to Postgres through SQLAlchemy without code changes.
-- **Readable anomaly reasons.** An IsolationForest score alone means little to an operator, so each flag comes with reasons such as "issued on a weekend" or "rare issuer".
+- **Readable anomaly reasons.** An IsolationForest score alone means little to an operator, so each flag comes with reasons such as "unknown issuer" or "validity above the maximum for this document type".
 
 ## Limitations & why this isn't a product
 

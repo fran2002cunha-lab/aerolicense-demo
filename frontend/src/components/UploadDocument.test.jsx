@@ -14,3 +14,13 @@ test.each([401, 503])('explains the API key requirement when upload returns %i',
   await waitFor(() => expect(screen.getByText(WRITE_AUTH_NOTE)).toBeInTheDocument());
   expect(global.fetch.mock.calls[0][1].headers).toBeUndefined();
 });
+
+test('the dropzone is keyboard operable and opens the file picker via a ref', () => {
+  const { container } = render(<UploadDocument pilotAddress="0x0" />);
+  const input = container.querySelector('#fileInput');
+  const click = jest.spyOn(input, 'click');
+  const zone = screen.getByRole('button', { name: /Selecionar ficheiro/ });
+  fireEvent.keyDown(zone, { key: 'Enter' });
+  fireEvent.click(zone);
+  expect(click).toHaveBeenCalledTimes(2);
+});

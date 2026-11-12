@@ -87,7 +87,7 @@ export default function AlertsPage() {
             width: '100%', maxWidth: 360, padding: '8px 12px',
             fontSize: 13, borderRadius: 8, fontFamily: 'Inter, sans-serif',
             background: c.bgSurface, border: `1px solid ${c.border}`,
-            color: c.text, outline: 'none',
+            color: c.text,
           }}
           aria-label="Pesquisar alertas"
         />
