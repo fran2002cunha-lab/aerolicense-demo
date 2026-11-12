@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../api';
+import { api, IS_DEMO } from '../api';
 import { c, gradientPrimary } from '../theme';
 
 const ROLE_CONFIG = {
@@ -100,9 +100,11 @@ export default function Header({ activeRole, onMenuToggle, menuOpen }) {
           boxShadow: online ? `0 0 8px ${c.green}` : 'none',
         }} aria-hidden="true" />
         <span style={s.statusText}>
-          {online === null ? 'A ligar...' : online
-            ? `API online · ${mode || 'demo'}`
-            : 'API offline'}
+          {IS_DEMO
+            ? 'Demo estática · sem backend'
+            : online === null ? 'A ligar...' : online
+              ? `API online · ${mode || 'demo'}`
+              : 'API offline'}
         </span>
       </div>
 

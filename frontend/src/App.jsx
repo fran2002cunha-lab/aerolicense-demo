@@ -13,7 +13,8 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import LoginPage     from './pages/LoginPage';
 import AboutPage     from './pages/AboutPage';
 import WalletPage    from './pages/WalletPage';
-import { onApiStatusChange } from './api';
+import DemoBanner    from './components/DemoBanner';
+import { onApiStatusChange, IS_DEMO } from './api';
 import { c } from './theme';
 
 function useIsMobile() {
@@ -54,7 +55,12 @@ export default function App() {
   }
 
   if (!isLoggedIn) {
-    return <LoginPage onLogin={handleLogin} />;
+    return (
+      <>
+        <DemoBanner />
+        <LoginPage onLogin={handleLogin} />
+      </>
+    );
   }
 
   const showSidebar = !isMobile || sidebarOpen;
@@ -68,8 +74,10 @@ export default function App() {
           menuOpen={sidebarOpen}
         />
 
-        {/* Offline banner */}
-        {apiOffline && (
+        <DemoBanner />
+
+        {/* Offline banner (nunca no modo demo estático) */}
+        {apiOffline && !IS_DEMO && (
           <div role="alert" style={{
             background: `${c.red}18`, borderBottom: `1px solid ${c.red}35`,
             padding: '8px 24px', fontSize: 12, color: c.red,

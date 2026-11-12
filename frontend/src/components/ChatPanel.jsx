@@ -1,5 +1,37 @@
 import { useState, useRef, useEffect } from 'react';
-import { api } from '../api';
+import { api, IS_DEMO } from '../api';
+
+const PLACEHOLDER_ANSWER = '<to be recorded>';
+
+/* tool call → "get_expiring_documents(days=30)" */
+export function formatToolCall(tc) {
+  const args = tc && tc.arguments && typeof tc.arguments === 'object' ? tc.arguments : {};
+  const parts = Object.entries(args).map(([k, v]) => `${k}=${JSON.stringify(v)}`);
+  return `${String(tc?.name || 'tool')}(${parts.join(', ')})`;
+}
+
+function formatDate(raw) {
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? String(raw || '') : d.toLocaleDateString('pt-PT');
+}
+
+/* Valida o ficheiro de gravações; devolve null se inválido ou vazio. */
+export function parseRecordings(data) {
+  if (!data || !Array.isArray(data.recordings)) return null;
+  const recordings = data.recordings.filter(r =>
+    r && typeof r.question === 'string' && typeof r.answer === 'string'
+      && r.answer.trim() && r.answer.trim() !== PLACEHOLDER_ANSWER);
+  if (!recordings.length) return null;
+  return {
+    model: String(data.model || 'modelo desconhecido'),
+    recordedAt: formatDate(data.recorded_at),
+    recordings: recordings.map(r => ({
+      question: r.question,
+      answer: r.answer,
+      toolCalls: Array.isArray(r.tool_calls) ? r.tool_calls : [],
+    })),
+  };
+}
 
 const SUGGESTIONS = [
   'Que pilotos têm documentos a expirar?',
@@ -9,6 +41,108 @@ const SUGGESTIONS = [
 ];
 
 export default function ChatPanel() {
+  return IS_DEMO ? <DemoChatPanel /> : <LiveChatPanel />;
+}
+
+/* ── Modo demo: respostas gravadas do modelo real, sem texto livre ── */
+export function DemoChatPanel({ initiallyOpen = false }) {
+  const [open,     setOpen]     = useState(initiallyOpen);
+  const [rec,      setRec]      = useState(undefined); // undefined = a carregar, null = indisponível
+  const [messages, setMessages] = useState([]);
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    if (!open || rec !== undefined) return;
+    let alive = true;
+    api.chatRecordings()
+      .then(d => { if (alive) setRec(parseRecordings(d)); })
+      .catch(() => { if (alive) setRec(null); });
+    return () => { alive = false; };
+  }, [open, rec]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView?.({ behavior: 'smooth' });
+  }, [messages]);
+
+  function ask(r) {
+    setMessages(prev => [...prev, { role: 'user', text: r.question }, { role: 'recorded', rec: r }]);
+  }
+
+  return (
+    <>
+      <button onClick={() => setOpen(o => !o)} style={s.fab} title="Assistente IA" aria-label="Assistente IA">
+        {open ? '✕' : '🤖'}
+      </button>
+
+      {open && (
+        <div style={{ ...s.panel, height: 560, maxHeight: 'calc(100vh - 120px)' }}>
+          <div style={s.header}>
+            <span style={{ fontWeight: 'bold', fontSize: 14 }}>🤖 Assistente AeroLicense</span>
+            <span style={{ fontSize: 11, color: '#AABBCC' }}>Respostas gravadas</span>
+          </div>
+
+          <div style={s.messages}>
+            <div style={s.botMsg}>
+              Olá! Nesta demo estática não há backend, por isso mostro respostas que foram
+              gravadas do modelo real. Escolhe uma das perguntas abaixo.
+            </div>
+            {rec === undefined && <div style={s.botMsg}><span style={s.typing}>● ● ●</span></div>}
+            {rec === null && (
+              <div role="status" style={{ ...s.botMsg, color: '#F87171' }}>
+                Respostas gravadas indisponíveis
+              </div>
+            )}
+            {messages.map((m, i) => m.role === 'user' ? (
+              <div key={i} style={s.userMsg}>{m.text}</div>
+            ) : (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, alignSelf: 'flex-start', maxWidth: '92%' }}>
+                {m.rec.toolCalls.map((tc, j) => (
+                  <span key={j} style={s.toolChip}>tool call: {formatToolCall(tc)}</span>
+                ))}
+                <div style={{ ...s.botMsg, maxWidth: '100%' }}>{m.rec.answer}</div>
+                <span style={s.recLabel}>
+                  Resposta gravada do modelo real ({rec?.model}, {rec?.recordedAt})
+                </span>
+              </div>
+            ))}
+            <div ref={bottomRef} />
+          </div>
+
+          {rec && (
+            <div style={{ ...s.suggestions, maxHeight: 190, overflowY: 'auto', paddingTop: 8, borderTop: '1px solid #1E3A5F' }}>
+              {rec.recordings.map((r, i) => (
+                <button key={i} type="button" style={s.suggestion} onClick={() => ask(r)}>
+                  {r.question}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div style={{ ...s.inputRow, flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <input
+                value=""
+                readOnly
+                disabled
+                aria-describedby="demo-chat-note"
+                placeholder="Texto livre desativado no modo demo"
+                style={{ ...s.input, opacity: 0.5, cursor: 'not-allowed' }}
+              />
+              <button disabled style={{ ...s.sendBtn, opacity: 0.4, cursor: 'not-allowed' }} aria-label="Enviar">➤</button>
+            </div>
+            <span id="demo-chat-note" style={{ fontSize: 10.5, color: '#6B8BAD', lineHeight: 1.4 }}>
+              Sem backend nesta demo estática (sem chaves de API), por isso o texto livre está desativado.
+              O assistente completo está no código do GitHub.
+            </span>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ── Modo normal: chat ligado ao backend ── */
+function LiveChatPanel() {
   const [open,     setOpen]     = useState(false);
   const [messages, setMessages] = useState([
     { role: 'assistant', text: 'Olá! Sou o assistente AeroLicense com IA. Posso responder perguntas sobre conformidade documental, scores de risco e anomalias ML. Como posso ajudar?' },
@@ -147,6 +281,13 @@ const s = {
     borderRadius: '12px 12px 4px 12px', padding: '10px 12px',
     maxWidth: '85%', alignSelf: 'flex-end', lineHeight: 1.5,
   },
+  toolChip: {
+    alignSelf: 'flex-start', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontSize: 10.5, color: '#A78BFA', background: '#1A1033',
+    border: '1px solid #3B2A6B', borderRadius: 999, padding: '3px 9px',
+    wordBreak: 'break-all',
+  },
+  recLabel: { fontSize: 10, color: '#6B8BAD', fontStyle: 'italic', paddingLeft: 2 },
   typing: { color: '#6B8BAD', letterSpacing: 4, fontSize: 16 },
   suggestions: { padding: '0 12px 8px', display: 'flex', flexDirection: 'column', gap: 4 },
   suggestion: {

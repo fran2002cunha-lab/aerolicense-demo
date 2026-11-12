@@ -423,9 +423,8 @@ export default function Dashboard() {
       <div style={sk.demoBanner}>
         <span style={sk.demoBannerIcon}>⚠️</span>
         <span>
-          <strong>Dataset de demonstração</strong> — Este ambiente contém 12 documentos expirados
-          intencionalmente para ilustrar o sistema de alertas e detecção de anomalias. Em ambiente
-          de produção, organizações com AeroLicense atingem ≥99% de compliance regulamentar.
+          <strong>Dataset de demonstração</strong> — Dados fictícios, com vários documentos
+          expirados de propósito para ilustrar os alertas, o score de risco e a deteção de anomalias.
         </span>
       </div>
 

@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { c, shadow } from '../theme';
+import { api, backendUrl, sha256File, IS_DEMO } from '../api';
 
-const isDev = process.env.NODE_ENV === 'development';
-const DEV_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-const apiUrl = (path) => isDev ? `${DEV_URL}${path}` : `/api/proxy?p=${encodeURIComponent(path)}`;
+export const DEMO_LOCAL_NOTE = 'Modo demo: o ficheiro é processado só no teu browser, nada é enviado.';
 
 const DOC_TYPES = [
   { value: "ATPL",           label: "Licença ATPL",                   medical: false },
@@ -42,13 +41,27 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
   const [expiresAt,   setExpires]  = useState("");
   const [loading,     setLoading]  = useState(false);
   const [result,      setResult]   = useState(null);
+  const [demoResult,  setDemoRes]  = useState(null);
   const [error,       setError]    = useState(null);
   const [dragOver,    setDragOver] = useState(false);
 
   const isMedical = DOC_TYPES.find(d => d.value === docType)?.medical;
 
+  async function handleDemoSubmit() {
+    if (!file) return;
+    setLoading(true); setDemoRes(null); setError(null);
+    try {
+      /* SHA-256 calculado localmente — o ficheiro não sai do browser. */
+      const hash  = await sha256File(file);
+      const check = await api.verifyDocument(hash);
+      setDemoRes({ hash, check });
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
+    if (IS_DEMO) { handleDemoSubmit(); return; }
     if (!file || !description || !expiresAt) return;
     setLoading(true); setResult(null); setError(null);
 
@@ -60,7 +73,7 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
     });
 
     try {
-      const res  = await fetch(apiUrl(`/documents/upload?${params}`), { method: "POST", body: form });
+      const res  = await fetch(backendUrl(`/documents/upload?${params}`), { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail);
       setResult(data);
@@ -89,6 +102,12 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
           </p>
         </div>
       </div>
+
+      {IS_DEMO && (
+        <div role="note" style={s.demoNote}>
+          <LockIcon /> <span>{DEMO_LOCAL_NOTE}</span>
+        </div>
+      )}
 
       {/* RGPD + security notice */}
       <div style={s.rgpdBox}>
@@ -126,6 +145,7 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
           </select>
         </Field>
 
+        {!IS_DEMO && (<>
         <Field label="Descrição">
           <input
             type="text"
@@ -146,6 +166,7 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
             required
           />
         </Field>
+        </>)}
 
         <Field label="Ficheiro (PDF / JPG / PNG)">
           <div
@@ -191,9 +212,9 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
           style={{ ...s.submitBtn, opacity: loading || !file ? 0.5 : 1,
             cursor: loading || !file ? 'not-allowed' : 'pointer' }}
         >
-          {loading
-            ? 'A registar na blockchain…'
-            : 'Registar na Blockchain'}
+          {IS_DEMO
+            ? (loading ? 'A calcular SHA-256…' : 'Calcular hash e verificar (local)')
+            : (loading ? 'A registar na blockchain…' : 'Registar na Blockchain')}
         </button>
       </form>
 
@@ -216,6 +237,36 @@ export default function UploadDocument({ pilotAddress, onSuccess }) {
           <p style={s.successNote}>
             Hash gravado permanentemente na Ethereum. Qualquer entidade pode verificar
             a autenticidade sem aceder ao ficheiro original.
+          </p>
+        </div>
+      )}
+
+      {demoResult && (
+        <div style={demoResult.check.is_authentic ? s.successBox : s.neutralBox}>
+          <div style={demoResult.check.is_authentic ? s.successHeader : s.neutralHeader}>
+            <ShieldCheckIcon />
+            {demoResult.check.is_authentic
+              ? 'Hash encontrado nos registos de demonstração'
+              : 'Hash não registado nos dados de demonstração'}
+          </div>
+          <div style={s.resultGrid}>
+            <ResultRow label="Hash SHA-256 (calculado no browser)" value={demoResult.hash} mono />
+            {demoResult.check.is_authentic && (
+              <>
+                <ResultRow label="Documento" value={demoResult.check.doc_descricao} />
+                <ResultRow label="Titular" value={`${demoResult.check.pilot_nome} (${demoResult.check.pilot_id})`} />
+                <ResultRow
+                  label="Estado"
+                  value={demoResult.check.is_expired ? 'Expirado' : 'Dentro da validade'}
+                  color={demoResult.check.is_expired ? c.red : c.green}
+                />
+              </>
+            )}
+          </div>
+          <p style={s.successNote}>
+            {demoResult.check.is_authentic
+              ? 'O hash coincide com um documento dos dados fictícios desta demo.'
+              : 'Qualquer alteração ao ficheiro muda o hash. Na versão completa (com backend), este hash seria gravado na Ethereum; nesta demo estática nada é registado.'}
           </p>
         </div>
       )}
@@ -320,6 +371,21 @@ const s = {
   successNote: {
     fontSize: 11, color: c.textMuted, margin: 0,
     padding: '10px 16px', borderTop: `1px solid ${c.green}20`, lineHeight: 1.5,
+  },
+  demoNote: {
+    display: 'flex', alignItems: 'center', gap: 7,
+    background: `${c.primary}12`, border: `1px solid ${c.primary}35`,
+    borderRadius: 10, padding: '10px 14px', marginBottom: 16,
+    fontSize: 12, color: c.primaryLt, lineHeight: 1.45,
+  },
+  neutralBox: {
+    marginTop: 20, background: c.bgElevated,
+    border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden',
+  },
+  neutralHeader: {
+    display: 'flex', alignItems: 'center', gap: 8,
+    padding: '12px 16px', borderBottom: `1px solid ${c.border}`,
+    fontSize: 13, fontWeight: 700, color: c.textMuted,
   },
   errorBox: {
     marginTop: 16, background: c.redBg, border: `1px solid ${c.red}35`,

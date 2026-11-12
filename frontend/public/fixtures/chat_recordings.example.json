@@ -1,0 +1,13 @@
+{
+  "model": "<model id>",
+  "recorded_at": "<ISO 8601 timestamp>",
+  "recordings": [
+    {
+      "question": "Que documentos expiram nos próximos 30 dias?",
+      "tool_calls": [
+        { "name": "get_expiring_documents", "arguments": { "days": 30 } }
+      ],
+      "answer": "<to be recorded>"
+    }
+  ]
+}

@@ -252,7 +252,7 @@ export default function AnalyticsPage() {
       <div style={s.targetDisclaimer}>
         <strong>Nota metodológica:</strong> Os indicadores abaixo são métricas target estimadas com base em
         literatura sobre digitalização de processos administrativos em aviação (Bhardwaj & Purdy 2019,
-        Burns et al. 2019). Não são dados medidos — serão validados numa fase piloto com escola de aviação parceira.
+        Burns et al. 2019). Não são dados medidos nem foram validados — este é um projeto académico, não um produto.
       </div>
 
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
